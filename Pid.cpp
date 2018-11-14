@@ -1,16 +1,21 @@
 // Do not remove the include below
 #include <WString.h>
 #include "Arduino.h"
-#include "Pid.h"
+#include "PID_v1.h"
 #include "LCDHelper.h"
 #include <Encoder.h>
 #include "PidState.h"
+#include "OneWire.h"
+#include "probe.h"
 #ifdef DEBUG
 #include "gdb.h"
 #endif
 
+OneWire onewire(D3);
+probe probe(&onewire);
 PidState pidState;
 LCDHelper lcdHelper;
+
 
 const byte encoderCk     = D5; // rotary encoder Clock
 const byte pushButtonPin = D7; // rotary encoder pushbutton
@@ -28,7 +33,7 @@ void RAMFUNC setup() {
 	gdbstub_init();
 #else
 void setup() {
-	Serial.begin(115200);
+	Serial.begin(9600);
 	Serial.println(F("Initialized"));
 #endif
 
@@ -37,6 +42,9 @@ void setup() {
 	pinMode(pushButtonPin, INPUT_PULLUP);
 	attachInterrupt(pushButtonPin, handleEncPush, CHANGE);
 	InitializeMenus();
+
+	pidState.loadFromEEProm();
+	Serial.print(F("XXXX"));
 }
 
 #ifdef DEBUG
@@ -44,6 +52,13 @@ void RAMFUNC loop() {
 #else
 	void loop() {
 #endif
-	pidState.update(enc.read(),isEncoderPressed);
+	probe::startConv();// start conversion for all sensors
+	if (probe::isReady()) {// update sensors when conversion complete
+		ESP.wdtFeed();
+		probe.update();
+		ESP.wdtFeed();
+	}
+
+	pidState.update(probe.getTemp(),enc.read(),isEncoderPressed);
 	lcdHelper.display(pidState);
 }

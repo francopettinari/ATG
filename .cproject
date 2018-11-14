@@ -26,6 +26,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.cpp.sketch.input.1809655131" name="Sorgente CPP" superClass="io.sloeber.compiler.cpp.sketch.input"/>
 							</tool>
@@ -38,6 +40,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.c.sketch.input.1377943925" name="Sorgente C" superClass="io.sloeber.compiler.c.sketch.input"/>
 							</tool>
@@ -50,6 +54,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.S.sketch.input.157865573" name="Sorgente Assembly" superClass="io.sloeber.compiler.S.sketch.input"/>
 							</tool>
@@ -91,6 +97,10 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.cpp.sketch.input.29471970" name="Sorgente CPP" superClass="io.sloeber.compiler.cpp.sketch.input"/>
 							</tool>
@@ -103,6 +113,10 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.c.sketch.input.586267504" name="Sorgente C" superClass="io.sloeber.compiler.c.sketch.input"/>
 							</tool>
@@ -115,6 +129,10 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.S.sketch.input.660854065" name="Sorgente Assembly" superClass="io.sloeber.compiler.S.sketch.input"/>
 							</tool>
@@ -157,6 +175,9 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/gdb}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.cpp.sketch.input.947475914" name="Sorgente CPP" superClass="io.sloeber.compiler.cpp.sketch.input"/>
 							</tool>
@@ -170,6 +191,9 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/gdb}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.c.sketch.input.1640067928" name="Sorgente C" superClass="io.sloeber.compiler.c.sketch.input"/>
 							</tool>
@@ -183,6 +207,9 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/gdb}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.S.sketch.input.278294459" name="Sorgente Assembly" superClass="io.sloeber.compiler.S.sketch.input"/>
 							</tool>

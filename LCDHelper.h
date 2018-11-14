@@ -22,6 +22,8 @@ class LCDHelper {
 
 	void Space (byte num);
 	void Clear(byte row);
+	void displayRun(PidState pstate);
+	void displayConfigServo(PidState pstate);
 public:
 	void display(PidState state);
 	void print(byte col, byte row, int val);
