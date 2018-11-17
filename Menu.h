@@ -8,24 +8,70 @@
 #ifndef MENU_H_
 #define MENU_H_
 
+class ConfigMenu;
 #include <WString.h>
-class MenuItem;
+#include "PidState.h"
 
-typedef  void (*MenuItemCallback)(MenuItem* parent);
+typedef  void (*MenuItemCallback)();
+
+class MainMenu;
+class ConfigMenu;
+
 
 class MenuItem {
+protected:
+	MenuItemCallback callBack;
 public:
+    int mappedState = -1; //mapped to an int because unable to resolve compile errors
 	String Caption;
-	MenuItemCallback callBack = NULL;
 	MenuItem* parent = NULL;
 	MenuItem** subMenuItems = NULL;
     int subMenuItemsLen = 0;
 
-	MenuItem(MenuItem* parent, String s,MenuItemCallback cb){
-		this->parent = parent;
-		Caption = s;
-		callBack = cb;
-	}
+    MenuItem(MenuItem* parent, int state);
+	MenuItem(MenuItem* parent, int state, String s,MenuItemCallback cb);
+    virtual ~MenuItem(){}
+
+	virtual void OnPress();
+};
+
+class UpMenu : public MenuItem {
+public:
+	int upState=-1;
+	UpMenu(MenuItem* parent,int upstate);
+	void OnPress();
+};
+
+class ServoConfigMenu : public MenuItem {
+public:
+	ServoConfigMenu(ConfigMenu* parent);
+
+	MenuItem* dirMenu;
+	MenuItem* minMenu;
+	MenuItem* maxMenu;
+};
+
+class ConfigMenu : public MenuItem{
+public:
+	ConfigMenu(MainMenu* parent);
+
+	MenuItem* upMenu;
+	MenuItem* tempCorrectionMenu;
+	ServoConfigMenu* servoMenu;
+};
+
+class RunMenu : public MenuItem {
+public:
+	RunMenu(MainMenu* parent);
+	MenuItem* runAutoMenu;
+};
+
+class MainMenu : public MenuItem {
+public:
+	MainMenu();
+
+	ConfigMenu* configMenu;
+	RunMenu* runMenu;
 };
 
 typedef MenuItem* MenuItemPtr;

@@ -14,9 +14,11 @@
 #include <Servo.h>
 
 class LCDHelper;
+class MenuItem;
+
 #include "LCDHelper.h"
 
-enum PidStateValue { None=0, RunAuto=10, RunHeatPause=12, Config_ServoDirection=20, Config_ServoMin=30,Config_ServoMax=40};
+enum PidStateValue { svUndefiend=-1,svMain=0,svRun=9, svRunAuto=10,svConfig=15, svTempConfig, svServo_Config=20, svConfig_ServoDirection=21, svConfig_ServoMin=22,svConfig_ServoMax=23};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
 enum EncoderMovement {EncMoveNone,EncMoveCW,EncMoveCCW};
@@ -27,19 +29,22 @@ class PidState {
 
 	void updateLcd();
 private:
+
 	MenuItem         *currentMenu=NULL;
 	EncoderPushButtonState decodeEncoderPushBtnState (boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
 
 	byte eepromVer = 01;  // eeprom data tracking
-protected:
 
+protected:
+	PidStateValue state = svMain;
 //	double Input;
 
 	PID pid;
 	Servo servo;
 
 	void setServoPosition(int degree);
+
 public:
 	LCDHelper        *lcdHelper=NULL;
 
@@ -49,13 +54,29 @@ public:
 	double           temperature = 0;
 	double Setpoint = 25;
 	double Output;
-	PidStateValue     state = None;
+
+	void SetState(PidStateValue value){
+		state = value;
+		savetoEEprom();
+		currentMenu = decodeCurrentMenu();
+		stateSelection=0;
+		currMenuStart = 0;
+		if(lcdHelper!=NULL){
+			lcdHelper->display(*this);
+		}
+	}
 
 	ServoDirection servoDirection = ServoDirectionCW;
 	int servoMin = 0; //degrees
 	int servoMax = 180; //degrees
 
 	PidState();
+
+	MenuItem* decodeCurrentMenu();
+
+	PidStateValue getState(){
+		return state;
+	}
 
 	void setCurrentMenu(MenuItem *m){
 		currentMenu = m;

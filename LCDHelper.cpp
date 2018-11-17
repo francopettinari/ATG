@@ -6,101 +6,74 @@
  */
 
 //LCD 20x4
-#include <Wire.h>
+
 #include "LCDHelper.h"
 #include "PidState.h"
 
-LCDHelper::LCDHelper():lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE) {
-	Wire.begin(D2,D1);
-	lcd.begin(20,4);
-	lcd.clear();
-}
-
-void LCDHelper::Space (byte num){
-  for(byte i = 0; i < num; i++){
-    lcd.print(F(" "));
-  }
-}
-
-void LCDHelper::Clear(byte row) {
-  lcd.setCursor(0, row);
-  Space(20);
+LCDHelper::LCDHelper():lcd(20,4) {
 }
 
 void LCDHelper::display(PidState pstate){
 //	Serial.print(F(" "));Serial.print(pstate.stateSelection);
 //	Serial.print(F(" "));
-	lcd.setCursor(0, 0);
-	lcd.print(pstate.getCurrentMenu()->Caption);lcd.print(F("   "));
-
-	if(pstate.state!=RunAuto){
+	lcd.clear();
+	lcd.PrintString(0,0,pstate.getCurrentMenu()->Caption.c_str());
+	if(pstate.getState()!=svRunAuto){
 		for(int idx = pstate.currMenuStart;idx<pstate.currMenuStart+3;idx++){
-			lcd.setCursor(0, idx+1-pstate.currMenuStart);
-			if(idx>pstate.getCurrentMenu()->subMenuItemsLen-1){
-				lcd.print(F("     "));
-				continue;
-			}
+			int y=idx+1-pstate.currMenuStart;
 			if(idx == pstate.stateSelection){
-				lcd.print(F(">"));
+				lcd.PrintF(0,y,F(">"));
 			}else{
-				lcd.print(F(" "));
+				lcd.PrintF(0,y,F(" "));
 			}
-			lcd.print(pstate.getCurrentMenu()->subMenuItems[idx]->Caption);
-			lcd.print(F("    "));
+			if(idx<pstate.getCurrentMenu()->subMenuItemsLen){
+				//Serial.println(pstate.getCurrentMenu()->subMenuItemsLen);
+				lcd.PrintString(1,y,pstate.getCurrentMenu()->subMenuItems[idx]->Caption.c_str());
+//				Serial.print(idx);Serial.print(F(" "));Serial.println(pstate.getCurrentMenu()->subMenuItems[idx]->Caption.c_str());
+			}
 		}
 	}
-	switch(pstate.state) {
-		case None:
-		case RunAuto:
+	switch(pstate.getState()) {
+		case svRunAuto:
 			displayRun(pstate);
 			break;
-		case Config_ServoDirection:
-		case Config_ServoMin:
-		case Config_ServoMax:
+		case svServo_Config:
+		case svConfig_ServoDirection:
+		case svConfig_ServoMin:
+		case svConfig_ServoMax:
 			displayConfigServo(pstate);
 			break;
 	}
-
+	lcd.render();
 //	lcd.setCursor(0, 3);lcd.print(pstate.currEncoderPos);
 //	lcd.setCursor(10, 3);lcd.print(pstate.stateSelection);
 //	Serial.println(F(" "));
 }
 
 void LCDHelper::displayRun(PidState pstate){
-
-	lcd.setCursor(14, 0);
-	lcd.print(pstate.getTemperature(),2);
-
-	lcd.setCursor(14, 1);
-	lcd.print(pstate.Setpoint,2);
-
-	lcd.setCursor(14, 2);
-	lcd.print(pstate.Output,2);
+	lcd.PrintDouble(14, 0,pstate.getTemperature(),2);
+	lcd.PrintDouble(14, 1,pstate.Setpoint,2);
+	lcd.PrintDouble(14, 2,pstate.Output,2);
 
 }
 
 void LCDHelper::displayConfigServo(PidState pstate){
-	lcd.setCursor(15, 0);
 	if(pstate.servoDirection==ServoDirectionCW){
-		lcd.print(F("CW   "));
+		lcd.PrintF(15, 0,F("CW   "));
 	}else if(pstate.servoDirection==ServoDirectionCCW){
-		lcd.print(F("CCW  "));
+		lcd.PrintF(15, 0,F("CCW  "));
 	}
 
-	lcd.setCursor(15, 1);
-	lcd.print(pstate.servoMin);lcd.print(F("     "));
+	lcd.PrintDouble(15, 1,pstate.servoMin);
 
-	lcd.setCursor(15, 2);
-	lcd.print(pstate.servoMax);lcd.print(F("     "));
+	lcd.PrintDouble(15, 2,pstate.servoMax);
 }
 
-void LCDHelper::print(byte col, byte row, int val){
-	lcd.setCursor(col, row);
-	lcd.print(val);
-}
+//void LCDHelper::print(byte col, byte row, int val){
+//	lcd.Print(col, row,val);
+//}
 
 void LCDHelper::print(byte col, byte row,  __FlashStringHelper *ifsh){
-	lcd.setCursor(col, row);
-	lcd.print(ifsh);
+	lcd.PrintF(col, row,ifsh);
 }
 

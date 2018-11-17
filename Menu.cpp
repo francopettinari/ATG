@@ -4,108 +4,143 @@
 #include <Encoder.h>
 #include "PidState.h"
 
-void buildMainMenu(MenuItem* mainMenu);
-void biuldConfigMenu(MenuItem* mainMenu);
-void buildRunMenu(MenuItem* runMenu);
-void buildConfigTCorrectionMenu(MenuItem* configMenu);
-void buildConfigServoMenu(MenuItem* servoCorrMenu);
+
+//MenuItem* getCurrentMenu(){
+//	MainMenu* pmm = (MainMenu*) pidState.topMenu;
+//	switch(pidState.getState()){
+//		case svMain :
+//			return pmm;
+//		case svRunAuto :
+//			return pmm->runMenu->runAutoMenu;
+//		case svConfig_ServoDirection :
+//			return pmm->configMenu->servoMenu->dirMenu;
+//		case svConfig_ServoMin :
+//			return pmm->configMenu->servoMenu->minMenu;
+//		case svConfig_ServoMax:
+//			return pmm->configMenu->servoMenu->maxMenu;
+//	}
+//	return pmm;
+//}
+
+MenuItem::MenuItem(MenuItem* parent, int state, String s,MenuItemCallback cb){
+	this->parent = parent;
+	Caption = s;
+	callBack = cb;
+	mappedState = state;
+}
+
+MenuItem::MenuItem(MenuItem* parent, int state):parent(parent){
+	callBack = NULL;
+	mappedState = state;
+}
+
+ void MenuItem::OnPress(){
+	Serial.print(F(">>>>>> Press <<<<<<  "));Serial.println(Caption);
+	if(callBack!=NULL){
+		Serial.println(F("Callback"));
+		callBack();
+	}
+}
+
+UpMenu::UpMenu(MenuItem* parent,int state):MenuItem(parent,-1){
+	Caption = "Up";
+	upState=state;
+}
+
+void UpMenu::OnPress(){
+	Serial.println(F(">>>>>> Press <<<<<<  "));
+	Serial.print(F("Up to "));Serial.println(upState);
+	pidState.SetState((PidStateValue)upState);
+}
+
+
+
+ServoConfigMenu::ServoConfigMenu(ConfigMenu* parent):MenuItem(parent,svServo_Config){
+	Caption = "Servo";
+	subMenuItems = new MenuItemPtr[4];
+	subMenuItemsLen = 4;
+	subMenuItems[0] = new UpMenu(this,svConfig);
+	dirMenu = new MenuItem(this,svConfig_ServoDirection,F("Dir"),[](){
+		pidState.SetState(svConfig_ServoDirection);
+	});
+	minMenu =  new MenuItem(this,svConfig_ServoMin,F("Min"),[](){
+		if(pidState.getState() == svServo_Config){
+			pidState.SetState(svConfig_ServoMin);
+		}else{
+			pidState.SetState(svServo_Config);
+		}
+	});
+	maxMenu = new MenuItem(this,svConfig_ServoMax,F("Max"),[](){
+		if(pidState.getState() == svServo_Config){
+			pidState.SetState(svConfig_ServoMax);
+		}else{
+			pidState.SetState(svServo_Config);
+		}
+	});
+	subMenuItems[1] = dirMenu;
+	subMenuItems[2] = minMenu;
+	subMenuItems[3] = maxMenu;
+	callBack = [](){
+			pidState.SetState(svServo_Config);
+		};
+}
+
+ConfigMenu::ConfigMenu(MainMenu* parent):MenuItem(parent,svConfig){
+	Caption = "Config";
+	upMenu = new UpMenu(this,svMain);
+	tempCorrectionMenu = new MenuItem(this,svTempConfig, F("Temp Corr"),[=](){
+		//pidState.setCurrentMenu(this->parent->subMenuItems[1]);
+	});
+	servoMenu = new ServoConfigMenu(this);
+
+	subMenuItems = new MenuItemPtr[3];
+	subMenuItemsLen = 3;
+	subMenuItems[0] = upMenu;
+	subMenuItems[1] = tempCorrectionMenu;
+	subMenuItems[2] = servoMenu;
+
+	callBack = [](){
+		pidState.SetState(svConfig);
+	};
+}
+
+
+RunMenu::RunMenu(MainMenu* parent):MenuItem(parent,svRun){
+	Caption = "Run";
+	subMenuItems = new MenuItemPtr[2];
+	subMenuItemsLen = 2;
+	subMenuItems[0] = new UpMenu(this,svMain);
+	runAutoMenu = new MenuItem(this,svRun,F("Auto"),[](){
+		if(pidState.getState() == svRun){
+			pidState.SetState(svRunAuto);
+		}else{
+			pidState.SetState(svRun);
+		}
+	});
+	subMenuItems[1] = runAutoMenu;
+
+	runAutoMenu->subMenuItems = new MenuItemPtr[1];
+	runAutoMenu->subMenuItemsLen = 1;
+	runAutoMenu->subMenuItems[0] = new UpMenu(runAutoMenu,svRun);
+	callBack = [](){
+		pidState.SetState(svRun);
+	};
+}
+
+MainMenu::MainMenu():MenuItem(NULL,-1){
+	Caption = "Main";
+	parent = NULL;
+	callBack = NULL;
+	subMenuItems = new MenuItemPtr[2];
+	subMenuItemsLen = 2;
+	subMenuItems[0] = configMenu = new ConfigMenu(this);
+	subMenuItems[1] = runMenu = new RunMenu(this);
+}
 
 void InitializeMenus(){
-	pidState.topMenu = new MenuItem(NULL,F("Main"),NULL);
-	buildMainMenu(pidState.topMenu);
+	pidState.topMenu = new MainMenu();
 	pidState.setCurrentMenu(pidState.topMenu);
 }
 
-void buildMainMenu(MenuItem* mainMenu){
-	MenuItem* configMenu = new MenuItem(mainMenu,F("Config"),[](MenuItem* parent){
-		pidState.setCurrentMenu(parent->subMenuItems[0]);
-	});
-
-	MenuItem* runMenu = new MenuItem(mainMenu,F("Run"),[](MenuItem* parent){
-		pidState.setCurrentMenu(parent->subMenuItems[1]);
-	});
-
-	pidState.topMenu->subMenuItems = new MenuItemPtr[2];
-	pidState.topMenu->subMenuItemsLen = 2;
-	pidState.topMenu->subMenuItems[0] = configMenu;
-	pidState.topMenu->subMenuItems[1] = runMenu;
-
-	biuldConfigMenu(configMenu);
-	buildRunMenu(runMenu);
-}
-
-void biuldConfigMenu(MenuItem* configMenu){
-	configMenu->subMenuItems = new MenuItemPtr[3];
-	configMenu->subMenuItemsLen = 3;
-	configMenu->subMenuItems[0] = new MenuItem(configMenu,F("Up"),[](MenuItem* parent){
-		pidState.setCurrentMenu(parent->parent);
-	});
-	MenuItem* tCorrMenu = new MenuItem(configMenu,F("Temp Corr"),[](MenuItem* parent){
-		pidState.setCurrentMenu(parent->subMenuItems[1]);
-	});
-	configMenu->subMenuItems[1] = tCorrMenu;
-	buildConfigTCorrectionMenu(configMenu);
-
-	MenuItem* tServoMenu = new MenuItem(configMenu,F("Servo"),[](MenuItem* parent){
-		pidState.setCurrentMenu(parent->subMenuItems[2]);
-	});
-	configMenu->subMenuItems[2] = tServoMenu;
-	buildConfigServoMenu(tServoMenu);
-}
-
-void buildRunMenu(MenuItem* runMenu){
-	runMenu->subMenuItems = new MenuItemPtr[2];
-	runMenu->subMenuItemsLen = 2;
-	runMenu->subMenuItems[0] = new MenuItem(runMenu,F("Up"),[](MenuItem* parent){
-		pidState.setCurrentMenu(parent->parent);
-
-	});
-	MenuItem* heatMenu = new MenuItem(runMenu,F("Auto"),[](MenuItem* parent){
-		if(pidState.state == None){
-			pidState.state = RunAuto;
-			pidState.setCurrentMenu(parent->subMenuItems[1]);
-		}else{
-			pidState.state = None;
-		}
-	});
-	runMenu->subMenuItems[1] = heatMenu;
-	heatMenu->subMenuItems = new MenuItemPtr[1];
-	heatMenu->subMenuItemsLen = 1;
-	heatMenu->subMenuItems[0] = new MenuItem(heatMenu,F("Up"),[](MenuItem* parent){
-		pidState.setCurrentMenu(parent->parent);
-	});
-}
-
-void buildConfigServoMenu(MenuItem* servoCorrMenu){
-	servoCorrMenu->subMenuItems = new MenuItemPtr[4];
-	servoCorrMenu->subMenuItemsLen = 4;
-	servoCorrMenu->subMenuItems[0] = new MenuItem(servoCorrMenu,F("Up"),[](MenuItem* parent){
-		pidState.setCurrentMenu(parent->parent);
-	});
-	servoCorrMenu->subMenuItems[1] = new MenuItem(servoCorrMenu,F("Dir"),[](MenuItem* parent){
-		pidState.state = Config_ServoDirection;
-	});
-	servoCorrMenu->subMenuItems[2] = new MenuItem(servoCorrMenu,F("Min"),[](MenuItem* parent){
-		if(pidState.state == None){
-			pidState.state = Config_ServoMin;
-		}else{
-			pidState.state = None;
-			pidState.setCurrentMenu(parent->parent);
-		}
-
-	});
-	servoCorrMenu->subMenuItems[3] = new MenuItem(servoCorrMenu,F("Max"),[](MenuItem* parent){
-		if(pidState.state == None){
-			pidState.state = Config_ServoMax;
-		}else{
-			pidState.state = None;
-			pidState.setCurrentMenu(parent->parent);
-		}
-	});
-}
-
-void buildConfigTCorrectionMenu(MenuItem* configMenu){
-
-}
 
 

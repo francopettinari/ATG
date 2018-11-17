@@ -44,7 +44,7 @@ void setup() {
 	InitializeMenus();
 
 	pidState.loadFromEEProm();
-	Serial.print(F("XXXX"));
+	Serial.println(F("Initialized from EEProm"));
 }
 
 #ifdef DEBUG
@@ -52,13 +52,16 @@ void RAMFUNC loop() {
 #else
 	void loop() {
 #endif
+	//Serial.println(F("Loop 1"));
 	probe::startConv();// start conversion for all sensors
 	if (probe::isReady()) {// update sensors when conversion complete
 		ESP.wdtFeed();
 		probe.update();
 		ESP.wdtFeed();
 	}
-
+	//Serial.println(F("Loop 2"));
 	pidState.update(probe.getTemp(),enc.read(),isEncoderPressed);
+	//Serial.println(F("Loop 3"));
 	lcdHelper.display(pidState);
+	//Serial.println(F("Loop 4"));
 }

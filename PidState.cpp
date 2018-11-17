@@ -16,7 +16,33 @@ PidState::PidState() : pid(&temperature, &Output, &Setpoint, 100,40,0, DIRECT){
 	pid.SetSampleTime(4 * 250);
 	pid.SetMode(AUTOMATIC);
 	servo.attach(D8);  // attaches the servo on pin 9 to the servo object
+	currentMenu = new MainMenu();
+}
 
+MenuItem* PidState::decodeCurrentMenu(){
+	MainMenu* pmm = (MainMenu*) topMenu;
+	switch(state){
+	case svUndefiend:
+		case svMain :
+			return pmm;
+		case svRun:
+			return pmm->runMenu;
+		case svRunAuto :
+			return pmm->runMenu->runAutoMenu;
+		case svConfig:
+			return pmm->configMenu;
+		case svTempConfig:
+			return pmm->configMenu->tempCorrectionMenu;
+		case svServo_Config:
+			return pmm->configMenu->servoMenu;
+		case svConfig_ServoDirection :
+			return pmm->configMenu->servoMenu->dirMenu;
+		case svConfig_ServoMin :
+			return pmm->configMenu->servoMenu->minMenu;
+		case svConfig_ServoMax:
+			return pmm->configMenu->servoMenu->maxMenu;
+	}
+	return pmm;
 }
 
 long lastLog=0;
@@ -58,6 +84,7 @@ void PidState::setServoPosition(int degree){
 }
 
 void PidState::update(double temp,int encoderPos, boolean encoderPress){
+
 	setTemperature(temp);
 
 	//encoder position
@@ -67,8 +94,13 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 	EncoderPushButtonState encoderPushButtonState = decodeEncoderPushBtnState(encoderPress);
 	int servoPos;
 
+	currentMenu = decodeCurrentMenu();
+
 	switch(state){
-		case None:
+		case svMain:
+		case svConfig:
+		case svServo_Config:
+		case svRun:
 			if(encMovement==EncMoveCCW){
 				stateSelection--;
 				if(stateSelection<0) stateSelection=0;
@@ -79,13 +111,14 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				if(stateSelection-currMenuStart>=3)currMenuStart++;
 			}
 			if(encoderPushButtonState==EncoderPushButtonPressed){
+				Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
+				Serial.print("Menu    :");Serial.println(getCurrentMenu()->Caption);
+				Serial.print("Menu len:");Serial.println(getCurrentMenu()->subMenuItemsLen);
 				MenuItem* selMI = currentMenu->subMenuItems[stateSelection];
-				if(selMI->callBack!=NULL){
-					currentMenu->subMenuItems[stateSelection]->callBack(selMI->parent);
-				}
+				selMI->OnPress();
 			}
 			break;
-		case RunAuto :
+		case svRunAuto :
 			//TODO move into a dedicated function
 			pid.Compute();   // was 6, getting close, start feeding the PID -mdw
 			servoPos = Output*(servoMax-servoMin)/254;
@@ -101,34 +134,34 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 
 			if(encMovement==EncMoveCCW){
-				Setpoint -= 0.25;
+				Setpoint -= 1;
 				if(Setpoint<0)Setpoint=0;
 				savetoEEprom();
 			}else if(encMovement==EncMoveCW){
-				Setpoint+=0.25;
+				Setpoint+=1;
 				if(Setpoint>=120)Setpoint=120;
 				savetoEEprom();
 			}
 
 			if(encoderPushButtonState==EncoderPushButtonPressed){
-				state = None;
+				state = svRun;
 //				savetoEEprom();
 			}
 			break;
-		case Config_ServoDirection:
+		case svConfig_ServoDirection:
 			if(encMovement==EncMoveCCW){
 				if(servoDirection==ServoDirectionCW)servoDirection=ServoDirectionCCW;
 			}else if(encMovement==EncMoveCW){
 				if(servoDirection==ServoDirectionCCW)servoDirection=ServoDirectionCW;
 			}
 			if(encoderPushButtonState==EncoderPushButtonPressed){
-				state = None;
+				state = svServo_Config;
 				savetoEEprom();
 			}else{
 				setServoPosition(servoMin);
 			}
 			break;
-		case Config_ServoMin:
+		case svConfig_ServoMin:
 			if(encMovement==EncMoveCCW){
 				servoMin--;
 				if(servoMin<0)servoMin=0;
@@ -139,12 +172,12 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			setServoPosition(servoMin);
 
 			if(encoderPushButtonState==EncoderPushButtonPressed){
-				state = None;
+				state = svServo_Config;
 				savetoEEprom();
 			}
 
 			break;
-		case Config_ServoMax:
+		case svConfig_ServoMax:
 			if(encMovement==EncMoveCCW){
 				if(servoMax>servoMin+1)servoMax--;
 				if(servoMax<=0)servoMax=1;
@@ -155,7 +188,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			setServoPosition(servoMax);
 
 			if(encoderPushButtonState==EncoderPushButtonPressed){
-				state = None;
+				state = svServo_Config;
 				savetoEEprom();
 			}
 			break;
@@ -181,8 +214,8 @@ void PidState::loadFromEEProm(){
 	state=EEPROM.get(addr, state);
 	addr+=sizeof(PidStateValue);
 	Serial.print(F("Readed state: "));Serial.println(state);
-	if(state<0 || state>10){
-		state=None;
+	if(state<0 || state>100){
+		state=svMain;
 		Serial.println(F(">>>>>>>> SOMETHING WENT WRONG.... ABORT READING!"));
 		return;
 	}
@@ -205,6 +238,8 @@ void PidState::loadFromEEProm(){
 
 	EEPROM.commit();
 	EEPROM.end();
+
+
 }
 
 void PidState::savetoEEprom(){
