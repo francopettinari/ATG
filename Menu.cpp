@@ -85,6 +85,28 @@ ServoConfigMenu::ServoConfigMenu(ConfigMenu* parent):MenuItem(parent,svServo_Con
 		};
 }
 
+PidConfigMenu::PidConfigMenu(ConfigMenu* parent):MenuItem(parent,svPidConfig){
+	Caption = "PID";
+	subMenuItems = new MenuItemPtr[4];
+	subMenuItemsLen = 4;
+	subMenuItems[0] = new UpMenu(this,svConfig);
+	kpMenu = new MenuItem(this,svPidKpiConfig,F("Kp"),[](){
+		pidState.SetState(svPidKpiConfig);
+	});
+	kiMenu =  new MenuItem(this,svPidKiiConfig,F("Ki"),[](){
+		pidState.SetState(svPidKiiConfig);
+	});
+	kdMenu = new MenuItem(this,svPidKdiConfig,F("Kd"),[](){
+		pidState.SetState(svPidKdiConfig);
+	});
+	subMenuItems[1] = kpMenu;
+	subMenuItems[2] = kiMenu;
+	subMenuItems[3] = kdMenu;
+	callBack = [](){
+		pidState.SetState(svPidConfig);
+	};
+}
+
 ConfigMenu::ConfigMenu(MainMenu* parent):MenuItem(parent,svConfig){
 	Caption = "Config";
 	upMenu = new UpMenu(this,svMain);
@@ -92,12 +114,13 @@ ConfigMenu::ConfigMenu(MainMenu* parent):MenuItem(parent,svConfig){
 		//pidState.setCurrentMenu(this->parent->subMenuItems[1]);
 	});
 	servoMenu = new ServoConfigMenu(this);
-
+    pidMenu = new PidConfigMenu(this);
 	subMenuItems = new MenuItemPtr[3];
-	subMenuItemsLen = 3;
+	subMenuItemsLen = 4;
 	subMenuItems[0] = upMenu;
 	subMenuItems[1] = tempCorrectionMenu;
 	subMenuItems[2] = servoMenu;
+	subMenuItems[2] = pidMenu;
 
 	callBack = [](){
 		pidState.SetState(svConfig);
@@ -107,9 +130,9 @@ ConfigMenu::ConfigMenu(MainMenu* parent):MenuItem(parent,svConfig){
 
 RunMenu::RunMenu(MainMenu* parent):MenuItem(parent,svRun){
 	Caption = "Run";
-	subMenuItems = new MenuItemPtr[2];
-	subMenuItemsLen = 2;
-	subMenuItems[0] = new UpMenu(this,svMain);
+	subMenuItems = new MenuItemPtr[3];
+	subMenuItemsLen = 3;
+
 	runAutoMenu = new MenuItem(this,svRun,F("Auto"),[](){
 		if(pidState.getState() == svRun){
 			pidState.SetState(svRunAuto);
@@ -117,14 +140,25 @@ RunMenu::RunMenu(MainMenu* parent):MenuItem(parent,svRun){
 			pidState.SetState(svRun);
 		}
 	});
-	subMenuItems[1] = runAutoMenu;
+
 
 	runAutoMenu->subMenuItems = new MenuItemPtr[1];
 	runAutoMenu->subMenuItemsLen = 1;
-	runAutoMenu->subMenuItems[0] = new UpMenu(runAutoMenu,svRun);
+	runAutoTuneMenu = new MenuItem(this,svRun,F("Auto Tune"),[](){
+		if(pidState.getState() == svRun){
+			pidState.SetState(svRunAutoTune);
+		}else{
+			pidState.SetState(svRun);
+		}
+	});
+
+	subMenuItems[0] = new UpMenu(this,svMain);
+	subMenuItems[1] = runAutoMenu;
+	subMenuItems[2] = runAutoTuneMenu;
+
 	callBack = [](){
-		pidState.SetState(svRun);
-	};
+			pidState.SetState(svRun);
+		};
 }
 
 MainMenu::MainMenu():MenuItem(NULL,-1){

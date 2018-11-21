@@ -26,7 +26,23 @@ void LCDBuffer::clear() {
 	memset(this->_buffer, ' ', sizeof(char) * this->_size);
 }
 
+unsigned short crc16(char* data_p, unsigned char length){
+    unsigned char x;
+    unsigned short crc = 0xFFFF;
+
+    while (length--){
+        x = crc >> 8 ^ *data_p++;
+        x ^= x>>4;
+        crc = (crc << 8) ^ ((unsigned short)(x << 12)) ^ ((unsigned short)(x <<5)) ^ ((unsigned short)x);
+    }
+    return crc;
+}
+
+
 void LCDBuffer::render() {
+//	unsigned short currentCRC = crc16(_buffer, 16);
+//	if(currentCRC==previousCRC) return;
+//	previousCRC = currentCRC;
 #ifdef LCD_DEBUG
 	Serial.println(F("--------------------"));
 	for(byte y=0;y<_height;y++){
@@ -68,33 +84,43 @@ void LCDBuffer::PrintString(const int x, const int y, String s){
 void LCDBuffer::PrintF(const int x, const int y,const __FlashStringHelper *ifsh) {
 	//Serial.print(F("LCDBuffer::Print("));Serial.print(x);Serial.print(F(","));Serial.print(y);Serial.println(F(",ifsh)"));
     PGM_P p = reinterpret_cast<PGM_P>(ifsh);
+    int ix=x;
     while (1) {
         uint8_t c = pgm_read_byte(p++);
         if (c == 0) break;
-        PrintChar(x,y,(char)c);
+        PrintChar(ix,y,(char)c);
+        ix++;
     }
 }
 
 void formatFloat(float f,char *buff){
-  if(f>=0 && f<10){
-    buff[0]=' ';
-    dtostrf(f, 2, 1, &buff[1]);
-  }else{
-    dtostrf(f, 2, 1, buff);
-  }
+	dtostrf(f, 6, 2, buff);
+//  if(f>=0 && f<10){
+////    buff[0]=' ';
+//    dtostrf(f, 6, 2, buff);
+//  }else{
+//    dtostrf(f, 6, 2, buff);
+//  }
 }
 
 void formatDouble(double d,char *buff, int digits){
-  if(d>=0 && d<10){
-    buff[0]=' ';
-    dtostrf(d, digits, 1, &buff[1]);
-  }else{
-    dtostrf(d, digits, 1, buff);
-  }
+	dtostrf(d, 4+digits, digits, buff);
+//  if(d>=0 && d<10){
+////    buff[0]=' ';
+//    dtostrf(d, 4+digits, digits, buff);
+//  }else{
+//    dtostrf(d, 4+digits, digits, buff);
+//  }
 }
 
 void LCDBuffer::PrintDouble(const int x, const int y,double d, int digits){
 	char line[_width+1];
 	formatDouble(d,line,digits);
+	PrintPChar(x,y,line);
+}
+
+void LCDBuffer::PrintFloat(const int x, const int y,float f){
+	char line[_width+1];
+	formatFloat(f,line);
 	PrintPChar(x,y,line);
 }

@@ -18,6 +18,7 @@ class LCDHelper {
     LCDBuffer lcd;
 	void displayRun(PidState pstate);
 	void displayConfigServo(PidState pstate);
+	void displayConfigPid(PidState pstate);
 public:
 	void display(PidState state);
 //	void print(byte col, byte row, int val);

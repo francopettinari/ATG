@@ -35,7 +35,17 @@ void LCDHelper::display(PidState pstate){
 	}
 	switch(pstate.getState()) {
 		case svRunAuto:
+		case svRunAutoTune:
 			displayRun(pstate);
+			break;
+		case svPidConfig:
+		case svPidKpiConfig:
+		case svPidKpdConfig:
+		case svPidKiiConfig:
+		case svPidKidConfig:
+		case svPidKdiConfig:
+		case svPidKddConfig:
+			displayConfigPid(pstate);
 			break;
 		case svServo_Config:
 		case svConfig_ServoDirection:
@@ -50,23 +60,32 @@ void LCDHelper::display(PidState pstate){
 //	Serial.println(F(" "));
 }
 
+void LCDHelper::displayConfigPid(PidState pstate){
+	lcd.PrintF(11, 0,F("Kp"));lcd.PrintFloat(14, 0,pstate.kp);
+	lcd.PrintF(11, 1,F("Ki"));lcd.PrintFloat(14, 1,pstate.ki);
+	lcd.PrintF(11, 2,F("Kd"));lcd.PrintFloat(14, 2,pstate.kd);
+}
+
 void LCDHelper::displayRun(PidState pstate){
 	lcd.PrintDouble(14, 0,pstate.getTemperature(),2);
 	lcd.PrintDouble(14, 1,pstate.Setpoint,2);
 	lcd.PrintDouble(14, 2,pstate.Output,2);
-
+	lcd.PrintDouble(14, 3,pstate.servoPos,2);
+//	int degree = pstate.servoPos;
+//	if(pstate.servoDirection==ServoDirectionCCW){
+//		degree = pstate.servoMax  - degree;
+//	}
+//	lcd.PrintDouble(14, 3,degree,2);
 }
 
 void LCDHelper::displayConfigServo(PidState pstate){
 	if(pstate.servoDirection==ServoDirectionCW){
-		lcd.PrintF(15, 0,F("CW   "));
+		lcd.PrintF(11, 0,F("Dir CW"));
 	}else if(pstate.servoDirection==ServoDirectionCCW){
-		lcd.PrintF(15, 0,F("CCW  "));
+		lcd.PrintF(11, 0,F("Dir CCW"));
 	}
-
-	lcd.PrintDouble(15, 1,pstate.servoMin);
-
-	lcd.PrintDouble(15, 2,pstate.servoMax);
+	lcd.PrintF(11, 1,F("Min "));lcd.PrintDouble(15, 1,pstate.servoMin);
+	lcd.PrintF(11, 2,F("Max "));lcd.PrintDouble(15, 2,pstate.servoMax);
 }
 
 //void LCDHelper::print(byte col, byte row, int val){

@@ -51,6 +51,15 @@ public:
 	MenuItem* maxMenu;
 };
 
+class PidConfigMenu : public MenuItem {
+public:
+	PidConfigMenu(ConfigMenu* parent);
+
+	MenuItem* kpMenu;
+	MenuItem* kiMenu;
+	MenuItem* kdMenu;
+};
+
 class ConfigMenu : public MenuItem{
 public:
 	ConfigMenu(MainMenu* parent);
@@ -58,12 +67,14 @@ public:
 	MenuItem* upMenu;
 	MenuItem* tempCorrectionMenu;
 	ServoConfigMenu* servoMenu;
+	PidConfigMenu* pidMenu;
 };
 
 class RunMenu : public MenuItem {
 public:
 	RunMenu(MainMenu* parent);
 	MenuItem* runAutoMenu;
+	MenuItem* runAutoTuneMenu;
 };
 
 class MainMenu : public MenuItem {
