@@ -29,6 +29,7 @@ public:
   void PrintF(const int x, const int y, const __FlashStringHelper *ifsh);
   void PrintDouble(const int x, const int y,double d, int digits=2);
   void PrintFloat(const int x, const int y,float f);
+  LiquidCrystal_I2C* getLcd();
 private:
   int _width, _height, _size;
   char *_buffer;

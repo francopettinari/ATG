@@ -22,6 +22,10 @@ LCDBuffer::LCDBuffer(const int width, const int height) {
 	_lcd->clear();
 }
 
+LiquidCrystal_I2C* LCDBuffer::getLcd(){
+	return _lcd;
+}
+
 void LCDBuffer::clear() {
 	memset(this->_buffer, ' ', sizeof(char) * this->_size);
 }
@@ -61,7 +65,7 @@ void LCDBuffer::render() {
 		memcpy(line,&_buffer[y*_width],_width);
 		line[_width]=0;//NULL terminated
 		this->_lcd->setCursor(0,y);
-		this->_lcd->print(line);
+		this->_lcd->write(line,_width);
 	}
 	//Serial.println(F("LCD render 10"));
 }

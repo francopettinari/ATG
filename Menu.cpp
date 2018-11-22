@@ -22,24 +22,32 @@
 //	return pmm;
 //}
 
-MenuItem::MenuItem(MenuItem* parent, int state, String s,MenuItemCallback cb){
+MenuItem::MenuItem(MenuItem* parent, int state, String s){
 	this->parent = parent;
 	Caption = s;
-	callBack = cb;
 	mappedState = state;
 }
 
-MenuItem::MenuItem(MenuItem* parent, int state):parent(parent){
-	callBack = NULL;
+MenuItem::MenuItem(MenuItem* parent, int state){
+	this->parent = parent;
 	mappedState = state;
 }
 
  void MenuItem::OnPress(){
 	Serial.print(F(">>>>>> Press <<<<<<  "));Serial.println(Caption);
-	if(callBack!=NULL){
-		Serial.println(F("Callback"));
-		callBack();
-	}
+}
+
+ CallbackMenuItem::CallbackMenuItem(MenuItem* parent, int state, String s,MenuItemCallback cb):MenuItem(parent,state,s){
+ 	Caption = s;
+ 	callBack=cb;
+ }
+
+ void CallbackMenuItem::OnPress(){
+ 	Serial.print(F(">>>>>> Press <<<<<<  "));Serial.println(Caption);
+ 	if(callBack!=NULL){
+ 		Serial.println(F("Callback"));
+ 		callBack();
+ 	}
 }
 
 UpMenu::UpMenu(MenuItem* parent,int state):MenuItem(parent,-1){
@@ -48,7 +56,7 @@ UpMenu::UpMenu(MenuItem* parent,int state):MenuItem(parent,-1){
 }
 
 void UpMenu::OnPress(){
-	Serial.println(F(">>>>>> Press <<<<<<  "));
+	Serial.print(F(">>>>>> Press <<<<<<  "));Serial.println(Caption);
 	Serial.print(F("Up to "));Serial.println(upState);
 	pidState.SetState((PidStateValue)upState);
 }
@@ -57,20 +65,19 @@ void UpMenu::OnPress(){
 
 ServoConfigMenu::ServoConfigMenu(ConfigMenu* parent):MenuItem(parent,svServo_Config){
 	Caption = "Servo";
-	subMenuItems = new MenuItemPtr[4];
-	subMenuItemsLen = 4;
+	subMenuItems.resize(4);
 	subMenuItems[0] = new UpMenu(this,svConfig);
-	dirMenu = new MenuItem(this,svConfig_ServoDirection,F("Dir"),[](){
+	dirMenu = new CallbackMenuItem(this,svConfig_ServoDirection,F("Dir"),[](){
 		pidState.SetState(svConfig_ServoDirection);
 	});
-	minMenu =  new MenuItem(this,svConfig_ServoMin,F("Min"),[](){
+	minMenu =  new CallbackMenuItem(this,svConfig_ServoMin,F("Min"),[](){
 		if(pidState.getState() == svServo_Config){
 			pidState.SetState(svConfig_ServoMin);
 		}else{
 			pidState.SetState(svServo_Config);
 		}
 	});
-	maxMenu = new MenuItem(this,svConfig_ServoMax,F("Max"),[](){
+	maxMenu = new CallbackMenuItem(this,svConfig_ServoMax,F("Max"),[](){
 		if(pidState.getState() == svServo_Config){
 			pidState.SetState(svConfig_ServoMax);
 		}else{
@@ -80,60 +87,90 @@ ServoConfigMenu::ServoConfigMenu(ConfigMenu* parent):MenuItem(parent,svServo_Con
 	subMenuItems[1] = dirMenu;
 	subMenuItems[2] = minMenu;
 	subMenuItems[3] = maxMenu;
-	callBack = [](){
-			pidState.SetState(svServo_Config);
-		};
 }
+
+void ServoConfigMenu::OnPress(){
+	Serial.print(F(">>>>>> Press <<<<<<  "));Serial.println(Caption);
+	pidState.SetState(svServo_Config);
+}
+
 
 PidConfigMenu::PidConfigMenu(ConfigMenu* parent):MenuItem(parent,svPidConfig){
 	Caption = "PID";
-	subMenuItems = new MenuItemPtr[4];
-	subMenuItemsLen = 4;
+	subMenuItems.resize(4);
 	subMenuItems[0] = new UpMenu(this,svConfig);
-	kpMenu = new MenuItem(this,svPidKpiConfig,F("Kp"),[](){
+	kpMenu = new CallbackMenuItem(this,svPidKpiConfig,F("Kp"),[](){
 		pidState.SetState(svPidKpiConfig);
 	});
-	kiMenu =  new MenuItem(this,svPidKiiConfig,F("Ki"),[](){
+	kiMenu =  new CallbackMenuItem(this,svPidKiiConfig,F("Ki"),[](){
 		pidState.SetState(svPidKiiConfig);
 	});
-	kdMenu = new MenuItem(this,svPidKdiConfig,F("Kd"),[](){
+	kdMenu = new CallbackMenuItem(this,svPidKdiConfig,F("Kd"),[](){
 		pidState.SetState(svPidKdiConfig);
 	});
 	subMenuItems[1] = kpMenu;
 	subMenuItems[2] = kiMenu;
 	subMenuItems[3] = kdMenu;
-	callBack = [](){
-		pidState.SetState(svPidConfig);
-	};
+}
+
+void PidConfigMenu::OnPress(){
+	pidState.SetState(svPidConfig);
 }
 
 ConfigMenu::ConfigMenu(MainMenu* parent):MenuItem(parent,svConfig){
 	Caption = "Config";
 	upMenu = new UpMenu(this,svMain);
-	tempCorrectionMenu = new MenuItem(this,svTempConfig, F("Temp Corr"),[=](){
-		//pidState.setCurrentMenu(this->parent->subMenuItems[1]);
-	});
 	servoMenu = new ServoConfigMenu(this);
     pidMenu = new PidConfigMenu(this);
-	subMenuItems = new MenuItemPtr[3];
-	subMenuItemsLen = 4;
+	subMenuItems.resize(3);
 	subMenuItems[0] = upMenu;
-	subMenuItems[1] = tempCorrectionMenu;
-	subMenuItems[2] = servoMenu;
+	subMenuItems[1] = servoMenu;
 	subMenuItems[2] = pidMenu;
+}
 
-	callBack = [](){
-		pidState.SetState(svConfig);
-	};
+void ConfigMenu::OnPress(){
+	pidState.SetState(svConfig);
 }
 
 
+AutoTuneResultMenu::AutoTuneResultMenu(RunMenu* parent):MenuItem(parent,svRunAutoTuneResult){
+	Caption = F("Autotune result");
+	subMenuItems.resize(2);
+
+	confirmNSaveMenu = new CallbackMenuItem(this,svRun,F("Yes"),[](){
+		pidState.ConfirmAutoTuneResult();
+		pidState.SetState(svRunAuto);
+	});
+	discardMenu = new CallbackMenuItem(this,svRun,F("No"),[](){
+		pidState.SetState(svRunAuto);
+	});
+
+	subMenuItems[0] = confirmNSaveMenu;
+	subMenuItems[1] = discardMenu;
+}
+
+void AutoTuneResultMenu::OnPress(){
+//at moment not needed because this menu is displayed programmatically after AutoTune is finished
+}
+
+RunAutoTuneMenu::RunAutoTuneMenu(RunMenu* runMenu):MenuItem(parent,svRunAutoTune){
+	Caption=F("Auto Tune");
+	autoTuneResultMenu = new AutoTuneResultMenu(runMenu);
+}
+
+void RunAutoTuneMenu::OnPress(){
+	if(pidState.getState() == svRun){
+		pidState.SetState(svRunAutoTune);
+	}else{
+		pidState.SetState(svRun);
+	}
+}
+
 RunMenu::RunMenu(MainMenu* parent):MenuItem(parent,svRun){
 	Caption = "Run";
-	subMenuItems = new MenuItemPtr[3];
-	subMenuItemsLen = 3;
+	subMenuItems.resize(3);
 
-	runAutoMenu = new MenuItem(this,svRun,F("Auto"),[](){
+	runAutoMenu = new CallbackMenuItem(this,svRun,F("Auto"),[](){
 		if(pidState.getState() == svRun){
 			pidState.SetState(svRunAuto);
 		}else{
@@ -141,34 +178,27 @@ RunMenu::RunMenu(MainMenu* parent):MenuItem(parent,svRun){
 		}
 	});
 
-
-	runAutoMenu->subMenuItems = new MenuItemPtr[1];
-	runAutoMenu->subMenuItemsLen = 1;
-	runAutoTuneMenu = new MenuItem(this,svRun,F("Auto Tune"),[](){
-		if(pidState.getState() == svRun){
-			pidState.SetState(svRunAutoTune);
-		}else{
-			pidState.SetState(svRun);
-		}
-	});
+	runAutoMenu->subMenuItems.resize(1);
+	runAutoTuneMenu = new RunAutoTuneMenu(this);
 
 	subMenuItems[0] = new UpMenu(this,svMain);
 	subMenuItems[1] = runAutoMenu;
 	subMenuItems[2] = runAutoTuneMenu;
+}
 
-	callBack = [](){
-			pidState.SetState(svRun);
-		};
+void RunMenu::OnPress(){
+	pidState.SetState(svRun);
 }
 
 MainMenu::MainMenu():MenuItem(NULL,-1){
 	Caption = "Main";
 	parent = NULL;
-	callBack = NULL;
-	subMenuItems = new MenuItemPtr[2];
-	subMenuItemsLen = 2;
+	subMenuItems.resize(2);
 	subMenuItems[0] = configMenu = new ConfigMenu(this);
 	subMenuItems[1] = runMenu = new RunMenu(this);
+}
+
+void MainMenu::OnPress(){
 }
 
 void InitializeMenus(){

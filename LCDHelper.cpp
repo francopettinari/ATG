@@ -10,7 +10,140 @@
 #include "LCDHelper.h"
 #include "PidState.h"
 
+byte tempCustomChar[] = {
+  B00100,
+  B01010,
+  B01010,
+  B01010,
+  B01010,
+  B10001,
+  B10001,
+  B01110
+};
+
+byte degreeCustomChar[] = {
+		  B01000,
+		  B10100,
+		  B01000,
+		  B00111,
+		  B01000,
+		  B01000,
+		  B01000,
+		  B00111
+		};
+byte setpointCustomChar[] = {
+		B11100,
+		B10000,
+		B11100,
+		B00111,
+		B11101,
+		B00111,
+		B00100,
+		B00100
+};
+
+byte output1CustomChar[] = {
+		 B10000,
+		  B10000,
+		  B10000,
+		  B10000,
+		  B10000,
+		  B10000,
+		  B10000,
+		  B10000
+};
+
+byte output2CustomChar[] = {
+		  B11000,
+		  B11000,
+		  B11000,
+		  B11000,
+		  B11000,
+		  B11000,
+		  B11000,
+		  B11000
+};
+
+byte output3CustomChar[] = {
+		  B11100,
+		  B11100,
+		  B11100,
+		  B11100,
+		  B11100,
+		  B11100,
+		  B11100,
+		  B11100
+};
+
+byte output4CustomChar[] = {
+		 B11110,
+		  B11110,
+		  B11110,
+		  B11110,
+		  B11110,
+		  B11110,
+		  B11110,
+		  B11110
+};
+
+byte output5CustomChar[] = {
+		B11111,
+		  B11111,
+		  B11111,
+		  B11111,
+		  B11111,
+		  B11111,
+		  B11111,
+		  B11111
+};
+
+//byte pot1CustomChar[] = {
+//		 B10100,
+//		  B10100,
+//		  B01010,
+//		  B11111,
+//		  B10001,
+//		  B10001,
+//		  B10001,
+//		  B01110
+//};
+//
+//byte pot2CustomChar[] = {
+//		B00101,
+//		  B00101,
+//		  B01010,
+//		  B11111,
+//		  B10001,
+//		  B10001,
+//		  B10001,
+//		  B01110
+//};
+
+static const int TEMPERATURE_CHAR = 0;
+static const int DEGREE_CHAR = 1;
+static const int SETPOINT_CHAR = 2;
+static const int OUT1_CHAR = 3;
+static const int OUT2_CHAR = 4;
+static const int OUT3_CHAR = 5;
+static const int OUT4_CHAR = 6;
+static const int OUT5_CHAR = 7;
+
+//static const int POT1_CHAR = 8;
+//static const int POT2_CHAR = 9;
+
 LCDHelper::LCDHelper():lcd(20,4) {
+	lcd.getLcd()->createChar(TEMPERATURE_CHAR, tempCustomChar);
+	lcd.getLcd()->createChar(DEGREE_CHAR, degreeCustomChar);
+	lcd.getLcd()->createChar(SETPOINT_CHAR, setpointCustomChar);
+
+	lcd.getLcd()->createChar(OUT1_CHAR, output1CustomChar);
+	lcd.getLcd()->createChar(OUT2_CHAR, output2CustomChar);
+	lcd.getLcd()->createChar(OUT3_CHAR, output3CustomChar);
+	lcd.getLcd()->createChar(OUT4_CHAR, output4CustomChar);
+	lcd.getLcd()->createChar(OUT5_CHAR, output5CustomChar);
+
+//	lcd.getLcd()->createChar(POT1_CHAR, pot1CustomChar);
+//	lcd.getLcd()->createChar(POT2_CHAR, pot2CustomChar);
 }
 
 void LCDHelper::display(PidState pstate){
@@ -26,7 +159,7 @@ void LCDHelper::display(PidState pstate){
 			}else{
 				lcd.PrintF(0,y,F(" "));
 			}
-			if(idx<pstate.getCurrentMenu()->subMenuItemsLen){
+			if(idx<pstate.getCurrentMenu()->subMenuItemsLen()){
 				//Serial.println(pstate.getCurrentMenu()->subMenuItemsLen);
 				lcd.PrintString(1,y,pstate.getCurrentMenu()->subMenuItems[idx]->Caption.c_str());
 //				Serial.print(idx);Serial.print(F(" "));Serial.println(pstate.getCurrentMenu()->subMenuItems[idx]->Caption.c_str());
@@ -35,8 +168,13 @@ void LCDHelper::display(PidState pstate){
 	}
 	switch(pstate.getState()) {
 		case svRunAuto:
-		case svRunAutoTune:
 			displayRun(pstate);
+			break;
+		case svRunAutoTune:
+			displayAutoTune(pstate);
+			break;
+		case svRunAutoTuneResult:
+			displayAutoTuneResult(pstate);
 			break;
 		case svPidConfig:
 		case svPidKpiConfig:
@@ -66,16 +204,108 @@ void LCDHelper::displayConfigPid(PidState pstate){
 	lcd.PrintF(11, 2,F("Kd"));lcd.PrintFloat(14, 2,pstate.kd);
 }
 
+void LCDHelper::displayAutoTuneResult(PidState pstate){
+	lcd.PrintF(11, 1,F("Confirm ?"));
+	lcd.PrintF(11, 2,F("Kp"));lcd.PrintFloat(14, 0,pstate.getATune().GetKp());
+	lcd.PrintF(11, 3,F("Ki"));lcd.PrintFloat(14, 1,pstate.getATune().GetKi());
+	lcd.PrintF(11, 4,F("Kd"));lcd.PrintFloat(14, 2,pstate.getATune().GetKd());
+}
+
 void LCDHelper::displayRun(PidState pstate){
-	lcd.PrintDouble(14, 0,pstate.getTemperature(),2);
-	lcd.PrintDouble(14, 1,pstate.Setpoint,2);
-	lcd.PrintDouble(14, 2,pstate.Output,2);
-	lcd.PrintDouble(14, 3,pstate.servoPos,2);
+	lcd.PrintChar(13, 0,(char)TEMPERATURE_CHAR); lcd.PrintDouble(14, 0,pstate.getTemperature(),1);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+	lcd.PrintChar(13, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(14, 1,pstate.Setpoint,1);        lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
+	lcd.PrintF(15, 2,F("____"));
+
+//	if(lastDisplayCount % 2==0){
+//		lcd.PrintF(13, 2,F("\\"));
+//	}else{
+//		lcd.PrintF(13, 2,F("-"));
+//	}
+//	if (millis()-lastDisplayMillis>1000){
+//			lastDisplayMillis = millis();
+//		lastDisplayCount++;
+//	}
+//    if(lastDisplayCount>1000){
+//    	lastDisplayCount=0;
+//    }
+
+	int o = 0;
+	if(pstate.servoDirection==ServoDirectionCW){
+		o = round(20.0*(pstate.Output)/255.0);
+	}else{
+		o = round(20.0*(255.0-pstate.Output)/255.0);
+	}
+	//Serial.print(F("output chr VAL"));Serial.println(o);
+	int pos = o/5;
+	int level = o-(pos*5);
+	for(int i=0;i<pos;i++){
+		lcd.PrintChar(15+i, 2,(char)OUT5_CHAR);
+	}
+	if(level>0){
+		switch(level){
+			case 1:
+				lcd.PrintChar(15+pos, 2,(char)OUT1_CHAR);
+				break;
+			case 2:
+				lcd.PrintChar(15+pos, 2,(char)OUT2_CHAR);
+				break;
+			case 3:
+				lcd.PrintChar(15+pos, 2,(char)OUT2_CHAR);
+				break;
+			case 4:
+				lcd.PrintChar(15+pos, 2,(char)OUT2_CHAR);
+				break;
+			case 5:
+				lcd.PrintChar(15+pos, 2,(char)OUT2_CHAR);
+				break;
+		}
+	}
+	lcd.PrintDouble(14, 3,pstate.Output,1);
+//	lcd.PrintDouble(14, 3,pstate.servoPos,1);
 //	int degree = pstate.servoPos;
 //	if(pstate.servoDirection==ServoDirectionCCW){
 //		degree = pstate.servoMax  - degree;
 //	}
 //	lcd.PrintDouble(14, 3,degree,2);
+}
+
+void LCDHelper::displayAutoTune(PidState pstate){
+	lcd.PrintChar(13, 0,(char)TEMPERATURE_CHAR); lcd.PrintDouble(14, 0,pstate.getTemperature(),1);        lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+	lcd.PrintChar(13, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(14, 1,pstate.getATune().GetSetPoint(),1);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
+	lcd.PrintF(15, 2,F("____"));
+
+	int o = 0;
+	if(pstate.servoDirection==ServoDirectionCW){
+		o = round(20.0*(pstate.Output)/255.0);
+	}else{
+		o = round(20.0*(255.0-pstate.Output)/255.0);
+	}
+	//Serial.print(F("output chr VAL"));Serial.println(o);
+	int pos = o/5;
+	int level = o-(pos*5);
+	for(int i=0;i<pos;i++){
+		lcd.PrintChar(15+i, 2,(char)OUT5_CHAR);
+	}
+	if(level>0){
+		switch(level){
+			case 1:
+				lcd.PrintChar(15+pos, 2,(char)OUT1_CHAR);
+				break;
+			case 2:
+				lcd.PrintChar(15+pos, 2,(char)OUT2_CHAR);
+				break;
+			case 3:
+				lcd.PrintChar(15+pos, 2,(char)OUT2_CHAR);
+				break;
+			case 4:
+				lcd.PrintChar(15+pos, 2,(char)OUT2_CHAR);
+				break;
+			case 5:
+				lcd.PrintChar(15+pos, 2,(char)OUT2_CHAR);
+				break;
+		}
+	}
+	lcd.PrintDouble(14, 3,pstate.Output,1);
 }
 
 void LCDHelper::displayConfigServo(PidState pstate){

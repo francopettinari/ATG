@@ -21,16 +21,16 @@ class MenuItem;
 
 enum PidStateValue {
 	svUndefiend=-1,svMain=0,
-	svRun=9, svRunAuto=10,svRunAutoTune=11,
-	svConfig=20, svPidConfig=22, svPidKpiConfig=23,svPidKpdConfig=24, svPidKiiConfig=25, svPidKidConfig=26, svPidKdiConfig=27,svPidKddConfig=28, svTempConfig=29,
+	svRun=9, svRunAuto=10,svRunAutoTune=11,svRunAutoTuneResult=12,
+	svConfig=20, svPidConfig=22, svPidKpiConfig=23,svPidKpdConfig=24, svPidKiiConfig=25, svPidKidConfig=26, svPidKdiConfig=27,svPidKddConfig=28,
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
 enum EncoderMovement {EncMoveNone=-1,EncMoveCW=0,EncMoveCCW=1};
-enum EncoderPushButtonState {EncoderPushButtonNone, EncoderPushButtonPressed, EncoderPushButtonKeepedPressed};
+enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1, EncoderPushButtonKeepedPressed=2};
 
 class PidState {
-	float lastPressMillis=0;
+//	float lastPressMillis=0;
 
 	void updateLcd();
 private:
@@ -40,9 +40,6 @@ private:
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
 
 	byte eepromVer = 02;  // eeprom data tracking
-
-	double aTuneNoise=0.25;
-
 
 protected:
 	PidStateValue state = svMain;
@@ -67,15 +64,22 @@ public:
 	boolean autoTune = false;
 	double kp=2,ki=0.5,kd=2;
 
-	void SetState(PidStateValue value){
+	PID_ATune getATune(){return aTune;}
+
+	void ConfirmAutoTuneResult(){
+		kp = aTune.GetKp();
+		ki = aTune.GetKi();
+		kd = aTune.GetKd();
+	    pid.SetTunings(kp, ki, kd);
+	    savetoEEprom();
+	}
+
+	void SetState(PidStateValue value, boolean save=true){
 		state = value;
-		savetoEEprom();
-		currentMenu = decodeCurrentMenu();
+		if(save)savetoEEprom();
+//		currentMenu = decodeCurrentMenu();
 		stateSelection=0;
-		currMenuStart = 0;
-		if(lcdHelper!=NULL){
-			lcdHelper->display(*this);
-		}
+		setCurrentMenu(decodeCurrentMenu());
 	}
 
 	ServoDirection servoDirection = ServoDirectionCW;
@@ -92,12 +96,10 @@ public:
 	}
 
 	void setCurrentMenu(MenuItem *m){
+		if(currentMenu == m) return;
 		currentMenu = m;
 		stateSelection=0;
 		currMenuStart = 0;
-		if(lcdHelper!=NULL){
-			lcdHelper->display(*this);
-		}
 	}
 
 	double getTemperature(){
@@ -115,7 +117,9 @@ public:
 		temperature = value;
 	}
 
-	MenuItem  *getCurrentMenu(){return currentMenu;}
+	MenuItem  *getCurrentMenu(){
+		return currentMenu;
+	}
 
 	void update(double temp,int encoderPos, boolean encoderPress);
 	void loadFromEEProm();

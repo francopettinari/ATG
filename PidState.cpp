@@ -9,17 +9,17 @@
 #include <EEPROM.h>
 
 //PidState::PidState() : pid(&temperature, &Output, &Setpoint, 95,4,0,P_ON_E, DIRECT){
-PidState::PidState() : pid(&temperature, &Output, &Setpoint, 2, 0.5, 2, DIRECT),aTune(&temperature, &Output){
+PidState::PidState() : pid(&temperature, &Output, &Setpoint, kp, ki, kd, DIRECT),aTune(&temperature, &Output){
 	//pid.SetTunings(r_set(1) - 100, (double)((r_set(2) - 100.00) / 250.00), r_set(3) - 100); // send the PID settings to the PID
 	//myPID.SetOutputLimits(0.0, 255.0);
-	pid.SetSampleTime(4 * 250);
-	pid.SetMode(AUTOMATIC);
+	pid.SetSampleTime(1000);
+	pid.SetMode(MANUAL);
 	servo.attach(D8);  // attaches the servo on pin 9 to the servo object
 	//setServoPosition(0);
 	currentMenu = new MainMenu();
 
-	aTune.SetNoiseBand(1);
-	aTune.SetLookbackSec(200);
+	aTune.SetNoiseBand(0.5);
+	aTune.SetLookbackSec(20);
 }
 
 MenuItem* PidState::decodeCurrentMenu(){
@@ -32,12 +32,12 @@ MenuItem* PidState::decodeCurrentMenu(){
 			return pmm->runMenu;
 		case svRunAuto :
 			return pmm->runMenu->runAutoMenu;
+		case svRunAutoTuneResult :
+			return pmm->runMenu->runAutoTuneMenu->autoTuneResultMenu;
 		case svRunAutoTune :
 			return pmm->runMenu->runAutoTuneMenu;
 		case svConfig:
 			return pmm->configMenu;
-		case svTempConfig:
-			return pmm->configMenu->tempCorrectionMenu;
 		case svServo_Config:
 			return pmm->configMenu->servoMenu;
 		case svConfig_ServoDirection :
@@ -65,12 +65,13 @@ void PidState::changeAutoTune(int value)
 {
  if(value>0) {
     //Set the output to the desired starting frequency.
-	Output=(servoMax-servoMin)/2+servoMin;
-    aTune.SetNoiseBand(aTuneNoise);
-    aTune.SetOutputStep(50);
+	//Output=(servoMax-servoMin)/2+servoMin;
+	Output=110;
+    aTune.SetNoiseBand(0.5);
+    aTune.SetOutputStep(30);
     aTune.SetLookbackSec(10);
-    aTune.SetControlType(0);
-    pid.SetMode(AUTOMATIC);
+    aTune.SetControlType(1);
+    pid.SetMode(MANUAL);
     autoTune = true;
   } else { //cancel autotune
     aTune.Cancel();
@@ -86,15 +87,15 @@ long lastLog=0;
 
 EncoderPushButtonState PidState::decodeEncoderPushBtnState (boolean encoderPress){
 	if(encoderPress){
-		if(lastPressMillis>0 ){
-			if ((millis()-lastPressMillis)<500){
-				return EncoderPushButtonKeepedPressed;
-			}
-		}
-		lastPressMillis=millis();
+//		if(lastPressMillis>0 ){
+//			if ((millis()-lastPressMillis)<500){
+//				return EncoderPushButtonKeepedPressed;
+//			}
+//		}
+//		lastPressMillis=millis();
 		return EncoderPushButtonPressed;
 	}else{
-		lastPressMillis = -1;
+//		lastPressMillis = -1;
 	}
 	return EncoderPushButtonNone;
 }
@@ -125,14 +126,19 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 
 	setTemperature(temp);
 
+	if(state!=svRunAuto){
+		pid.SetMode(MANUAL);
+	}
+
 	//encoder position
 	EncoderMovement encMovement = decodeEncoderMoveDirection(encoderPos);
 
 	//encoder push button
 	EncoderPushButtonState encoderPushButtonState = decodeEncoderPushBtnState(encoderPress);
+	Serial.print(F("State selection: "));Serial.println(stateSelection);
+	Serial.print(F("Encoder push: "));Serial.println(encoderPushButtonState);
 
-
-	currentMenu = decodeCurrentMenu();
+	setCurrentMenu(decodeCurrentMenu());
 
 	switch(state){
 		case svUndefiend:
@@ -147,19 +153,23 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				if(stateSelection<currMenuStart)currMenuStart--;
 			}else if(encMovement==EncMoveCW){
 				stateSelection++;
-				if(stateSelection>currentMenu->subMenuItemsLen-1) stateSelection=currentMenu->subMenuItemsLen-1;
+				if(stateSelection>currentMenu->subMenuItemsLen()-1) stateSelection=currentMenu->subMenuItemsLen()-1;
 				if(stateSelection-currMenuStart>=3)currMenuStart++;
 			}
 			if(encoderPushButtonState==EncoderPushButtonPressed){
 				Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
 				Serial.print("Menu    :");Serial.println(getCurrentMenu()->Caption);
-				Serial.print("Menu len:");Serial.println(getCurrentMenu()->subMenuItemsLen);
+				Serial.print("Menu len:");Serial.println(getCurrentMenu()->subMenuItemsLen());
 				MenuItem* selMI = currentMenu->subMenuItems[stateSelection];
 				selMI->OnPress();
 			}
 			break;
 
 		case svRunAuto :
+			if(pid.GetMode()!=AUTOMATIC){
+				pid.SetTunings(kp,ki,kd);
+				pid.SetMode(AUTOMATIC);
+			}
 			//TODO move into a dedicated function
 			pid.Compute();
 //			Serial.print("Range degree:");Serial.println(servoMax-servoMin);
@@ -187,10 +197,21 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 //				saveSetPointTotoEEprom();
 			}
 			if(encoderPushButtonState==EncoderPushButtonPressed){
-				SetState(svRun);
+				Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
+				Serial.print("Menu    :");Serial.println(getCurrentMenu()->Caption);
+				Serial.print("Menu len:");Serial.println(getCurrentMenu()->subMenuItemsLen());
+				SetState(svRun,false);
+				Serial.println(F("SetState done"));
 			}
 			break;
 		case svRunAutoTune:
+			if(encoderPushButtonState==EncoderPushButtonPressed){
+				Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
+				Serial.print("Menu    :");Serial.println(getCurrentMenu()->Caption);
+				Serial.print("Menu len:");Serial.println(getCurrentMenu()->subMenuItemsLen());
+				SetState(svRun);
+			}
+
 			if(millis()-lastLog<1000){
 				return;
 			}
@@ -198,13 +219,10 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			Serial.print("autoTune: ");Serial.println(autoTune);
 			if(!autoTune)changeAutoTune(true);
 			if (aTune.Runtime()!=0) {
-				state = svRun;
-				kp = aTune.GetKp();
-				ki = aTune.GetKi();
-				kd = aTune.GetKd();
-				pid.SetTunings(kp,ki,kd);
-				pid.SetMode(AUTOMATIC);
+				Serial.print("AutoTune FINISHED!");
 				changeAutoTune(false);
+				SetState(svRunAutoTuneResult,false);
+				break;
 			}
 
 			servoPos = (Output*(servoMax-servoMin))/255;
@@ -215,9 +233,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 			setServoPosition(servoPos);
 
-			if(encoderPushButtonState==EncoderPushButtonPressed){
-				SetState(svRun);
-			}
+
 
 			break;
 		case svConfig_ServoDirection:
@@ -358,14 +374,12 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				}else if(encMovement==EncMoveCW){
 					decPart+=1.0;
 				}
-				ki=ikd+(decPart/100.0);
+				kd=ikd+(decPart/100.0);
 				if(encoderPushButtonState==EncoderPushButtonPressed){
 					state = svPidConfig;
 					savetoEEprom();
 				}
 			}
-			break;
-		case svTempConfig :
 			break;
 	}
 

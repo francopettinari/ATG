@@ -17,8 +17,13 @@ class PidState;
 class LCDHelper {
     LCDBuffer lcd;
 	void displayRun(PidState pstate);
+	void displayAutoTune(PidState pstate);
+	void displayAutoTuneResult(PidState pstate);
 	void displayConfigServo(PidState pstate);
 	void displayConfigPid(PidState pstate);
+
+//	int lastDisplayCount = 0;
+//	double lastDisplayMillis = 0;
 public:
 	void display(PidState state);
 //	void print(byte col, byte row, int val);

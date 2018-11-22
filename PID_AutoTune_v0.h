@@ -28,6 +28,7 @@ class PID_ATune
 	double GetKi();										//   computed tuning parameters.
 	double GetKd();										//
 
+	double GetSetPoint();
   private:
     void FinishUp();
 	bool isMax, isMin;
