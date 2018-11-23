@@ -135,8 +135,8 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 
 	//encoder push button
 	EncoderPushButtonState encoderPushButtonState = decodeEncoderPushBtnState(encoderPress);
-	Serial.print(F("State selection: "));Serial.println(stateSelection);
-	Serial.print(F("Encoder push: "));Serial.println(encoderPushButtonState);
+//	Serial.print(F("State selection: "));Serial.println(stateSelection);
+//	Serial.print(F("Encoder push: "));Serial.println(encoderPushButtonState);
 
 	setCurrentMenu(decodeCurrentMenu());
 
@@ -158,8 +158,8 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 			if(encoderPushButtonState==EncoderPushButtonPressed){
 				Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
-				Serial.print("Menu    :");Serial.println(getCurrentMenu()->Caption);
-				Serial.print("Menu len:");Serial.println(getCurrentMenu()->subMenuItemsLen());
+				Serial.print(F("Menu    :"));Serial.println(getCurrentMenu()->Caption);
+				Serial.print(F("Menu len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
 				MenuItem* selMI = currentMenu->subMenuItems[stateSelection];
 				selMI->OnPress();
 			}
@@ -198,8 +198,8 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 			if(encoderPushButtonState==EncoderPushButtonPressed){
 				Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
-				Serial.print("Menu    :");Serial.println(getCurrentMenu()->Caption);
-				Serial.print("Menu len:");Serial.println(getCurrentMenu()->subMenuItemsLen());
+				Serial.print(F("Menu    :"));Serial.println(getCurrentMenu()->Caption);
+				Serial.print(F("Menu len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
 				SetState(svRun,false);
 				Serial.println(F("SetState done"));
 			}
@@ -207,8 +207,8 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 		case svRunAutoTune:
 			if(encoderPushButtonState==EncoderPushButtonPressed){
 				Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
-				Serial.print("Menu    :");Serial.println(getCurrentMenu()->Caption);
-				Serial.print("Menu len:");Serial.println(getCurrentMenu()->subMenuItemsLen());
+				Serial.print(F("Menu    :"));Serial.println(getCurrentMenu()->Caption);
+				Serial.print(F("Menu len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
 				SetState(svRun);
 			}
 
@@ -216,13 +216,15 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				return;
 			}
 			lastLog = millis();
-			Serial.print("autoTune: ");Serial.println(autoTune);
+			Serial.print(F("autoTune: "));Serial.println(autoTune);
 			if(!autoTune)changeAutoTune(true);
 			if (aTune.Runtime()!=0) {
-				Serial.print("AutoTune FINISHED!");
+				Serial.print(F("AutoTune FINISHED!"));
 				changeAutoTune(false);
 				SetState(svRunAutoTuneResult,false);
 				break;
+			}else{
+				Serial.println(F("AutoTune Runtime done!"));
 			}
 
 			servoPos = (Output*(servoMax-servoMin))/255;
@@ -234,7 +236,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			setServoPosition(servoPos);
 
 
-
+			Serial.println(F("AutoTune Loop done!"));
 			break;
 		case svConfig_ServoDirection:
 			if(encMovement==EncMoveCCW){

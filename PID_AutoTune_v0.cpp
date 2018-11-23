@@ -27,7 +27,7 @@ double PID_ATune::GetSetPoint(){
 }
 
 int PID_ATune::Runtime() {
-	Serial.println("autoTune Runtime: ");
+//	Serial.println(F("autoTune Runtime: "));
 
 	justevaled = false;
 	if (peakCount > 9 && running) {
@@ -60,15 +60,15 @@ int PID_ATune::Runtime() {
 	}
 
 	//oscillate the output base on the input's relation to the setpoint
-	Serial.print("refVal:");Serial.print(refVal);Serial.print(" - ");Serial.println(setpoint + noiseBand);
+	//Serial.print(F("refVal:"));Serial.print(refVal);Serial.print(F(" - "));Serial.print(setpoint - noiseBand);Serial.print(F(" / "));Serial.println(setpoint + noiseBand);
 	if (refVal > setpoint + noiseBand) {
 		*output = outputStart - oStep;
-		Serial.print("autotune temp over:");
-		Serial.println(*output);
+		//Serial.print(F("autotune temp over:"));
+		//Serial.println(*output);
 	} else if (refVal < setpoint - noiseBand) {
 		*output = outputStart + oStep;
-		Serial.print("autotune temp under:");
-		Serial.println(*output);
+		//Serial.print(F("autotune temp under:"));
+		//Serial.println(*output);
 	}
 
 	//bool isMax=true, isMin=true;
@@ -89,8 +89,8 @@ int PID_ATune::Runtime() {
 	}
 
 	if (isMax) {
-		Serial.print("IsMax ");
-		Serial.println(peakType);
+		//Serial.print(F("IsMax "));
+		//Serial.println(peakType);
 		if (peakType == 0)
 			peakType = 1;
 		if (peakType == -1) {
@@ -102,7 +102,7 @@ int PID_ATune::Runtime() {
 		peaks[peakCount] = refVal;
 
 	} else if (isMin) {
-		Serial.print("IsMin ");
+		Serial.print(F("IsMin "));
 		Serial.println(peakType);
 		if (peakType == 0)
 			peakType = -1;
@@ -115,8 +115,8 @@ int PID_ATune::Runtime() {
 		if (peakCount < 10)
 			peaks[peakCount] = refVal;
 	}
-	Serial.print("peakCount: ");
-	Serial.println(peakCount);
+	//Serial.print(F("peakCount: "));
+	//Serial.println(peakCount);
 	if (justchanged && peakCount > 2) { //we've transitioned.  check if we can autotune based on the last peaks
 		double avgSeparation = (abs(peaks[peakCount - 1] - peaks[peakCount - 2])
 				+ abs(peaks[peakCount - 2] - peaks[peakCount - 3])) / 2;
@@ -184,8 +184,7 @@ void PID_ATune::SetLookbackSec(int value) {
 		nLookBack = 100;
 		sampleTime = value * 10;
 	}
-	Serial.println("autoTune sampleTime: ");
-	Serial.println(sampleTime);
+	Serial.print(F("autoTune sampleTime: "));Serial.println(sampleTime);
 }
 
 int PID_ATune::GetLookbackSec() {

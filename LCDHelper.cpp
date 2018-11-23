@@ -149,6 +149,7 @@ LCDHelper::LCDHelper():lcd(20,4) {
 void LCDHelper::display(PidState pstate){
 //	Serial.print(F(" "));Serial.print(pstate.stateSelection);
 //	Serial.print(F(" "));
+	Serial.println(F("LCDHelper::display"));
 	lcd.clear();
 	lcd.PrintString(0,0,pstate.getCurrentMenu()->Caption.c_str());
 	if(pstate.getState()!=svRunAuto){

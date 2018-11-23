@@ -51,7 +51,7 @@ MenuItem::MenuItem(MenuItem* parent, int state){
 }
 
 UpMenu::UpMenu(MenuItem* parent,int state):MenuItem(parent,-1){
-	Caption = "Up";
+	Caption = F("Up");
 	upState=state;
 }
 
@@ -64,7 +64,7 @@ void UpMenu::OnPress(){
 
 
 ServoConfigMenu::ServoConfigMenu(ConfigMenu* parent):MenuItem(parent,svServo_Config){
-	Caption = "Servo";
+	Caption = F("Servo");
 	subMenuItems.resize(4);
 	subMenuItems[0] = new UpMenu(this,svConfig);
 	dirMenu = new CallbackMenuItem(this,svConfig_ServoDirection,F("Dir"),[](){
@@ -96,7 +96,7 @@ void ServoConfigMenu::OnPress(){
 
 
 PidConfigMenu::PidConfigMenu(ConfigMenu* parent):MenuItem(parent,svPidConfig){
-	Caption = "PID";
+	Caption = F("PID");
 	subMenuItems.resize(4);
 	subMenuItems[0] = new UpMenu(this,svConfig);
 	kpMenu = new CallbackMenuItem(this,svPidKpiConfig,F("Kp"),[](){
@@ -118,7 +118,7 @@ void PidConfigMenu::OnPress(){
 }
 
 ConfigMenu::ConfigMenu(MainMenu* parent):MenuItem(parent,svConfig){
-	Caption = "Config";
+	Caption = F("Config");
 	upMenu = new UpMenu(this,svMain);
 	servoMenu = new ServoConfigMenu(this);
     pidMenu = new PidConfigMenu(this);
@@ -167,7 +167,7 @@ void RunAutoTuneMenu::OnPress(){
 }
 
 RunMenu::RunMenu(MainMenu* parent):MenuItem(parent,svRun){
-	Caption = "Run";
+	Caption = F("Run");
 	subMenuItems.resize(3);
 
 	runAutoMenu = new CallbackMenuItem(this,svRun,F("Auto"),[](){
@@ -191,7 +191,7 @@ void RunMenu::OnPress(){
 }
 
 MainMenu::MainMenu():MenuItem(NULL,-1){
-	Caption = "Main";
+	Caption = F("Main");
 	parent = NULL;
 	subMenuItems.resize(2);
 	subMenuItems[0] = configMenu = new ConfigMenu(this);

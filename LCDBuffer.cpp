@@ -7,6 +7,7 @@
 
 #include "LCDBuffer.h"
 #include <Wire.h>
+//#define LCD_DEBUG = 1
 
 LCDBuffer::LCDBuffer(const int width, const int height) {
 	this->_width = width;

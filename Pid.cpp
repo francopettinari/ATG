@@ -33,7 +33,7 @@ void RAMFUNC setup() {
 	gdbstub_init();
 #else
 void setup() {
-	Serial.begin(9600);
+	Serial.begin(115200);
 	Serial.println(F("Initialized"));
 #endif
 
@@ -52,6 +52,7 @@ void RAMFUNC loop() {
 #else
 	void loop() {
 #endif
+	Serial.println(F("loop begin"));
 	probe::startConv();// start conversion for all sensors
 	if (probe::isReady()) {// update sensors when conversion complete
 		ESP.wdtFeed();
@@ -60,4 +61,5 @@ void RAMFUNC loop() {
 	}
 	pidState.update(probe.getTemp(),enc.read(),isEncoderPressed);
 	lcdHelper.display(pidState);
+	Serial.println(F("loop end"));
 }
