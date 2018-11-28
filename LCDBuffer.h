@@ -14,8 +14,8 @@ class LCDBuffer {
 public:
   LCDBuffer(const int width, const int height);
 
-  const int width() const { return this->_width; }
-  const int height() const { return this->_height; }
+  int width() { return this->_width; }
+  int height() { return this->_height; }
 
   char* buffer() { return _buffer; }
 

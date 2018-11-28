@@ -134,7 +134,7 @@ void ConfigMenu::OnPress(){
 
 
 AutoTuneResultMenu::AutoTuneResultMenu(RunMenu* parent):MenuItem(parent,svRunAutoTuneResult){
-	Caption = F("Autotune result");
+	Caption = F("Tune res.");
 	subMenuItems.resize(2);
 
 	confirmNSaveMenu = new CallbackMenuItem(this,svRun,F("Yes"),[](){

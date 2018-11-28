@@ -43,6 +43,9 @@ void setup() {
 	attachInterrupt(pushButtonPin, handleEncPush, CHANGE);
 	InitializeMenus();
 
+	ESP.wdtDisable();
+	ESP.wdtEnable(WDTO_8S);
+
 	pidState.loadFromEEProm();
 	Serial.println(F("Initialized from EEProm"));
 }
@@ -52,14 +55,18 @@ void RAMFUNC loop() {
 #else
 	void loop() {
 #endif
-	Serial.println(F("loop begin"));
+//	Serial.println(F("loop begin"));
+	ESP.wdtFeed();
 	probe::startConv();// start conversion for all sensors
 	if (probe::isReady()) {// update sensors when conversion complete
 		ESP.wdtFeed();
 		probe.update();
 		ESP.wdtFeed();
 	}
+	ESP.wdtFeed();
 	pidState.update(probe.getTemp(),enc.read(),isEncoderPressed);
+	ESP.wdtFeed();
 	lcdHelper.display(pidState);
-	Serial.println(F("loop end"));
+	ESP.wdtFeed();
+//	Serial.println(F("loop end"));
 }

@@ -29,6 +29,8 @@ class PID_ATune
 	double GetKd();										//
 
 	double GetSetPoint();
+
+	boolean IsRunning(){ return running;}
   private:
     void FinishUp();
 	bool isMax, isMin;

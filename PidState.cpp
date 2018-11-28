@@ -66,9 +66,9 @@ void PidState::changeAutoTune(int value)
  if(value>0) {
     //Set the output to the desired starting frequency.
 	//Output=(servoMax-servoMin)/2+servoMin;
-	Output=110;
+	//Output=110;
     aTune.SetNoiseBand(0.5);
-    aTune.SetOutputStep(30);
+    aTune.SetOutputStep(40);
     aTune.SetLookbackSec(10);
     aTune.SetControlType(1);
     pid.SetMode(MANUAL);
@@ -87,17 +87,26 @@ long lastLog=0;
 
 EncoderPushButtonState PidState::decodeEncoderPushBtnState (boolean encoderPress){
 	if(encoderPress){
-//		if(lastPressMillis>0 ){
-//			if ((millis()-lastPressMillis)<500){
-//				return EncoderPushButtonKeepedPressed;
-//			}
-//		}
-//		lastPressMillis=millis();
-		return EncoderPushButtonPressed;
-	}else{
-//		lastPressMillis = -1;
+		lastPressMillis = millis();
+		if(lastPressState == EncoderPushButtonNone){
+			lastPressMillis = millis();
+			lastPressState = EncoderPushButtonPressed;
+			return EncoderPushButtonPressed;
+		} else {
+			//already pressed. hinibit this pressure until a release occours
+			//pressed, but not yet long press
+			lastPressState = EncoderPushButtonPressed;
+			return EncoderPushButtonNone;
+		}
+	} else {
+		lastPressMillis = -1;
+		lastPressState = EncoderPushButtonNone;
+		return EncoderPushButtonNone;
 	}
-	return EncoderPushButtonNone;
+}
+
+boolean PidState::IsEncoderPressed(boolean encoderPress){
+	return encoderPress && lastPressState == EncoderPushButtonPressed;
 }
 
 EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
@@ -135,11 +144,12 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 
 	//encoder push button
 	EncoderPushButtonState encoderPushButtonState = decodeEncoderPushBtnState(encoderPress);
+
 //	Serial.print(F("State selection: "));Serial.println(stateSelection);
-//	Serial.print(F("Encoder push: "));Serial.println(encoderPushButtonState);
-
+	Serial.print(F("Encoder push: "));Serial.println(encoderPushButtonState);
+	ESP.wdtFeed();
 	setCurrentMenu(decodeCurrentMenu());
-
+	ESP.wdtFeed();
 	switch(state){
 		case svUndefiend:
 		case svMain:
@@ -147,6 +157,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 		case svPidConfig:
 		case svServo_Config:
 		case svRun:
+		case svRunAutoTuneResult:
 			if(encMovement==EncMoveCCW){
 				stateSelection--;
 				if(stateSelection<0) stateSelection=0;
@@ -156,7 +167,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				if(stateSelection>currentMenu->subMenuItemsLen()-1) stateSelection=currentMenu->subMenuItemsLen()-1;
 				if(stateSelection-currMenuStart>=3)currMenuStart++;
 			}
-			if(encoderPushButtonState==EncoderPushButtonPressed){
+			if(encoderPushButtonState==EncoderPushButtonPressed ){
 				Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
 				Serial.print(F("Menu    :"));Serial.println(getCurrentMenu()->Caption);
 				Serial.print(F("Menu len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
@@ -196,7 +207,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				if(Setpoint>=120)Setpoint=120;
 //				saveSetPointTotoEEprom();
 			}
-			if(encoderPushButtonState==EncoderPushButtonPressed){
+			if(encoderPushButtonState==EncoderPushButtonPressed ){
 				Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
 				Serial.print(F("Menu    :"));Serial.println(getCurrentMenu()->Caption);
 				Serial.print(F("Menu len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
@@ -205,10 +216,11 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 			break;
 		case svRunAutoTune:
-			if(encoderPushButtonState==EncoderPushButtonPressed){
+			if(encoderPushButtonState==EncoderPushButtonPressed ){
 				Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
 				Serial.print(F("Menu    :"));Serial.println(getCurrentMenu()->Caption);
 				Serial.print(F("Menu len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
+				aTune.Cancel();
 				SetState(svRun);
 			}
 
@@ -216,16 +228,22 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				return;
 			}
 			lastLog = millis();
-			Serial.print(F("autoTune: "));Serial.println(autoTune);
+//			Serial.print(F("autoTune: "));Serial.println(autoTune);
 			if(!autoTune)changeAutoTune(true);
+			ESP.wdtFeed();
+			if(!aTune.IsRunning()){
+				autotuneSetPoint = temperature;
+			}
 			if (aTune.Runtime()!=0) {
-				Serial.print(F("AutoTune FINISHED!"));
+//				Serial.print(F("AutoTune FINISHED!"));
+				SetAutotuneResult(aTune.GetKp(),aTune.GetKi(),aTune.GetKd());
 				changeAutoTune(false);
 				SetState(svRunAutoTuneResult,false);
 				break;
-			}else{
-				Serial.println(F("AutoTune Runtime done!"));
 			}
+//			else{
+//				Serial.println(F("AutoTune Runtime done!"));
+//			}
 
 			servoPos = (Output*(servoMax-servoMin))/255;
 			if(servoDirection==ServoDirectionCW){
@@ -235,8 +253,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 			setServoPosition(servoPos);
 
-
-			Serial.println(F("AutoTune Loop done!"));
+//			Serial.println(F("AutoTune Loop done!"));
 			break;
 		case svConfig_ServoDirection:
 			if(encMovement==EncMoveCCW){
@@ -277,7 +294,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 			setServoPosition(servoMax);
 
-			if(encoderPushButtonState==EncoderPushButtonPressed){
+			if(encoderPushButtonState==EncoderPushButtonPressed ){
 				state = svServo_Config;
 				savetoEEprom();
 			}
@@ -293,7 +310,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 					ikp++;
 				}
 				kp=ikp+decPart;
-				if(encoderPushButtonState==EncoderPushButtonPressed){
+				if(encoderPushButtonState==EncoderPushButtonPressed ){
 					state = svPidKpdConfig;
 					savetoEEprom();
 				}
@@ -344,7 +361,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 					decPart+=1.0;
 				}
 				ki=iki+(decPart/100.0);
-				if(encoderPushButtonState==EncoderPushButtonPressed){
+				if(encoderPushButtonState==EncoderPushButtonPressed ){
 					state = svPidConfig;
 					savetoEEprom();
 				}
@@ -361,7 +378,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 					ikd+=1.0;
 				}
 				kd=ikd+decPart;
-				if(encoderPushButtonState==EncoderPushButtonPressed){
+				if(encoderPushButtonState==EncoderPushButtonPressed ){
 					state = svPidKddConfig;
 					savetoEEprom();
 				}
@@ -377,7 +394,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 					decPart+=1.0;
 				}
 				kd=ikd+(decPart/100.0);
-				if(encoderPushButtonState==EncoderPushButtonPressed){
+				if(encoderPushButtonState==EncoderPushButtonPressed ){
 					state = svPidConfig;
 					savetoEEprom();
 				}
@@ -403,6 +420,7 @@ void PidState::loadFromEEProm(){
 	}
 
 	state=EEPROM.get(addr, state);
+	state=svRunAutoTuneResult;
 	addr+=sizeof(PidStateValue);
 	Serial.print(F("Readed state: "));Serial.println(state);
 	if(state<0 || state>100){
@@ -481,7 +499,7 @@ void PidState::saveServoDirToEEprom(){
 }
 
 void PidState::savetoEEprom(){
-
+	ESP.wdtFeed();
 	EEPROM.begin(64);
 
 	int addr = 0;
@@ -524,6 +542,8 @@ void PidState::savetoEEprom(){
 
 	EEPROM.commit();
 	EEPROM.end();
+
+	ESP.wdtFeed();
 }
 
 

@@ -27,16 +27,17 @@ enum PidStateValue {
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
 enum EncoderMovement {EncMoveNone=-1,EncMoveCW=0,EncMoveCCW=1};
-enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1, EncoderPushButtonKeepedPressed=2};
+enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1};
 
 class PidState {
-//	float lastPressMillis=0;
-
+	float lastPressMillis=0;
+    float lastPressState = EncoderPushButtonNone;
 	void updateLcd();
 private:
 
 	MenuItem         *currentMenu=NULL;
 	EncoderPushButtonState decodeEncoderPushBtnState (boolean encoderPress);
+	boolean IsEncoderPressed(boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
 
 	byte eepromVer = 02;  // eeprom data tracking
@@ -59,17 +60,25 @@ public:
 	int              currEncoderPos=0,prevEncoderPos=0;    // a counter for the rotary encoder dial
 	double           temperature = 0;
 	double Setpoint = 25;
+	double autotuneSetPoint = 0;
 	double Output;
 	int servoPos;
 	boolean autoTune = false;
 	double kp=2,ki=0.5,kd=2;
+	double akp=2,aki=0.5,akd=2;
 
 	PID_ATune getATune(){return aTune;}
 
+	void SetAutotuneResult(double arkp,double arki, double arkd){
+		akp = arkp;
+		aki = arki;
+		akd = arkd;
+	}
+
 	void ConfirmAutoTuneResult(){
-		kp = aTune.GetKp();
-		ki = aTune.GetKi();
-		kd = aTune.GetKd();
+		kp = akp;
+		ki = aki;
+		kd = akd;
 	    pid.SetTunings(kp, ki, kd);
 	    savetoEEprom();
 	}
@@ -104,6 +113,10 @@ public:
 
 	double getTemperature(){
 		return temperature;
+	}
+
+	double getATuneSetPoint(){
+		return autotuneSetPoint;
 	}
 
 	float RoundTo025(float Num){

@@ -28,7 +28,7 @@ LiquidCrystal_I2C* LCDBuffer::getLcd(){
 }
 
 void LCDBuffer::clear() {
-	memset(this->_buffer, ' ', sizeof(char) * this->_size);
+	memset(this->_buffer, 32, sizeof(char) * this->_size);
 }
 
 unsigned short crc16(char* data_p, unsigned char length){

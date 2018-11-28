@@ -206,10 +206,10 @@ void LCDHelper::displayConfigPid(PidState pstate){
 }
 
 void LCDHelper::displayAutoTuneResult(PidState pstate){
-	lcd.PrintF(11, 1,F("Confirm ?"));
-	lcd.PrintF(11, 2,F("Kp"));lcd.PrintFloat(14, 0,pstate.getATune().GetKp());
-	lcd.PrintF(11, 3,F("Ki"));lcd.PrintFloat(14, 1,pstate.getATune().GetKi());
-	lcd.PrintF(11, 4,F("Kd"));lcd.PrintFloat(14, 2,pstate.getATune().GetKd());
+	lcd.PrintF(11, 0,F("Confirm ?"));
+	lcd.PrintF(11, 1,F("Kp"));lcd.PrintFloat(14, 1,pstate.akp);
+	lcd.PrintF(11, 2,F("Ki"));lcd.PrintFloat(14, 2,pstate.aki);
+	lcd.PrintF(11, 3,F("Kd"));lcd.PrintFloat(14, 3,pstate.akd);
 }
 
 void LCDHelper::displayRun(PidState pstate){
@@ -271,8 +271,10 @@ void LCDHelper::displayRun(PidState pstate){
 }
 
 void LCDHelper::displayAutoTune(PidState pstate){
-	lcd.PrintChar(13, 0,(char)TEMPERATURE_CHAR); lcd.PrintDouble(14, 0,pstate.getTemperature(),1);        lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-	lcd.PrintChar(13, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(14, 1,pstate.getATune().GetSetPoint(),1);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
+	double tp = pstate.getTemperature();
+//	double sp = pstate.getATuneSetPoint();
+	lcd.PrintChar(13, 0,(char)TEMPERATURE_CHAR); lcd.PrintDouble(14, 0,tp,1);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+//	lcd.PrintChar(13, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(14, 1,sp,1);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
 	lcd.PrintF(15, 2,F("____"));
 
 	int o = 0;
