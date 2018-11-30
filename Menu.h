@@ -27,14 +27,13 @@ protected:
 public:
     int mappedState = -1; //mapped to an int because unable to resolve compile errors
 	String Caption;
-	MenuItem* parent = NULL;
 	std::vector<MenuItem *> subMenuItems;
     int subMenuItemsLen(){
     	return subMenuItems.size();
     }
 
-    MenuItem(MenuItem* parent, int state);
-    MenuItem(MenuItem* parent, int state, String s);
+    MenuItem(int state);
+    MenuItem(int state, String s);
     virtual ~MenuItem(){}
 
 	virtual void OnPress()=0;
@@ -44,7 +43,7 @@ class CallbackMenuItem : public MenuItem {
 protected:
 	MenuItemCallback callBack;
 public:
-	CallbackMenuItem(MenuItem* parent, int state, String s,MenuItemCallback cb);
+	CallbackMenuItem(int state, String s,MenuItemCallback cb);
     virtual ~CallbackMenuItem(){}
 
 	void OnPress();
@@ -53,13 +52,13 @@ public:
 class UpMenu : public MenuItem {
 public:
 	int upState=-1;
-	UpMenu(MenuItem* parent,int upstate);
+	UpMenu(int upstate);
 	void OnPress();
 };
 
 class ServoConfigMenu : public MenuItem {
 public:
-	ServoConfigMenu(ConfigMenu* parent);
+	ServoConfigMenu();
 	void OnPress();
 
 	MenuItem* dirMenu;
@@ -69,7 +68,7 @@ public:
 
 class PidConfigMenu : public MenuItem {
 public:
-	PidConfigMenu(ConfigMenu* parent);
+	PidConfigMenu();
 	void OnPress();
 
 	MenuItem* kpMenu;
@@ -79,7 +78,7 @@ public:
 
 class ConfigMenu : public MenuItem{
 public:
-	ConfigMenu(MainMenu* parent);
+	ConfigMenu();
 	void OnPress();
 
 	MenuItem* upMenu;
@@ -89,7 +88,7 @@ public:
 
 class AutoTuneResultMenu : public MenuItem {
 public:
-	AutoTuneResultMenu(RunMenu* parent);
+	AutoTuneResultMenu();
 	void OnPress();
 
 	MenuItem* confirmNSaveMenu;
@@ -98,18 +97,40 @@ public:
 
 class RunAutoTuneMenu : public MenuItem {
 public:
-	RunAutoTuneMenu(RunMenu* parent);
+	RunAutoTuneMenu();
 	AutoTuneResultMenu* autoTuneResultMenu;
 
 	void OnPress();
 };
 
-class RunMenu : public MenuItem {
+class RunAutoSetpointMenu : public MenuItem {
 public:
-	RunMenu(MainMenu* parent);
+	RunAutoSetpointMenu();
+	void OnPress();
+};
+
+class RunAutoTimerMenu : public MenuItem {
+public:
+	RunAutoTimerMenu();
+	void OnPress();
+};
+
+
+class RunAutoMenu : public MenuItem {
+public:
+	RunAutoMenu();
 	void OnPress();
 
-	MenuItem* runAutoMenu;
+	RunAutoSetpointMenu* setpointMenu;
+	RunAutoTimerMenu* timerMenu;
+};
+
+class RunMenu : public MenuItem {
+public:
+	RunMenu();
+	void OnPress();
+
+	RunAutoMenu* runAutoMenu;
 	RunAutoTuneMenu* runAutoTuneMenu;
 };
 

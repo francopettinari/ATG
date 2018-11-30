@@ -109,7 +109,12 @@ void formatFloat(float f,char *buff){
 }
 
 void formatDouble(double d,char *buff, int digits){
-	dtostrf(d, 4+digits, digits, buff);
+	if(digits<=0){
+		dtostrf(d, 3, 0, buff);
+	}else{
+		dtostrf(d, 4+digits, digits, buff);
+	}
+
 //  if(d>=0 && d<10){
 ////    buff[0]=' ';
 //    dtostrf(d, 4+digits, digits, buff);

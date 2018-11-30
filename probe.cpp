@@ -78,9 +78,9 @@ boolean probe::_updateTemp() {  // read OneWire device temperature
   if (OneWire::crc8(data, 8) != data[8]) return false;  // return false if crc check fails
   unsigned int raw = ((data[1] << 8) | data[0]); 
   byte cfg = (data[4] & 0x60);
-  if (cfg == 0x00) raw = raw << 3;        // 9 bit res, 93.75 ms MAX conversion time
+  if (cfg == 0x00) raw = raw << 3;        //  9 bit res, 93.75 ms MAX conversion time
     else if (cfg == 0x20) raw = raw << 2; // 10 bit res, 187.5 ms MAX conversion time
-    else if (cfg == 0x40) raw = raw << 1; // 11 bit res, 375 ms MAX conversion time
+    else if (cfg == 0x40) raw = raw << 1; // 11 bit res, 375   ms MAX conversion time
   for (int i = 3; i > 0; i--) {
     _temperature[i] = _temperature[i - 1];
   }

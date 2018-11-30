@@ -11,8 +11,13 @@
 #include "gdb.h"
 #endif
 
+#include <DallasTemperature.h>
+
 OneWire onewire(D3);
-probe probe(&onewire);
+//probe probe(&onewire);
+// Declare a DS18B20 Instance and assing the OneWire reference to it.
+DallasTemperature sensors(&onewire);
+
 PidState pidState;
 LCDHelper lcdHelper;
 
@@ -37,7 +42,7 @@ void setup() {
 	Serial.println(F("Initialized"));
 #endif
 
-
+	sensors.begin();
 
 	pinMode(pushButtonPin, INPUT_PULLUP);
 	attachInterrupt(pushButtonPin, handleEncPush, CHANGE);
@@ -57,14 +62,17 @@ void RAMFUNC loop() {
 #endif
 //	Serial.println(F("loop begin"));
 	ESP.wdtFeed();
-	probe::startConv();// start conversion for all sensors
-	if (probe::isReady()) {// update sensors when conversion complete
-		ESP.wdtFeed();
-		probe.update();
-		ESP.wdtFeed();
-	}
+	sensors.requestTemperatures(); // Tell the DS18B20 to get make a measurement
+//	probe::startConv();// start conversion for all sensors
+//	if (probe::isReady()) {// update sensors when conversion complete
+//		ESP.wdtFeed();
+//		probe.update();
+//		ESP.wdtFeed();
+//	}
 	ESP.wdtFeed();
-	pidState.update(probe.getTemp(),enc.read(),isEncoderPressed);
+	//pidState.update(probe.getTemp(),enc.read(),isEncoderPressed);
+	pidState.update(sensors.getTempCByIndex(0),enc.read(),isEncoderPressed);
+
 	ESP.wdtFeed();
 	lcdHelper.display(pidState);
 	ESP.wdtFeed();

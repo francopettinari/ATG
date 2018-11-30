@@ -21,7 +21,7 @@ class MenuItem;
 
 enum PidStateValue {
 	svUndefiend=-1,svMain=0,
-	svRun=9, svRunAuto=10,svRunAutoTune=11,svRunAutoTuneResult=12,
+	svRun=9, svRunAuto=10,svRunAutoTune=11,svRunAutoTuneResult=12,svRunAutoSetpoint=13,svRunAutoTimer=14,
 	svConfig=20, svPidConfig=22, svPidKpiConfig=23,svPidKpdConfig=24, svPidKiiConfig=25, svPidKidConfig=26, svPidKdiConfig=27,svPidKddConfig=28,
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
@@ -125,7 +125,7 @@ public:
 	}
 
 	void setTemperature(double value){
-		value = RoundTo025(value);
+//		value = RoundTo025(value);
 		if(temperature==value)return ;
 		temperature = value;
 	}

@@ -21,6 +21,7 @@ class LCDHelper {
 	void displayAutoTuneResult(PidState pstate);
 	void displayConfigServo(PidState pstate);
 	void displayConfigPid(PidState pstate);
+	void displayDefault(PidState pstate);
 
 //	int lastDisplayCount = 0;
 //	double lastDisplayMillis = 0;
