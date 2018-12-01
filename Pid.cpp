@@ -42,6 +42,7 @@ void setup() {
 	Serial.println(F("Initialized"));
 #endif
 
+	sensors.setWaitForConversion(false);
 	sensors.begin();
 
 	pinMode(pushButtonPin, INPUT_PULLUP);
@@ -55,26 +56,36 @@ void setup() {
 	Serial.println(F("Initialized from EEProm"));
 }
 
+boolean tempReadRequested = false;
+float lastTempReadMillis = 0;
 #ifdef DEBUG
 void RAMFUNC loop() {
 #else
 	void loop() {
 #endif
 //	Serial.println(F("loop begin"));
-	ESP.wdtFeed();
-	sensors.requestTemperatures(); // Tell the DS18B20 to get make a measurement
+	if(!tempReadRequested || millis()-lastTempReadMillis>2000){
+		sensors.requestTemperatures(); // Tell the DS18B20 to get make a measurement
+		tempReadRequested = true;
+		lastTempReadMillis = millis();
+		pidState.update(-200,enc.read(),isEncoderPressed);
+	}else{
+		if(sensors.isConversionComplete()){
+			pidState.update(sensors.getTempCByIndex(0),enc.read(),isEncoderPressed);
+			tempReadRequested = false;
+		}else{
+			pidState.update(-200,enc.read(),isEncoderPressed);
+		}
+	}
 //	probe::startConv();// start conversion for all sensors
 //	if (probe::isReady()) {// update sensors when conversion complete
 //		ESP.wdtFeed();
 //		probe.update();
 //		ESP.wdtFeed();
 //	}
-	ESP.wdtFeed();
 	//pidState.update(probe.getTemp(),enc.read(),isEncoderPressed);
-	pidState.update(sensors.getTempCByIndex(0),enc.read(),isEncoderPressed);
 
 	ESP.wdtFeed();
 	lcdHelper.display(pidState);
-	ESP.wdtFeed();
 //	Serial.println(F("loop end"));
 }

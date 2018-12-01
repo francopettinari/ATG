@@ -239,10 +239,11 @@ void LCDHelper::displayRun(PidState pstate){
 	//lcd.PrintF(15, 2,F("____"));
 
 	int o = 0;
+	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
 	if(pstate.servoDirection==ServoDirectionCW){
-		o = 100.0*(pstate.Output)/255.0;
+		o = 100.0*(pstate.Output-pstate.servoMinValue)/outRange;
 	}else{
-		o = 100.0*(255.0-pstate.Output)/255.0;
+		o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
 	}
 	//Serial.print(F("output chr VAL"));Serial.println(o);
 //	int pos = o/5;
@@ -297,10 +298,11 @@ void LCDHelper::displayAutoTune(PidState pstate){
 //	lcd.PrintF(15, 2,F("____"));
 
 	int o = 0;
+	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
 	if(pstate.servoDirection==ServoDirectionCW){
-		o = 100.0*(pstate.Output)/255.0;
+		o = 100.0*(pstate.Output-pstate.servoMinValue)/outRange;
 	}else{
-		o = 100.0*(255.0-pstate.Output)/255.0;
+		o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
 	}
 	//Serial.print(F("output chr VAL"));Serial.println(o);
 //	int pos = o/5;
@@ -329,6 +331,7 @@ void LCDHelper::displayAutoTune(PidState pstate){
 //	}
 	lcd.PrintDouble(14, 2,o,1);
 	lcd.PrintF(19, 2,F("%"));
+	lcd.PrintDouble(14, 3,pstate.Output,1);
 }
 
 void LCDHelper::displayConfigServo(PidState pstate){
@@ -337,8 +340,8 @@ void LCDHelper::displayConfigServo(PidState pstate){
 	}else if(pstate.servoDirection==ServoDirectionCCW){
 		lcd.PrintF(11, 0,F("Dir CCW"));
 	}
-	lcd.PrintF(11, 1,F("Min "));lcd.PrintDouble(15, 1,pstate.servoMin);
-	lcd.PrintF(11, 2,F("Max "));lcd.PrintDouble(15, 2,pstate.servoMax);
+	lcd.PrintF(11, 1,F("Min "));lcd.PrintDouble(15, 1,pstate.servoMinValue,0);
+	lcd.PrintF(11, 2,F("Max "));lcd.PrintDouble(15, 2,pstate.servoMaxValue,0);
 }
 
 //void LCDHelper::print(byte col, byte row, int val){

@@ -9,6 +9,11 @@
 #define PIDSTATE_H_
 
 #include <WString.h>
+
+enum EncoderMovement {EncMoveNone=-1,EncMoveCW=0,EncMoveCCW=1};
+enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1};
+
+
 #include "Menu.h"
 #include "PID_v1.h"
 #include <Servo.h>
@@ -26,8 +31,6 @@ enum PidStateValue {
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
-enum EncoderMovement {EncMoveNone=-1,EncMoveCW=0,EncMoveCCW=1};
-enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1};
 
 class PidState {
 	float lastPressMillis=0;
@@ -35,7 +38,7 @@ class PidState {
 	void updateLcd();
 private:
 
-	MenuItem         *currentMenu=NULL;
+
 	EncoderPushButtonState decodeEncoderPushBtnState (boolean encoderPress);
 	boolean IsEncoderPressed(boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
@@ -43,16 +46,13 @@ private:
 	byte eepromVer = 02;  // eeprom data tracking
 
 protected:
-	PidStateValue state = svMain;
-//	double Input;
-
 	PID pid;
-	PID_ATune aTune;
 	Servo servo;
-
-	void setServoPosition(int degree);
-
 public:
+	MenuItem         *currentMenu=NULL;
+	PID_ATune aTune;
+
+	PidStateValue state = svMain;
 	LCDHelper        *lcdHelper=NULL;
 
 	MenuItem         *topMenu = NULL;
@@ -62,12 +62,12 @@ public:
 	double Setpoint = 25;
 	double autotuneSetPoint = 0;
 	double Output;
-	int servoPos;
 	boolean autoTune = false;
 	double kp=2,ki=0.5,kd=2;
 	double akp=2,aki=0.5,akd=2;
 
 	PID_ATune getATune(){return aTune;}
+	void setServoPosition(int degree);
 
 	void SetAutotuneResult(double arkp,double arki, double arkd){
 		akp = arkp;
@@ -92,8 +92,8 @@ public:
 	}
 
 	ServoDirection servoDirection = ServoDirectionCW;
-	int servoMin = 0; //degrees
-	int servoMax = 180; //degrees
+	int servoMinValue = 0; //degrees
+	int servoMaxValue = 180; //degrees
 
 	PidState();
 	void changeAutoTune(int value);
