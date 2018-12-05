@@ -47,8 +47,10 @@ private:
 
 protected:
 	PID pid;
-	Servo servo;
+    float pidSampleTime =3000;
+    bool servoOFF = false;
 public:
+	Servo servo;
 	MenuItem         *currentMenu=NULL;
 	PID_ATune aTune;
 
@@ -58,10 +60,14 @@ public:
 	MenuItem         *topMenu = NULL;
 	int              stateSelection = 0, currMenuStart=0;
 	int              currEncoderPos=0,prevEncoderPos=0;    // a counter for the rotary encoder dial
-	double           temperature = 0;
+	double           temperature = 0, lastTemperature=0,dTemperature;
+	float lastTemperatureMillis=0;
 	double Setpoint = 25;
 	double autotuneSetPoint = 0;
 	double Output;
+	void SetServoOff(bool value);
+	bool IsServoOff();
+	bool IsServoUnderFireOff();
 	boolean autoTune = false;
 	double kp=2,ki=0.5,kd=2;
 	double akp=2,aki=0.5,akd=2;
@@ -126,7 +132,20 @@ public:
 
 	void setTemperature(double value){
 //		value = RoundTo025(value);
-		if(temperature==value)return ;
+
+		if(lastTemperatureMillis==0){
+			lastTemperatureMillis=millis();
+			lastTemperature = temperature;
+		}else{
+			float now = millis();
+			if(now-lastTemperatureMillis>=pidSampleTime){
+				dTemperature = (value-lastTemperature)/((now-lastTemperatureMillis)/1000);
+				dTemperature = dTemperature * 60.0;//degrees per minute
+				lastTemperatureMillis=now;
+				lastTemperature = value;
+			}
+		}
+		if(temperature==value)return;
 		temperature = value;
 	}
 

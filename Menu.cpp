@@ -92,6 +92,7 @@ void UpMenu::OnSelectedInMenu(){
 	pidState.SetState((PidStateValue)upState);
 }
 
+//////////////   ServoConfigDirMenu
 ServoConfigDirMenu::ServoConfigDirMenu():MenuItem(svConfig_ServoDirection){
 	Caption = F("Dir");
 }
@@ -110,7 +111,9 @@ void ServoConfigDirMenu:: HandleEncoderPush(EncoderPushButtonState pst){
 	pidState.state = svServo_Config;
 	pidState.saveServoDirToEEprom();
 }
+//////////////   ServoConfigDirMenu
 
+//////////////   ServoConfigMinMenu
 ServoConfigMinMenu::ServoConfigMinMenu():MenuItem(svConfig_ServoMin){
 	Caption = F("Min");
 }
@@ -131,7 +134,9 @@ void ServoConfigMinMenu:: HandleEncoderPush(EncoderPushButtonState pst){
 	pidState.state = svServo_Config;
 	pidState.savetoEEprom();
 }
+//////////////   ServoConfigMinMenu
 
+//////////////   ServoConfigMaxMenu
 ServoConfigMaxMenu::ServoConfigMaxMenu():MenuItem(svConfig_ServoMax){
 	Caption = F("Max");
 }
@@ -152,6 +157,8 @@ void ServoConfigMaxMenu::HandleEncoderPush(EncoderPushButtonState pst){
 	pidState.state = svServo_Config;
 	pidState.savetoEEprom();
 }
+//////////////   ServoConfigMaxMenu
+
 ServoConfigMenu::ServoConfigMenu():MenuItem(svServo_Config){
 	Caption = F("Servo");
 	subMenuItems.resize(4);

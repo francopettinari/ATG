@@ -15,7 +15,7 @@
 PidState::PidState() : pid(&temperature, &Output, &Setpoint, kp, ki, kd,P_ON_E, DIRECT),aTune(&temperature, &Output){
 	//pid.SetTunings(r_set(1) - 100, (double)((r_set(2) - 100.00) / 250.00), r_set(3) - 100); // send the PID settings to the PID
 	//myPID.SetOutputLimits(0.0, 255.0);
-	pid.SetSampleTime(3000);
+	pid.SetSampleTime(pidSampleTime);
 	pid.SetMode(MANUAL);
 	servo.attach(D8);  // attaches the servo on pin 9 to the servo object
 	//setServoPosition(0);
@@ -138,14 +138,59 @@ void PidState::setServoPosition(int degree){
 	delay(15);
 }
 
+void PidState::SetServoOff(bool value){
+	Serial.print(F("ServoOFF = "));
+	Serial.println(value?F("true"):F("false"));
+	servoOFF=value;
+}
+bool PidState::IsServoOff(){return servoOFF;}
+
+bool PidState::IsServoUnderFireOff(){
+	Serial.println(F("isServoUnderFireOff"));
+//	Serial.print(F("Servo: "));Serial.println(ps.servo.read());
+	Serial.print(F("ps.Output: "));Serial.println(Output);
+	if(servoDirection==ServoDirectionCW){
+		bool calculatedServoOff = Output<=servoMinValue;
+		if(calculatedServoOff){
+			if(!IsServoOff()){
+				Serial.println(F("SWITCH TO Fire OFF"));
+				setServoPosition(servoMinValue+(servoMinValue+servoMaxValue)/2);
+				delay(2000);
+				setServoPosition(0);
+				SetServoOff(true);
+			}else{
+				Serial.println(F("Fire is OFF"));
+			}
+			return true;
+		}
+		SetServoOff(false);
+		return false;
+	}else{
+		if(servo.read()==180) return true;
+		if(Output>=servoMaxValue){
+			Serial.println(F("CCW Fire OFF"));
+			setServoPosition(servoMaxValue-(servoMinValue+servoMaxValue)/2);
+			delay(2000);
+			setServoPosition(180);
+			return true;
+		}
+		return false;
+	}
+	Serial.println(F("Fire is ON"));
+	return false;
+}
+
 void PidState::update(double temp,int encoderPos, boolean encoderPress){
 
 	if(temp>-100){
 		setTemperature(temp);
 	}
 
-	if(state!=svRunAuto && state!=svRunAutoTimer && state!=svRunAutoSetpoint){
+	if(state!=svRunAuto && state!=svRunAutoTimer && state!=svRunAutoSetpoint &&
+	   state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
+	{
 		pid.SetMode(MANUAL);
+		Serial.println(F("PID switched to MANUAL"));
 		Output=0;
 		setServoPosition(Output);
 	}
@@ -200,25 +245,16 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			if(temp<=-100){
 				return;
 			}
+
 			if(pid.GetMode()!=AUTOMATIC){
+				Serial.println(F("PID switched to AUTOMATIC"));
 				pid.SetTunings(kp,ki,kd);
 				pid.SetControllerDirection(servoDirection==ServoDirectionCW?DIRECT:REVERSE);
 				pid.SetOutputLimits(servoMinValue,servoMaxValue);
 				pid.SetMode(AUTOMATIC);
 			}
-			float delta = Setpoint-temperature;
-			if(delta<5){
-				pid.Compute();
-			}else{
-				if (pid.GetDirection()==DIRECT){
-					Output=servoMaxValue;
-				}else{
-					Output=servoMinValue;
-				}
-			}
-			if(Output==servoMinValue){
-				setServoPosition(0);
-			}else{
+			pid.Compute();
+			if(!IsServoUnderFireOff()){
 				setServoPosition(Output);
 			}
 
@@ -392,8 +428,6 @@ void PidState::savetoEEprom(){
 	Serial.print(F("EEPROMWriteSettings. Kd: "));Serial.println(kd);
 	EEPROM.put(addr, kd);
 	addr+=sizeof(double);
-
-
 
 	EEPROM.commit();
 	EEPROM.end();
