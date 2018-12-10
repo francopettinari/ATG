@@ -27,7 +27,7 @@ class MenuItem;
 enum PidStateValue {
 	svUndefiend=-1,svMain=0,
 	svRun=9, svRunAuto=10,svRunAutoTune=11,svRunAutoTuneResult=12,svRunAutoSetpoint=13,svRunAutoTimer=14,
-	svConfig=20, svPidConfig=22, svPidKpiConfig=23,svPidKpdConfig=24, svPidKiiConfig=25, svPidKidConfig=26, svPidKdiConfig=27,svPidKddConfig=28,
+	svConfig=20, svPidConfig=22, svPidKpiConfig=23,svPidKpdConfig=24, svPidKiiConfig=25, svPidKidConfig=26,svPidKicConfig=27, svPidKdiConfig=28,svPidKddConfig=29,
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
@@ -47,7 +47,7 @@ private:
 
 protected:
 	PID pid;
-    float pidSampleTime =3000;
+    float pidSampleTime =10000;
     bool servoOFF = false;
 public:
 	Servo servo;
@@ -136,10 +136,11 @@ public:
 		if(lastTemperatureMillis==0){
 			lastTemperatureMillis=millis();
 			lastTemperature = temperature;
+			dTemperature=0;
 		}else{
 			float now = millis();
 			if(now-lastTemperatureMillis>=pidSampleTime){
-				dTemperature = (value-lastTemperature)/((now-lastTemperatureMillis)/1000);
+				dTemperature = (value-lastTemperature)*1000.0/(now-lastTemperatureMillis);
 				dTemperature = dTemperature * 60.0;//degrees per minute
 				lastTemperatureMillis=now;
 				lastTemperature = value;

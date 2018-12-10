@@ -60,6 +60,7 @@ MenuItem* PidState::decodeCurrentMenu(){
 			return pmm->configMenu->pidMenu->kpMenu;
 		case svPidKiiConfig:
 		case svPidKidConfig:
+		case svPidKicConfig:
 			return pmm->configMenu->pidMenu->kiMenu;
 		case svPidKdiConfig:
 		case svPidKddConfig:
@@ -139,27 +140,27 @@ void PidState::setServoPosition(int degree){
 }
 
 void PidState::SetServoOff(bool value){
-	Serial.print(F("ServoOFF = "));
-	Serial.println(value?F("true"):F("false"));
+//	Serial.print(F("ServoOFF = "));
+//	Serial.println(value?F("true"):F("false"));
 	servoOFF=value;
 }
 bool PidState::IsServoOff(){return servoOFF;}
 
 bool PidState::IsServoUnderFireOff(){
-	Serial.println(F("isServoUnderFireOff"));
+//	Serial.println(F("isServoUnderFireOff"));
 //	Serial.print(F("Servo: "));Serial.println(ps.servo.read());
-	Serial.print(F("ps.Output: "));Serial.println(Output);
+//	Serial.print(F("ps.Output: "));Serial.println(Output);
 	if(servoDirection==ServoDirectionCW){
 		bool calculatedServoOff = Output<=servoMinValue;
 		if(calculatedServoOff){
 			if(!IsServoOff()){
-				Serial.println(F("SWITCH TO Fire OFF"));
+//				Serial.println(F("SWITCH TO Fire OFF"));
 				setServoPosition(servoMinValue+(servoMinValue+servoMaxValue)/2);
 				delay(2000);
 				setServoPosition(0);
 				SetServoOff(true);
 			}else{
-				Serial.println(F("Fire is OFF"));
+//				Serial.println(F("Fire is OFF"));
 			}
 			return true;
 		}
@@ -168,7 +169,7 @@ bool PidState::IsServoUnderFireOff(){
 	}else{
 		if(servo.read()==180) return true;
 		if(Output>=servoMaxValue){
-			Serial.println(F("CCW Fire OFF"));
+//			Serial.println(F("CCW Fire OFF"));
 			setServoPosition(servoMaxValue-(servoMinValue+servoMaxValue)/2);
 			delay(2000);
 			setServoPosition(180);
@@ -176,7 +177,7 @@ bool PidState::IsServoUnderFireOff(){
 		}
 		return false;
 	}
-	Serial.println(F("Fire is ON"));
+//	Serial.println(F("Fire is ON"));
 	return false;
 }
 
@@ -259,7 +260,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 
 			if(millis()-lastLog>=1000){
-				Serial.print(temp);Serial.print(F(" "));Serial.println(Output);
+				Serial.print(temp,4);Serial.print(F(" "));Serial.print(dTemperature,4);Serial.print(F(" "));Serial.println(Output);
 				lastLog = millis();
 			}
 			break;

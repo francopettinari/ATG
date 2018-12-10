@@ -38,11 +38,12 @@ void RAMFUNC setup() {
 	gdbstub_init();
 #else
 void setup() {
-	Serial.begin(115200);
+	Serial.begin(9600);  //due to serial XY graph
 	Serial.println(F("Initialized"));
 #endif
 
 	sensors.setWaitForConversion(false);
+	sensors.setResolution(12);
 	sensors.begin();
 
 	pinMode(pushButtonPin, INPUT_PULLUP);

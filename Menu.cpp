@@ -246,12 +246,24 @@ void KiPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 			decPart+=1.0;
 		}
 		pidState.ki=iki+(decPart/100.0);
+	}else if(pidState.state==svPidKicConfig) {
+		int iki = (int)pidState.ki;
+		float millPart = (pidState.ki-iki);
+		millPart = (int)(millPart*1000);
+		if(mvmnt==EncMoveCCW){
+			millPart-=1.0;
+		}else if(mvmnt==EncMoveCW){
+			millPart+=1.0;
+		}
+		pidState.ki=iki+(millPart/1000.0);
 	}
 }
 void KiPidConfigMenu::HandleEncoderPush(EncoderPushButtonState pst){
 	if(pidState.state==svPidKiiConfig){
 		pidState.state = svPidKidConfig;
 	} else if(pidState.state==svPidKidConfig) {
+		pidState.state = svPidKicConfig;
+	}else if(pidState.state==svPidKicConfig) {
 		pidState.state = svPidConfig;
 		pidState.savetoEEprom();
 	}

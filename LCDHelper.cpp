@@ -116,6 +116,7 @@ void LCDHelper::display(PidState pstate){
 		case svPidKpdConfig:
 		case svPidKiiConfig:
 		case svPidKidConfig:
+		case svPidKicConfig:
 		case svPidKdiConfig:
 		case svPidKddConfig:
 			displayConfigPid(pstate);
@@ -141,16 +142,16 @@ void LCDHelper::displayDefault(PidState pstate){
 }
 
 void LCDHelper::displayConfigPid(PidState pstate){
-	lcd.PrintF(11, 0,F("Kp"));lcd.PrintFloat(14, 0,pstate.kp);
-	lcd.PrintF(11, 1,F("Ki"));lcd.PrintFloat(14, 1,pstate.ki);
-	lcd.PrintF(11, 2,F("Kd"));lcd.PrintFloat(14, 2,pstate.kd);
+	lcd.PrintF(10, 0,F("Kp"));lcd.PrintDouble(13, 0,pstate.kp,3);
+	lcd.PrintF(10, 1,F("Ki"));lcd.PrintDouble(13, 1,pstate.ki,3);
+	lcd.PrintF(10, 2,F("Kd"));lcd.PrintDouble(13, 2,pstate.kd,3);
 }
 
 void LCDHelper::displayAutoTuneResult(PidState pstate){
-	lcd.PrintF(11, 0,F("Confirm ?"));
-	lcd.PrintF(11, 1,F("Kp"));lcd.PrintFloat(14, 1,pstate.akp);
-	lcd.PrintF(11, 2,F("Ki"));lcd.PrintFloat(14, 2,pstate.aki);
-	lcd.PrintF(11, 3,F("Kd"));lcd.PrintFloat(14, 3,pstate.akd);
+	lcd.PrintF(10, 0,F("Confirm ?"));
+	lcd.PrintF(10, 1,F("Kp"));lcd.PrintDouble(14, 1,pstate.akp,3);
+	lcd.PrintF(10, 2,F("Ki"));lcd.PrintDouble(14, 2,pstate.aki,3);
+	lcd.PrintF(10, 3,F("Kd"));lcd.PrintDouble(14, 3,pstate.akd,3);
 }
 
 void LCDHelper::displayRun(PidState pstate){
