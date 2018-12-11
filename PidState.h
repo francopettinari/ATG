@@ -47,7 +47,7 @@ private:
 
 protected:
 	PID pid;
-    float pidSampleTime =10000;
+    float pidSampleTime =5000;
     bool servoOFF = false;
 public:
 	Servo servo;
@@ -117,7 +117,7 @@ public:
 		currMenuStart = 0;
 	}
 
-	double getTemperature(){
+	float getTemperature(){
 		return temperature;
 	}
 
@@ -125,20 +125,20 @@ public:
 		return autotuneSetPoint;
 	}
 
-	float RoundTo025(float Num){
-	  int tmp= (int)Num;
-	  return tmp+int((Num-tmp)*1000/225)*0.25;
-	}
+//	float RoundTo025(float Num){
+//	  int tmp= (int)Num;
+//	  return tmp+int((Num-tmp)*1000/225)*0.25;
+//	}
 
 	void setTemperature(double value){
 //		value = RoundTo025(value);
-
+		float now = millis();
 		if(lastTemperatureMillis==0){
-			lastTemperatureMillis=millis();
+			lastTemperatureMillis=now;
 			lastTemperature = temperature;
 			dTemperature=0;
 		}else{
-			float now = millis();
+
 			if(now-lastTemperatureMillis>=pidSampleTime){
 				dTemperature = (value-lastTemperature)*1000.0/(now-lastTemperatureMillis);
 				dTemperature = dTemperature * 60.0;//degrees per minute

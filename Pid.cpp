@@ -43,8 +43,8 @@ void setup() {
 #endif
 
 	sensors.setWaitForConversion(false);
-	sensors.setResolution(12);
 	sensors.begin();
+	sensors.setResolution(12);
 
 	pinMode(pushButtonPin, INPUT_PULLUP);
 	attachInterrupt(pushButtonPin, handleEncPush, CHANGE);

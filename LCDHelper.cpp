@@ -54,14 +54,14 @@ byte heatCustomChar[] = {
 };
 
 byte derivateCustomChar[] = {
-B00001,
-B00001,
-B00001,
-B01100,
-B10010,
-B10010,
-B01100,
-B00000
+		  B00001,
+		  B01101,
+		  B10011,
+		  B10011,
+		  B01100,
+		  B00000,
+		  B00000,
+		  B00000
 };
 
 static const int TEMPERATURE_CHAR = 0;
@@ -155,8 +155,8 @@ void LCDHelper::displayAutoTuneResult(PidState pstate){
 }
 
 void LCDHelper::displayRun(PidState pstate){
-	lcd.PrintChar(13, 0,(char)TEMPERATURE_CHAR); lcd.PrintDouble(14, 0,pstate.getTemperature(),1);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-	lcd.PrintChar(13, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(14, 1,pstate.Setpoint,1);        lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
+	lcd.PrintChar(10, 0,(char)TEMPERATURE_CHAR); lcd.PrintDouble(11, 0,pstate.getTemperature(),3);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+	lcd.PrintChar(10, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(11, 1,pstate.Setpoint        ,3);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
 
 	int o = 0;
 	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
@@ -165,13 +165,11 @@ void LCDHelper::displayRun(PidState pstate){
 	}else{
 		o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
 	}
-	lcd.PrintChar(13, 2,(char)HEAT_CHAR);
-	lcd.PrintDouble(14, 2,o,1);
-	lcd.PrintF(19, 2,F("%"));
+	lcd.PrintChar(10, 2,(char)HEAT_CHAR); lcd.PrintDouble(11, 2,o,3); 	lcd.PrintF(19, 2,F("%"));
 
 	//lcd.PrintDouble(14, 3,pstate.Output,1);
-	lcd.PrintF(13, 3,F("d"));
-	lcd.PrintDouble(14, 3,pstate.dTemperature,1);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
+	lcd.PrintF(10, 3,F("d"));
+	lcd.PrintDouble(11, 3,pstate.dTemperature,3);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
 
 }
 
