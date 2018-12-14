@@ -123,6 +123,14 @@ public:
 	void HandleEncoderPush(EncoderPushButtonState pst);
 };
 
+class SampleTimePidConfigMenu : public MenuItem {
+public:
+	SampleTimePidConfigMenu();
+	void OnSelectedInMenu();
+	void HandleEncoderMovement(EncoderMovement mvmnt);
+	void HandleEncoderPush(EncoderPushButtonState pst);
+};
+
 class PidConfigMenu : public MenuItem {
 public:
 	PidConfigMenu();
@@ -131,6 +139,7 @@ public:
 	KpPidConfigMenu* kpMenu;
 	KiPidConfigMenu* kiMenu;
 	KdPidConfigMenu* kdMenu;
+	SampleTimePidConfigMenu* sampleTimeMenu;
 };
 
 class ConfigMenu : public MenuItem{

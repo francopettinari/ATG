@@ -27,7 +27,12 @@ class MenuItem;
 enum PidStateValue {
 	svUndefiend=-1,svMain=0,
 	svRun=9, svRunAuto=10,svRunAutoTune=11,svRunAutoTuneResult=12,svRunAutoSetpoint=13,svRunAutoTimer=14,
-	svConfig=20, svPidConfig=22, svPidKpiConfig=23,svPidKpdConfig=24, svPidKiiConfig=25, svPidKidConfig=26,svPidKicConfig=27, svPidKdiConfig=28,svPidKddConfig=29,
+	svConfig=20,
+	svPidConfig=22,
+	svPidKpiConfig=23,svPidKpdConfig=24,
+	svPidKiiConfig=25, svPidKidConfig=26,svPidKicConfig=27,
+	svPidKdiConfig=28,svPidKddConfig=29,
+	svPidSampleTimeConfig=30,
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
@@ -43,11 +48,11 @@ private:
 	boolean IsEncoderPressed(boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
 
-	byte eepromVer = 02;  // eeprom data tracking
+	byte eepromVer = 03;  // eeprom data tracking
 
 protected:
 	PID pid;
-    float pidSampleTime =5000;
+
     bool servoOFF = false;
 public:
 	Servo servo;
@@ -61,8 +66,9 @@ public:
 	int              stateSelection = 0, currMenuStart=0;
 	int              currEncoderPos=0,prevEncoderPos=0;    // a counter for the rotary encoder dial
 	double           temperature = 0, lastTemperature=0,dTemperature;
+	float pidSampleTimeSecs = 5;
 	float lastTemperatureMillis=0;
-	double Setpoint = 25;
+	double Setpoint = 25,DynamicSetpoint=25;
 	double autotuneSetPoint = 0;
 	double Output;
 	void SetServoOff(bool value);
@@ -139,7 +145,7 @@ public:
 			dTemperature=0;
 		}else{
 
-			if(now-lastTemperatureMillis>=pidSampleTime){
+			if(now-lastTemperatureMillis>=pidSampleTimeSecs*1000){
 				dTemperature = (value-lastTemperature)*1000.0/(now-lastTemperatureMillis);
 				dTemperature = dTemperature * 60.0;//degrees per minute
 				lastTemperatureMillis=now;

@@ -7,15 +7,10 @@
 
 #include "PidState.h"
 #include <EEPROM.h>
-//kpvaL:95 == val-100 => val=95+100 = 195 => KP = 195-100 = 95
-//kival:4  == val-100 => val=4 +100 = 104 => KI = (104-100)/250 = 4/250 = 0.016
-//kival:0  == val-100 => val=0 +100 = 0   => KD = 100-100 = 0
+#include "UDPTacer.h"
 
-//PidState::PidState() : pid(&temperature, &Output, &Setpoint, 95,4,0,P_ON_E, DIRECT){
-PidState::PidState() : pid(&temperature, &Output, &Setpoint, kp, ki, kd,P_ON_E, DIRECT),aTune(&temperature, &Output){
-	//pid.SetTunings(r_set(1) - 100, (double)((r_set(2) - 100.00) / 250.00), r_set(3) - 100); // send the PID settings to the PID
-	//myPID.SetOutputLimits(0.0, 255.0);
-	pid.SetSampleTime(pidSampleTime);
+PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P_ON_M, DIRECT),aTune(&temperature, &Output){
+	pid.SetSampleTime(pidSampleTimeSecs*1000);
 	pid.SetMode(MANUAL);
 	servo.attach(D8);  // attaches the servo on pin 9 to the servo object
 	//setServoPosition(0);
@@ -23,6 +18,7 @@ PidState::PidState() : pid(&temperature, &Output, &Setpoint, kp, ki, kd,P_ON_E, 
 
 	aTune.SetNoiseBand(0.2);
 	aTune.SetLookbackSec(20);
+	dTemperature=0;
 }
 
 MenuItem* PidState::decodeCurrentMenu(){
@@ -65,6 +61,8 @@ MenuItem* PidState::decodeCurrentMenu(){
 		case svPidKdiConfig:
 		case svPidKddConfig:
 			return pmm->configMenu->pidMenu->kdMenu;
+		case svPidSampleTimeConfig:
+			return pmm->configMenu->pidMenu->sampleTimeMenu;
 	}
 	return pmm;
 }
@@ -254,6 +252,21 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				pid.SetOutputLimits(servoMinValue,servoMaxValue);
 				pid.SetMode(AUTOMATIC);
 			}
+
+		    //when P_ON_M is active the I-Term is the one that will move
+			//the controller output.
+			//P-Term will oppose to the changes.
+			//D-Term will slow down the changes.
+
+			//this can be used only if P_ON_E is active
+//			if(Output-Setpoint>5){
+//				//ramp
+//				DynamicSetpoint=Setpoint;//FIXME build a ramp
+//				pid.SetTunings(kp,0,kd);
+//			}else{
+//				DynamicSetpoint=Setpoint;
+//				pid.SetTunings(kp,ki,kd);
+//			}
 			pid.Compute();
 			if(!IsServoUnderFireOff()){
 				setServoPosition(Output);
@@ -261,6 +274,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 
 			if(millis()-lastLog>=1000){
 				Serial.print(temp,4);Serial.print(F(" "));Serial.print(dTemperature,4);Serial.print(F(" "));Serial.println(Output);
+				UdpTracer->print(F("TEMP:"));UdpTracer->print(temp,4);UdpTracer->print(F(";DTEMP:"));UdpTracer->print(dTemperature,4);UdpTracer->print(F(";OUT:"));UdpTracer->println(Output);
 				lastLog = millis();
 			}
 			break;
@@ -306,7 +320,7 @@ void PidState::loadFromEEProm(){
 	temp = EEPROM.get(addr, temp);
 	addr+=1;
 
-	if(temp!=eepromVer){
+	if(eepromVer!=03 && temp!=eepromVer){
 		Serial.print(F(">>>>>>>> WRONG EPROM VERSION expected "));Serial.print(eepromVer);Serial.print(F("FOUND "));Serial.println(temp);
 		return;
 	}
@@ -348,6 +362,13 @@ void PidState::loadFromEEProm(){
 	kd = EEPROM.get(addr, kd);
 	addr+=sizeof(double);
 	Serial.print(F("Readed kd: "));Serial.println(kd);
+
+	//if(eepromVer>3){
+		pidSampleTimeSecs = EEPROM.get(addr, pidSampleTimeSecs);
+		addr+=sizeof(double);
+		Serial.print(F("Readed Sample time secs: "));Serial.println(pidSampleTimeSecs);
+		if(pidSampleTimeSecs==NAN)pidSampleTimeSecs=5;
+//	}
 
 	EEPROM.commit();
 	EEPROM.end();
@@ -428,6 +449,10 @@ void PidState::savetoEEprom(){
 
 	Serial.print(F("EEPROMWriteSettings. Kd: "));Serial.println(kd);
 	EEPROM.put(addr, kd);
+	addr+=sizeof(double);
+
+	Serial.print(F("EEPROMWriteSettings. Sample time secs: "));Serial.println(pidSampleTimeSecs);
+	EEPROM.put(addr, pidSampleTimeSecs);
 	addr+=sizeof(double);
 
 	EEPROM.commit();

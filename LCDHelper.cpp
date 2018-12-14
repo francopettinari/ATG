@@ -119,6 +119,7 @@ void LCDHelper::display(PidState pstate){
 		case svPidKicConfig:
 		case svPidKdiConfig:
 		case svPidKddConfig:
+		case svPidSampleTimeConfig:
 			displayConfigPid(pstate);
 			break;
 		case svServo_Config:
@@ -145,6 +146,7 @@ void LCDHelper::displayConfigPid(PidState pstate){
 	lcd.PrintF(10, 0,F("Kp"));lcd.PrintDouble(13, 0,pstate.kp,3);
 	lcd.PrintF(10, 1,F("Ki"));lcd.PrintDouble(13, 1,pstate.ki,3);
 	lcd.PrintF(10, 2,F("Kd"));lcd.PrintDouble(13, 2,pstate.kd,3);
+	lcd.PrintF(10, 3,F("St"));lcd.PrintDouble(16, 3,pstate.pidSampleTimeSecs,0);
 }
 
 void LCDHelper::displayAutoTuneResult(PidState pstate){

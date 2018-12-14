@@ -98,13 +98,14 @@ void LCDBuffer::PrintF(const int x, const int y,const __FlashStringHelper *ifsh)
     }
 }
 
-void formatFloat(float f,char *buff, int digits){
-	if(digits<=0){
-		dtostrf(f, 3, 0, buff);
-	}else{
-		dtostrf(f, 4+digits, digits, buff);
-	}
-}
+extern void formatFloat(float f,char *buff, int digits);
+//void formatFloat(float f,char *buff, int digits){
+//	if(digits<=0){
+//		dtostrf(f, 3, 0, buff);
+//	}else{
+//		dtostrf(f, 4+digits, digits, buff);
+//	}
+//}
 
 
 void formatDouble(double d,char *buff, int digits){

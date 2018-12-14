@@ -5046,7 +5046,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_FR
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_FREQ/value=40
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_LD/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_LD/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_LD/value=eagle.flash.4m1m.ld
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_LD/value=eagle.flash.4m.ld
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_MODE/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_MODE/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_MODE/value=dio
@@ -5100,7 +5100,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_P
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_PAGESIZE/value=256
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_START/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_START/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_START/value=0x300000
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_START/value=0x100000
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SYSTEM.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SYSTEM.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SYSTEM.PATH/value=${A.RUNTIME.PLATFORM.PATH}/system
@@ -5457,7 +5457,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARD_NAM
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARD_NAME/value=NodeMCU 1.0 (ESP-12E Module)
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/value=COM4
+environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/value=fapeOTA.local 10.11.2.67
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ECLIPSE_LOCATION/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ECLIPSE_LOCATION/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ECLIPSE_LOCATION/value=E\:\\ProgramFiles\\sloeber\\
@@ -5487,7 +5487,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MAKE_LOCA
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MAKE_LOCATION/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\tools\\make\\
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/value=CpuFrequency\=80\nCrystalFreq\=26\nDebug\=Disabled\nDebugLevel\=None____\nFlashErase\=none\nFlashSize\=4M1M\nled\=11\nLwIPVariant\=v2mss536\nResetMethod\=nodemcu\nUploadSpeed\=115200\nVTable\=flash
+environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/value=CpuFrequency\=80\nCrystalFreq\=26\nDebug\=Disabled\nDebugLevel\=None____\nFlashErase\=none\nFlashSize\=4M3M\nled\=11\nLwIPVariant\=v2mss536\nResetMethod\=nodemcu\nUploadSpeed\=115200\nVTable\=flash
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OBJCOPY/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OBJCOPY/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OBJCOPY/value=${A.RECIPE.OBJCOPY.HEX.PATTERN}

@@ -197,7 +197,6 @@ void KpPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 		}
 		pidState.kp=ikp+decPart;
 	} else if(pidState.state==svPidKpdConfig){
-
 		decPart = (int)(decPart*100);
 		if(mvmnt==EncMoveCCW){
 			//Serial.println(F("CCW"));
@@ -207,6 +206,12 @@ void KpPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 			decPart+=1.0;
 		}
 		pidState.kp=ikp+(decPart/100.0);
+	} else if(pidState.state==svPidSampleTimeConfig){
+		if(mvmnt==EncMoveCCW){
+			pidState.pidSampleTimeSecs-=1.0;
+		}else if(mvmnt==EncMoveCW){
+			pidState.pidSampleTimeSecs+=1.0;
+		}
 	}
 }
 void KpPidConfigMenu::HandleEncoderPush(EncoderPushButtonState pst){
@@ -269,6 +274,7 @@ void KiPidConfigMenu::HandleEncoderPush(EncoderPushButtonState pst){
 	}
 }
 
+//Kd
 KdPidConfigMenu::KdPidConfigMenu():MenuItem(svPidKdiConfig){
 	Caption = F("Kd");
 }
@@ -306,16 +312,34 @@ void KdPidConfigMenu::HandleEncoderPush(EncoderPushButtonState pst){
 	}
 }
 
+//Sample time
+SampleTimePidConfigMenu::SampleTimePidConfigMenu():MenuItem(svPidSampleTimeConfig){
+	Caption = F("ST");
+}
+void SampleTimePidConfigMenu::OnSelectedInMenu(){
+	pidState.SetState(svPidSampleTimeConfig);
+}
+void SampleTimePidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
+	if(mvmnt==EncMoveCCW){
+		pidState.pidSampleTimeSecs--;
+	}else if(mvmnt==EncMoveCW){
+		pidState.pidSampleTimeSecs++;
+	}
+}
+void SampleTimePidConfigMenu::HandleEncoderPush(EncoderPushButtonState pst){
+	pidState.state = svPidConfig;
+	pidState.savetoEEprom();
+}
+
+//PID Config
 PidConfigMenu::PidConfigMenu():MenuItem(svPidConfig){
 	Caption = F("PID");
-	subMenuItems.resize(4);
+	subMenuItems.resize(5);
 	subMenuItems[0] = new UpMenu(svConfig);
-	kpMenu = new KpPidConfigMenu();
-	kiMenu = new KiPidConfigMenu();
-	kdMenu = new KdPidConfigMenu();
-	subMenuItems[1] = kpMenu;
-	subMenuItems[2] = kiMenu;
-	subMenuItems[3] = kdMenu;
+	subMenuItems[1] = kpMenu = new KpPidConfigMenu();
+	subMenuItems[2] = kiMenu = new KiPidConfigMenu();
+	subMenuItems[3] = kdMenu = new KdPidConfigMenu();
+	subMenuItems[4] = sampleTimeMenu = new SampleTimePidConfigMenu();
 }
 
 void PidConfigMenu::OnSelectedInMenu(){
@@ -324,13 +348,11 @@ void PidConfigMenu::OnSelectedInMenu(){
 
 ConfigMenu::ConfigMenu():MenuItem(svConfig){
 	Caption = F("Config");
-	upMenu = new UpMenu(svMain);
-	servoMenu = new ServoConfigMenu();
-    pidMenu = new PidConfigMenu();
+
 	subMenuItems.resize(3);
-	subMenuItems[0] = upMenu;
-	subMenuItems[1] = servoMenu;
-	subMenuItems[2] = pidMenu;
+	subMenuItems[0] = upMenu = new UpMenu(svMain);
+	subMenuItems[1] = servoMenu = new ServoConfigMenu();
+	subMenuItems[2] = pidMenu = new PidConfigMenu();
 }
 
 void ConfigMenu::OnSelectedInMenu(){
@@ -342,16 +364,14 @@ AutoTuneResultMenu::AutoTuneResultMenu():MenuItem(svRunAutoTuneResult){
 	Caption = F("Tune res.");
 	subMenuItems.resize(2);
 
-	confirmNSaveMenu = new CallbackMenuItem(svRun,F("Yes"),[](){
+	subMenuItems[0] = confirmNSaveMenu = new CallbackMenuItem(svRun,F("Yes"),[](){
 		pidState.ConfirmAutoTuneResult();
 		pidState.SetState(svRunAuto);
 	});
-	discardMenu = new CallbackMenuItem(svRun,F("No"),[](){
+	subMenuItems[1] = discardMenu = new CallbackMenuItem(svRun,F("No"),[](){
 		pidState.SetState(svRunAuto);
 	});
 
-	subMenuItems[0] = confirmNSaveMenu;
-	subMenuItems[1] = discardMenu;
 }
 
 void AutoTuneResultMenu::OnSelectedInMenu(){
@@ -419,13 +439,10 @@ void RunAutoTimerMenu::OnSelectedInMenu(){
 RunAutoMenu::RunAutoMenu():MenuItem(svRunAuto){
 	Caption=F("Auto");
 	subMenuItems.resize(3);
-
-	setpointMenu = new RunAutoSetpointMenu();
-	timerMenu = new RunAutoTimerMenu();
 	
 	subMenuItems[0] = new UpMenu(svRun);
-	subMenuItems[1] = setpointMenu;
-	subMenuItems[2] = timerMenu;
+	subMenuItems[1] = setpointMenu = new RunAutoSetpointMenu();
+	subMenuItems[2] = timerMenu = new RunAutoTimerMenu();
 }
 
 void RunAutoMenu::OnSelectedInMenu(){
@@ -442,12 +459,9 @@ RunMenu::RunMenu():MenuItem(svRun){
 	Caption = F("Run");
 	subMenuItems.resize(3);
 
-	runAutoMenu = new RunAutoMenu();
-	runAutoTuneMenu = new RunAutoTuneMenu();
-
 	subMenuItems[0] = new UpMenu(svMain);
-	subMenuItems[1] = runAutoMenu;
-	subMenuItems[2] = runAutoTuneMenu;
+	subMenuItems[1] = runAutoMenu = new RunAutoMenu();
+	subMenuItems[2] = runAutoTuneMenu = new RunAutoTuneMenu();
 }
 
 void RunMenu::OnSelectedInMenu(){
@@ -457,8 +471,8 @@ void RunMenu::OnSelectedInMenu(){
 MainMenu::MainMenu():MenuItem(-1){
 	Caption = F("Main");
 	subMenuItems.resize(2);
-	subMenuItems[0] = configMenu = new ConfigMenu();
-	subMenuItems[1] = runMenu = new RunMenu();
+	subMenuItems[0] = runMenu = new RunMenu();
+	subMenuItems[1] = configMenu = new ConfigMenu();
 }
 
 void MainMenu::OnSelectedInMenu(){
