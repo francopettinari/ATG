@@ -171,7 +171,7 @@ void LCDHelper::displayRun(PidState pstate){
 
 	//lcd.PrintDouble(14, 3,pstate.Output,1);
 	lcd.PrintF(10, 3,F("d"));
-	lcd.PrintDouble(11, 3,pstate.dTemperature,3);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
+	lcd.PrintDouble(11, 3,pstate.myDInput,3);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
 
 }
 

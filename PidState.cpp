@@ -9,7 +9,7 @@
 #include <EEPROM.h>
 #include "UDPTacer.h"
 
-PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P_ON_M, DIRECT),aTune(&temperature, &Output){
+PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P_ON_E, DIRECT),aTune(&temperature, &Output){
 	pid.SetSampleTime(pidSampleTimeSecs*1000);
 	pid.SetMode(MANUAL);
 	servo.attach(D8);  // attaches the servo on pin 9 to the servo object
@@ -18,7 +18,14 @@ PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P
 
 	aTune.SetNoiseBand(0.2);
 	aTune.SetLookbackSec(20);
-	dTemperature=0;
+//	dTemperature=0;
+
+	pid.myPTerm = &myPTerm;
+	pid.myITerm = &myITerm;
+	pid.myDTerm = &myDTerm;
+	pid.myDInput= &myDInput;
+	pid.myError = &myError;
+	pid.myOutputSum = &myOutputSum;
 }
 
 MenuItem* PidState::decodeCurrentMenu(){
@@ -247,34 +254,85 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 
 			if(pid.GetMode()!=AUTOMATIC){
 				Serial.println(F("PID switched to AUTOMATIC"));
-				pid.SetTunings(kp,ki,kd);
+				pid.SetTunings(kp,ki,kd,P_ON_E);
 				pid.SetControllerDirection(servoDirection==ServoDirectionCW?DIRECT:REVERSE);
 				pid.SetOutputLimits(servoMinValue,servoMaxValue);
 				pid.SetMode(AUTOMATIC);
 			}
 
-		    //when P_ON_M is active the I-Term is the one that will move
-			//the controller output.
-			//P-Term will oppose to the changes.
-			//D-Term will slow down the changes.
-
-			//this can be used only if P_ON_E is active
-//			if(Output-Setpoint>5){
-//				//ramp
-//				DynamicSetpoint=Setpoint;//FIXME build a ramp
-//				pid.SetTunings(kp,0,kd);
-//			}else{
-//				DynamicSetpoint=Setpoint;
-//				pid.SetTunings(kp,ki,kd);
-//			}
-			pid.Compute();
-			if(!IsServoUnderFireOff()){
-				setServoPosition(Output);
+			UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+			switch(fsmState){
+			case psRampimg:
+				if(temp<=DynamicSetpoint-6.3){
+					//fsmState = psRampimg; //keep staying in ramping
+				} else if(temp>DynamicSetpoint-6.3 && temp<DynamicSetpoint){
+					fsmState = psApproacing;
+					DynamicSetpoint=Setpoint;
+					pid.SetTunings(kp,ki,kd);
+					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
+				} else if(temp>=DynamicSetpoint){
+					DynamicSetpoint=Setpoint;
+					pid.SetTunings(kp,ki,kd);
+					fsmState = psKeepTemp;
+					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
+				}
+				break;
+			case psApproacing:
+				if(temp<=DynamicSetpoint-6.3){
+					fsmState = psRampimg;
+					DynamicSetpoint=Setpoint;//FIXME build a ramp
+					pid.SetTunings(kp,0,kd);
+					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
+				}  else if(temp>DynamicSetpoint-6.3 && temp<DynamicSetpoint){
+					//fsmState = psApproacing; //remain in approacing
+				} else if(temp>=DynamicSetpoint){
+					fsmState = psKeepTemp;
+					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
+				}
+				break;
+			case psKeepTemp:
+				if(temp<=DynamicSetpoint-6.3){
+					DynamicSetpoint=Setpoint;//FIXME build a ramp
+					pid.SetTunings(kp,0,kd);
+					fsmState = psRampimg; //possible? yes in case of power restore?
+					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
+				}  else if(temp>DynamicSetpoint-6.3 && temp<DynamicSetpoint){
+					fsmState = psApproacing; //remain in approacing
+					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
+				} else if(temp>=DynamicSetpoint){
+					//fsmState = psKeepTemp;
+				}
+				break;
 			}
 
-			if(millis()-lastLog>=1000){
-				Serial.print(temp,4);Serial.print(F(" "));Serial.print(dTemperature,4);Serial.print(F(" "));Serial.println(Output);
-				UdpTracer->print(F("TEMP:"));UdpTracer->print(temp,4);UdpTracer->print(F(";DTEMP:"));UdpTracer->print(dTemperature,4);UdpTracer->print(F(";OUT:"));UdpTracer->println(Output);
+			//this can be used only if P_ON_E is active
+			if(Setpoint-temp>6.3){
+				Serial.println("Diff over 6.3");
+				//ramp
+				DynamicSetpoint=Setpoint;//FIXME build a ramp
+				pid.SetTunings(kp,0,kd);
+			}else{
+				Serial.printf("Diff under 6.3 %.3f\n", ki);
+				DynamicSetpoint=Setpoint;
+				pid.SetTunings(kp,ki,kd);
+			}
+			pid.Compute();
+//			if(!IsServoUnderFireOff()){
+//				setServoPosition(Output);
+//			}
+
+			if(millis()-lastLog>=(pidSampleTimeSecs*1000)){
+				Serial.print(DynamicSetpoint,4);Serial.print(F(" "));Serial.print(Setpoint,4);Serial.print(F(" "));Serial.print(temp,4);Serial.print(F(" "));/*Serial.print(dTemperature,4);Serial.print(F(" "));*/Serial.println(Output);
+				UdpTracer->print(F("LOG:"));UdpTracer->print(millis(),4);
+			    UdpTracer->print(F(";SETP:"));UdpTracer->print(Setpoint,4);
+				UdpTracer->print(F(";TEMP:"));UdpTracer->print(temp,4);
+//				UdpTracer->print(F(";DTEMP:"));UdpTracer->print(dTemperature,4);
+				UdpTracer->print(F(";OUT:"));UdpTracer->print(Output,4);
+				UdpTracer->print(F(";PGAIN:"));UdpTracer->print(myPTerm,4);
+				UdpTracer->print(F(";IGAIN:"));UdpTracer->print(myITerm,4);
+				UdpTracer->print(F(";DGAIN:"));UdpTracer->print(myDTerm,4);
+				UdpTracer->print(F(";OUTSUM:"));UdpTracer->print(myOutputSum,4);
+				UdpTracer->print(F(";PIDDTEMP:"));UdpTracer->println(myDInput,4);
 				lastLog = millis();
 			}
 			break;

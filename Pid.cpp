@@ -114,8 +114,8 @@ void OTASetup() {
     }
   });
   ArduinoOTA.begin();
-  UdpTracer->println("OTA Ready");
-  UdpTracer->print("OTA IP address: ");
+  UdpTracer->println(F("OTA Ready"));
+  UdpTracer->print(F("OTA IP address: "));UdpTracer->println(WiFi.localIP().toString());
   Serial.println(WiFi.localIP());
 }
 void setup() {

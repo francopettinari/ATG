@@ -36,13 +36,14 @@ enum PidStateValue {
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
+enum FsmState {psRampimg=10,psApproacing=20,psKeepTemp=30};
 
 class PidState {
 	float lastPressMillis=0;
     float lastPressState = EncoderPushButtonNone;
 	void updateLcd();
 private:
-
+	FsmState fsmState=psRampimg;
 
 	EncoderPushButtonState decodeEncoderPushBtnState (boolean encoderPress);
 	boolean IsEncoderPressed(boolean encoderPress);
@@ -65,7 +66,7 @@ public:
 	MenuItem         *topMenu = NULL;
 	int              stateSelection = 0, currMenuStart=0;
 	int              currEncoderPos=0,prevEncoderPos=0;    // a counter for the rotary encoder dial
-	double           temperature = 0, lastTemperature=0,dTemperature;
+	double           temperature = 0, lastTemperature=0/*,dTemperature*/;
 	float pidSampleTimeSecs = 5;
 	float lastTemperatureMillis=0;
 	double Setpoint = 25,DynamicSetpoint=25;
@@ -77,6 +78,14 @@ public:
 	boolean autoTune = false;
 	double kp=2,ki=0.5,kd=2;
 	double akp=2,aki=0.5,akd=2;
+
+
+	double myPTerm;
+	double myITerm;
+	double myDTerm;
+	double myDInput;
+	double myError;
+	double myOutputSum;
 
 	PID_ATune getATune(){return aTune;}
 	void setServoPosition(int degree);
@@ -139,19 +148,19 @@ public:
 	void setTemperature(double value){
 //		value = RoundTo025(value);
 		float now = millis();
-		if(lastTemperatureMillis==0){
-			lastTemperatureMillis=now;
-			lastTemperature = temperature;
-			dTemperature=0;
-		}else{
-
-			if(now-lastTemperatureMillis>=pidSampleTimeSecs*1000){
-				dTemperature = (value-lastTemperature)*1000.0/(now-lastTemperatureMillis);
-				dTemperature = dTemperature * 60.0;//degrees per minute
-				lastTemperatureMillis=now;
-				lastTemperature = value;
-			}
-		}
+//		if(lastTemperatureMillis==0){
+//			lastTemperatureMillis=now;
+//			lastTemperature = temperature;
+//			dTemperature=0;
+//		}else{
+//
+//			if(now-lastTemperatureMillis>=pidSampleTimeSecs*1000){
+//				dTemperature = (value-lastTemperature)*1000.0/(now-lastTemperatureMillis);
+//				dTemperature = dTemperature * 60.0;//degrees per minute
+//				lastTemperatureMillis=now;
+//				lastTemperature = value;
+//			}
+//		}
 		if(temperature==value)return;
 		temperature = value;
 	}
