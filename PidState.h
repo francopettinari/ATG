@@ -36,15 +36,14 @@ enum PidStateValue {
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
-enum FsmState {psRampimg=10,psApproacing=20,psKeepTemp=30};
+enum FsmState {psIdle,psRampimg=10,psApproacing=20,psKeepTemp=30};
 
 class PidState {
 	float lastPressMillis=0;
     float lastPressState = EncoderPushButtonNone;
 	void updateLcd();
 private:
-	FsmState fsmState=psRampimg;
-
+	FsmState fsmState=psIdle;
 	EncoderPushButtonState decodeEncoderPushBtnState (boolean encoderPress);
 	boolean IsEncoderPressed(boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
@@ -69,9 +68,12 @@ public:
 	double           temperature = 0, lastTemperature=0/*,dTemperature*/;
 	float pidSampleTimeSecs = 5;
 	float lastTemperatureMillis=0;
-	double Setpoint = 25,DynamicSetpoint=25;
+	double Setpoint = 25,DynamicSetpoint=25,pDynamicSetpoint=0;
+	float approacingStartMillis,lastDynSetpointCalcMillis = 0;
+	float approacingStartTemp = 0;
 	double autotuneSetPoint = 0;
-	double Output;
+	double Output,PrevOutput=0;
+	float PrevOutputChangeMillis = 0;
 	void SetServoOff(bool value);
 	bool IsServoOff();
 	bool IsServoUnderFireOff();
@@ -80,9 +82,12 @@ public:
 	double akp=2,aki=0.5,akd=2;
 
 
+
+
 	double myPTerm;
 	double myITerm;
 	double myDTerm;
+	double myDTimeMillis;
 	double myDInput;
 	double myError;
 	double myOutputSum;
@@ -170,6 +175,9 @@ public:
 	}
 
 	void update(double temp,int encoderPos, boolean encoderPress);
+	void updatePidStatus();
+	void startRamp();
+	void updateRamp();
 	void loadFromEEProm();
 	void savetoEEprom();
 

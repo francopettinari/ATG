@@ -157,8 +157,8 @@ void LCDHelper::displayAutoTuneResult(PidState pstate){
 }
 
 void LCDHelper::displayRun(PidState pstate){
-	lcd.PrintChar(10, 0,(char)TEMPERATURE_CHAR); lcd.PrintDouble(11, 0,pstate.getTemperature(),3);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-	lcd.PrintChar(10, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(11, 1,pstate.Setpoint        ,3);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
+	lcd.PrintChar(12, 0,(char)TEMPERATURE_CHAR); lcd.PrintDouble(13, 0,pstate.getTemperature(),2);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+	lcd.PrintChar(12, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(13, 1,pstate.Setpoint        ,2);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
 
 	int o = 0;
 	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
@@ -167,11 +167,12 @@ void LCDHelper::displayRun(PidState pstate){
 	}else{
 		o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
 	}
-	lcd.PrintChar(10, 2,(char)HEAT_CHAR); lcd.PrintDouble(11, 2,o,3); 	lcd.PrintF(19, 2,F("%"));
+	lcd.PrintChar(12, 2,(char)HEAT_CHAR); lcd.PrintDouble(13, 2,o,2); 	lcd.PrintF(19, 2,F("%"));
 
 	//lcd.PrintDouble(14, 3,pstate.Output,1);
-	lcd.PrintF(10, 3,F("d"));
-	lcd.PrintDouble(11, 3,pstate.myDInput,3);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
+	lcd.PrintF(12, 3,F("d"));
+	float tempDerivate = pstate.myDInput/pstate.myDTimeMillis*(float)60000.0; //DTemp/DTime(minutes) °C/min
+	lcd.PrintDouble(13, 3,tempDerivate,2);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
 
 }
 

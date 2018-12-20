@@ -10,11 +10,14 @@
 
 UDPTracer* UdpTracer = new UDPTracer();
 //IPAddress broadcastIp;
-IPAddress broadcastIp(192,168,1,109);
+IPAddress broadcastIp (192,168,1,109);
+//IPAddress broadcastIp(10,11,2,55);
 unsigned int broadcastPort = 8267;      // local port to listen on
 
 UDPTracer::UDPTracer() {
 //	broadcastIp = ~WiFi.subnetMask() | WiFi.localIP();
+	//broadcastIp = WiFi.localIP();
+	//broadcastIp[3] = 255;
 }
 
 UDPTracer::~UDPTracer() {
@@ -42,7 +45,7 @@ void UDPTracer::Log(__FlashStringHelper *ifsh){
 void UDPTracer::Log(String s){
 	Udp.beginPacketMulticast(broadcastIp, broadcastPort, WiFi.localIP());
 	Udp.write(s.c_str());
-	if(s.endsWith("\n")){
+	if(s.endsWith(F("\n"))){
 		Udp.endPacket();
 	}
 }
@@ -141,5 +144,5 @@ void UDPTracer::println(double n, int digits){
 }
 
 void UDPTracer::println(void) {
-    return print("\r\n");
+    return print(F("\r\n"));
 }

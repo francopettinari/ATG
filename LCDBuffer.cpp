@@ -107,8 +107,15 @@ extern void formatFloat(float f,char *buff, int digits);
 //	}
 //}
 
+float roundToDp( float f, int digits ) {
+	float multiplier = powf( 10.0f, digits );
+	f = roundf( f * multiplier ) / multiplier;
+	return f;
+}
+
 
 void formatDouble(double d,char *buff, int digits){
+	d = roundToDp(d,digits);
 	if(digits<=0){
 		dtostrf(d, 3, 0, buff);
 	}else{
@@ -124,6 +131,7 @@ void LCDBuffer::PrintDouble(const int x, const int y,double d, int digits){
 
 void LCDBuffer::PrintFloat(const int x, const int y,float f, int digits){
 	char line[_width+1];
+	f = roundToDp(f,digits);
 	formatFloat(f,line,digits);
 	PrintPChar(x,y,line);
 }

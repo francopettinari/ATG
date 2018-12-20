@@ -118,6 +118,16 @@ void OTASetup() {
   UdpTracer->print(F("OTA IP address: "));UdpTracer->println(WiFi.localIP().toString());
   Serial.println(WiFi.localIP());
 }
+
+void readGasAlarm() {
+	float sensorValue = analogRead(A0);         // Read the Sensor Values from Analog Pin A0
+	float sensorVoltage = sensorValue/1024*5.0; // Calculate the Sensor Voltage
+	Serial.print("sensor voltage = ");          // Print the Message
+	Serial.print(sensorVoltage);                // Print the Values
+	Serial.println(" V");                       // Print the Message
+}
+
+
 void setup() {
 	Serial.begin(115200);
 	OTASetup();
@@ -146,7 +156,7 @@ bool tempReadRequested = false;
 float lastTempReadMillis = 0;
 
 void loop() {
-	if(WiFi.status() == WL_CONNECTED){
+	if(WiFi.isConnected()){
 		ArduinoOTA.handle();
 	}
 

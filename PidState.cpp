@@ -15,6 +15,7 @@ PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P
 	servo.attach(D8);  // attaches the servo on pin 9 to the servo object
 	//setServoPosition(0);
 	currentMenu = new MainMenu();
+	approacingStartMillis=0;
 
 	aTune.SetNoiseBand(0.2);
 	aTune.SetLookbackSec(20);
@@ -24,6 +25,7 @@ PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P
 	pid.myITerm = &myITerm;
 	pid.myDTerm = &myDTerm;
 	pid.myDInput= &myDInput;
+	pid.myDTimeMillis= &myDTimeMillis;
 	pid.myError = &myError;
 	pid.myOutputSum = &myOutputSum;
 }
@@ -134,14 +136,68 @@ EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
 }
 
 void PidState::setServoPosition(int degree){
+	bool changed = false;
+	float now = millis();
 	if(servoDirection==ServoDirectionCW){
-		servo.write(degree + servoMinValue);
-//		Serial.print("Servo pos    :");Serial.println(degree + servoMin);
+		if (degree<=servoMinValue && PrevOutput>servoMinValue){
+
+			//now swtiching off
+			if(now-PrevOutputChangeMillis>5000){
+				UdpTracer->println(F("Switch off"));
+				servo.write(degree);
+				changed=true;
+			}else{
+				//skip and wait
+				UdpTracer->println(F("Switch off: wait 5 seconds..."));
+			}
+		}else if (degree>servoMinValue && PrevOutput<=servoMinValue){
+			//now switchin on
+			if(now-PrevOutputChangeMillis>5000){
+				servo.write(degree);
+				UdpTracer->println(F("Switch on"));
+				changed=true;
+			}else{
+				//skip and wait
+				UdpTracer->println(F("Switch on: wait 5 seconds..."));
+			}
+		} else{
+			//noi problem, no transition ON->OFF or OFF->ON
+			servo.write(degree);
+			changed=true;
+		}
 	}else{
-		servo.write(servoMaxValue  - degree);
-//		Serial.print("Servo pos    :");Serial.println(servoMax  - degree);
+		if (degree>=servoMaxValue && PrevOutput<servoMaxValue){
+			//now swtiching off
+			if(now-PrevOutputChangeMillis>5000){
+				UdpTracer->println(F("Switch off"));
+				servo.write(degree);
+				changed=true;
+			}else{
+				//skip and wait
+				UdpTracer->println(F("Switch off: wait 5 seconds..."));
+			}
+		}else if (degree<=servoMaxValue && PrevOutput>servoMaxValue){
+			//now switchin on
+			if(now-PrevOutputChangeMillis>5000){
+				UdpTracer->println(F("Switch on"));
+				servo.write(degree);
+				changed=true;
+			}else{
+				//skip and wait
+				UdpTracer->println(F("Switch on: wait 5 seconds..."));
+			}
+		} else{
+			//noi problem, no transition ON->OFF or OFF->ON
+			UdpTracer->print(F("Servo position: "));UdpTracer->println(degree);
+			servo.write(degree);
+			changed=true;
+		}
 	}
-	delay(15);
+	if(changed){
+		PrevOutput = degree;
+		PrevOutputChangeMillis = now;
+		delay(15);
+	}
 }
 
 void PidState::SetServoOff(bool value){
@@ -152,16 +208,11 @@ void PidState::SetServoOff(bool value){
 bool PidState::IsServoOff(){return servoOFF;}
 
 bool PidState::IsServoUnderFireOff(){
-//	Serial.println(F("isServoUnderFireOff"));
-//	Serial.print(F("Servo: "));Serial.println(ps.servo.read());
-//	Serial.print(F("ps.Output: "));Serial.println(Output);
 	if(servoDirection==ServoDirectionCW){
 		bool calculatedServoOff = Output<=servoMinValue;
 		if(calculatedServoOff){
 			if(!IsServoOff()){
 //				Serial.println(F("SWITCH TO Fire OFF"));
-				setServoPosition(servoMinValue+(servoMinValue+servoMaxValue)/2);
-				delay(2000);
 				setServoPosition(0);
 				SetServoOff(true);
 			}else{
@@ -175,8 +226,6 @@ bool PidState::IsServoUnderFireOff(){
 		if(servo.read()==180) return true;
 		if(Output>=servoMaxValue){
 //			Serial.println(F("CCW Fire OFF"));
-			setServoPosition(servoMaxValue-(servoMinValue+servoMaxValue)/2);
-			delay(2000);
 			setServoPosition(180);
 			return true;
 		}
@@ -185,6 +234,106 @@ bool PidState::IsServoUnderFireOff(){
 //	Serial.println(F("Fire is ON"));
 	return false;
 }
+
+void PidState::updatePidStatus(){
+	UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+	switch(fsmState){
+	case psIdle:
+			pid.SetTunings(kp,ki,kd);
+			DynamicSetpoint=Setpoint;
+		break;
+	case psRampimg:
+			DynamicSetpoint=Setpoint; //this has to be recalculated time by time
+			pid.SetTunings(kp,2.5,0);
+		break;
+	case psApproacing:
+			DynamicSetpoint=Setpoint;
+			pid.SetTunings(kp,ki,kd);
+		break;
+	case psKeepTemp:
+			DynamicSetpoint=Setpoint;//FIXME build a ramp
+			pid.SetTunings(kp,ki,kd);
+		break;
+	}
+}
+
+void PidState::startRamp(){
+	approacingStartMillis = millis();
+	approacingStartTemp = temperature;
+	DynamicSetpoint=temperature;
+	if(DynamicSetpoint>Setpoint){
+		DynamicSetpoint=Setpoint;
+	}
+	pDynamicSetpoint = DynamicSetpoint;
+}
+void PidState::updateRamp(){
+	float now = millis();
+
+	if (lastDynSetpointCalcMillis==0)lastDynSetpointCalcMillis=now;
+	float deltaSecs = (now-lastDynSetpointCalcMillis)/(float)1000.0;
+	if(deltaSecs>5){
+		float roChange = 1.0/(float)60000.0;//°C/min
+		if(abs(pDynamicSetpoint-Setpoint) <= roChange*(now-lastDynSetpointCalcMillis)){ //if the rate of change is going to push the drive past the setpoint, just make it equal the setpoint otherwise it'll oscillate
+			DynamicSetpoint = Setpoint;
+		}
+		else{ //If more ramping is required, calculate the change required for the time period passed to keep the rate of change constant, and add it to the drive.
+		  if(Setpoint>pDynamicSetpoint){  //possitive direction
+			  DynamicSetpoint = pDynamicSetpoint+(roChange*(now-lastDynSetpointCalcMillis));
+		  }
+		  else{   //negative direction
+			  DynamicSetpoint = pDynamicSetpoint-(roChange*(now-lastDynSetpointCalcMillis));
+		  }
+		}
+		lastDynSetpointCalcMillis = now;;
+		pDynamicSetpoint = DynamicSetpoint;
+
+//		DynamicSetpoint = approacingStartTemp+(now-approacingStartMillis)/(float)60000.0;
+		lastDynSetpointCalcMillis = now;
+		UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
+	}
+}
+//void PidState::updateRamp(){
+//	float now = millis();
+//	float deltaSecs = (now-approacingStartMillis)/(float)1000.0;
+//	float deltaT = temperature-approacingStartTemp;
+//	if(deltaSecs>15){
+//		//recalculate the ramp if needed
+////		if(abs(deltaT)<0.1){
+////			//UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
+////			return;
+////		}
+//		UdpTracer->print(F("DT:"));UdpTracer->printFloat(deltaT,4);UdpTracer->println();
+//		UdpTracer->print(F("DSecs:"));UdpTracer->printFloat(deltaSecs,4);UdpTracer->println();
+//		float tDeriv = deltaT/deltaSecs;
+////		if(abs(tDeriv)<0.0001){
+////			//UdpTracer->print(F("deltaT/deltaSecs:x "));UdpTracer->printFloat(tDeriv,4);UdpTracer->println();
+////			return;
+////		}else{
+////			//UdpTracer->print(F("deltaT/deltaSecs:y "));UdpTracer->printFloat(tDeriv,4);UdpTracer->println();
+////		}
+//
+//		tDeriv = tDeriv*(float)60.0;
+////		UdpTracer->print(F("deltaT/deltaSecs/(float)60:"));UdpTracer->printFloat(der,4);UdpTracer->println();
+//		UdpTracer->print(F("Ramp ratio (°C/Min):"));UdpTracer->printFloat(tDeriv,4);UdpTracer->println();
+//		UdpTracer->print(F("Forecast temperature: "));UdpTracer->printFloat(approacingStartTemp+tDeriv,4);UdpTracer->println();
+//		//when tDeriv=1 we are on the right way
+//		//when tDeriv>1 we must decrease the dynamic setpoint forecast
+//		//when tDeriv<1 we must increase the dynamic setpoint forecast
+//		float correctionDeriv = 1-tDeriv;
+//		//when correctionDeriv=0 we are on the right way
+//		//when correctionDeriv>0 we must decrease the dynamic setpoint forecast
+//		//when correctionDeriv<0 we must increase the dynamic setpoint forecast
+//
+//		float ratioForecastDeltaT = 1/tDeriv;
+//		DynamicSetpoint += correctionDeriv/4; //15 secs already passed
+//		approacingStartTemp = temperature;
+//		approacingStartMillis = now;
+//		UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
+//	}
+//	//
+//}
+
+
 
 void PidState::update(double temp,int encoderPos, boolean encoderPress){
 
@@ -260,80 +409,92 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				pid.SetMode(AUTOMATIC);
 			}
 
-			UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+			float now = millis();
+
 			switch(fsmState){
-			case psRampimg:
-				if(temp<=DynamicSetpoint-6.3){
-					//fsmState = psRampimg; //keep staying in ramping
-				} else if(temp>DynamicSetpoint-6.3 && temp<DynamicSetpoint){
+			case psIdle:
+				if(temp<=Setpoint-1){
+					fsmState = psRampimg;
+					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					updatePidStatus();
+					startRamp();
+				} else if(temp>Setpoint-1 && temp<Setpoint){
 					fsmState = psApproacing;
-					DynamicSetpoint=Setpoint;
-					pid.SetTunings(kp,ki,kd);
-					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
-				} else if(temp>=DynamicSetpoint){
-					DynamicSetpoint=Setpoint;
-					pid.SetTunings(kp,ki,kd);
+					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					updatePidStatus();
+				} else if(temp>=Setpoint){
 					fsmState = psKeepTemp;
-					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
+					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					updatePidStatus();
+				}
+				UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
+				break;
+			case psRampimg:
+				if(temp<=Setpoint-1){
+					//fsmState = psRampimg; //keep staying in ramping
+					updateRamp();
+				} else if(temp>Setpoint-1 && temp<Setpoint){
+					fsmState = psApproacing;
+					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					pid.Initialize();
+					updatePidStatus();
+				} else if(temp>=Setpoint){
+					fsmState = psKeepTemp;
+					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					updatePidStatus();
 				}
 				break;
 			case psApproacing:
-				if(temp<=DynamicSetpoint-6.3){
+				if(temp<=Setpoint-1){
 					fsmState = psRampimg;
-					DynamicSetpoint=Setpoint;//FIXME build a ramp
-					pid.SetTunings(kp,0,kd);
-					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
-				}  else if(temp>DynamicSetpoint-6.3 && temp<DynamicSetpoint){
+					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					updatePidStatus();
+					startRamp();
+				}  else if(temp>Setpoint-1 && temp<Setpoint){
 					//fsmState = psApproacing; //remain in approacing
-				} else if(temp>=DynamicSetpoint){
+				} else if(temp>=Setpoint){
 					fsmState = psKeepTemp;
-					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
+					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					updatePidStatus();
 				}
 				break;
 			case psKeepTemp:
-				if(temp<=DynamicSetpoint-6.3){
-					DynamicSetpoint=Setpoint;//FIXME build a ramp
-					pid.SetTunings(kp,0,kd);
+				// a change in state only allowed if more than 30 seconds have passed
+				if(temp<=Setpoint-6.3){
 					fsmState = psRampimg; //possible? yes in case of power restore?
-					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
-				}  else if(temp>DynamicSetpoint-6.3 && temp<DynamicSetpoint){
+					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					updatePidStatus();
+					startRamp();
+				}  else if(temp>Setpoint-6.3 && temp<Setpoint){
 					fsmState = psApproacing; //remain in approacing
-					UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
-				} else if(temp>=DynamicSetpoint){
+					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					updatePidStatus();
+
+				} else if(temp>=Setpoint){
 					//fsmState = psKeepTemp;
 				}
 				break;
 			}
 
-			//this can be used only if P_ON_E is active
-			if(Setpoint-temp>6.3){
-				Serial.println("Diff over 6.3");
-				//ramp
-				DynamicSetpoint=Setpoint;//FIXME build a ramp
-				pid.SetTunings(kp,0,kd);
-			}else{
-				Serial.printf("Diff under 6.3 %.3f\n", ki);
-				DynamicSetpoint=Setpoint;
-				pid.SetTunings(kp,ki,kd);
+			bool computed = pid.Compute();
+			if(!IsServoUnderFireOff()){
+				setServoPosition(Output);
 			}
-			pid.Compute();
-//			if(!IsServoUnderFireOff()){
-//				setServoPosition(Output);
-//			}
 
-			if(millis()-lastLog>=(pidSampleTimeSecs*1000)){
-				Serial.print(DynamicSetpoint,4);Serial.print(F(" "));Serial.print(Setpoint,4);Serial.print(F(" "));Serial.print(temp,4);Serial.print(F(" "));/*Serial.print(dTemperature,4);Serial.print(F(" "));*/Serial.println(Output);
-				UdpTracer->print(F("LOG:"));UdpTracer->print(millis(),4);
-			    UdpTracer->print(F(";SETP:"));UdpTracer->print(Setpoint,4);
-				UdpTracer->print(F(";TEMP:"));UdpTracer->print(temp,4);
-//				UdpTracer->print(F(";DTEMP:"));UdpTracer->print(dTemperature,4);
-				UdpTracer->print(F(";OUT:"));UdpTracer->print(Output,4);
-				UdpTracer->print(F(";PGAIN:"));UdpTracer->print(myPTerm,4);
-				UdpTracer->print(F(";IGAIN:"));UdpTracer->print(myITerm,4);
-				UdpTracer->print(F(";DGAIN:"));UdpTracer->print(myDTerm,4);
-				UdpTracer->print(F(";OUTSUM:"));UdpTracer->print(myOutputSum,4);
+			if(computed){
+//			if(now-lastLog>=(pidSampleTimeSecs*1000)){
+				Serial.print(DynamicSetpoint,4);Serial.print(F(" "));Serial.print(Setpoint,4);Serial.print(F(" "));Serial.print(temp,4);Serial.print(F(" "));Serial.println(Output);
+				UdpTracer->print(F("LOG:")      );UdpTracer->print(now,4);
+			    UdpTracer->print(F(";SETP:")    );UdpTracer->print(Setpoint,4);
+			    UdpTracer->print(F(";DSETP:")    );UdpTracer->print(DynamicSetpoint,4);
+				UdpTracer->print(F(";TEMP:")    );UdpTracer->print(temp,4);
+				UdpTracer->print(F(";OUT:")     );UdpTracer->print(Output,4);
+				UdpTracer->print(F(";PGAIN:")   );UdpTracer->print(myPTerm,4);
+				UdpTracer->print(F(";IGAIN:")   );UdpTracer->print(myITerm,4);
+				UdpTracer->print(F(";DGAIN:")   );UdpTracer->print(myDTerm,4);
+				UdpTracer->print(F(";OUTSUM:")  );UdpTracer->print(myOutputSum,4);
 				UdpTracer->print(F(";PIDDTEMP:"));UdpTracer->println(myDInput,4);
-				lastLog = millis();
+//				lastLog = now;
 			}
 			break;
 		}
