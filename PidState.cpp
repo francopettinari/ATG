@@ -139,22 +139,22 @@ void PidState::setServoPosition(int degree){
 	bool changed = false;
 	float now = millis();
 	if(servoDirection==ServoDirectionCW){
-		if (degree<=servoMinValue && PrevOutput>servoMinValue){
+		if (degree<=servoMinValue && prevDegree>servoMinValue){
 
 			//now swtiching off
 			if(now-PrevOutputChangeMillis>5000){
 				UdpTracer->println(F("Switch off"));
-				servo.write(degree);
+				servo.write(0);
 				changed=true;
 			}else{
 				//skip and wait
 				UdpTracer->println(F("Switch off: wait 5 seconds..."));
 			}
-		}else if (degree>servoMinValue && PrevOutput<=servoMinValue){
+		}else if (degree>servoMinValue && prevDegree<=servoMinValue){
 			//now switchin on
 			if(now-PrevOutputChangeMillis>5000){
-				servo.write(degree);
 				UdpTracer->println(F("Switch on"));
+				servo.write(180);
 				changed=true;
 			}else{
 				//skip and wait
@@ -166,7 +166,7 @@ void PidState::setServoPosition(int degree){
 			changed=true;
 		}
 	}else{
-		if (degree>=servoMaxValue && PrevOutput<servoMaxValue){
+		if (degree>=servoMaxValue && prevDegree<servoMaxValue){
 			//now swtiching off
 			if(now-PrevOutputChangeMillis>5000){
 				UdpTracer->println(F("Switch off"));
@@ -176,7 +176,7 @@ void PidState::setServoPosition(int degree){
 				//skip and wait
 				UdpTracer->println(F("Switch off: wait 5 seconds..."));
 			}
-		}else if (degree<=servoMaxValue && PrevOutput>servoMaxValue){
+		}else if (degree<=servoMaxValue && prevDegree>servoMaxValue){
 			//now switchin on
 			if(now-PrevOutputChangeMillis>5000){
 				UdpTracer->println(F("Switch on"));
@@ -194,7 +194,7 @@ void PidState::setServoPosition(int degree){
 		}
 	}
 	if(changed){
-		PrevOutput = degree;
+		prevDegree = degree;
 		PrevOutputChangeMillis = now;
 		delay(15);
 	}
@@ -287,53 +287,10 @@ void PidState::updateRamp(){
 		lastDynSetpointCalcMillis = now;;
 		pDynamicSetpoint = DynamicSetpoint;
 
-//		DynamicSetpoint = approacingStartTemp+(now-approacingStartMillis)/(float)60000.0;
 		lastDynSetpointCalcMillis = now;
 		UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
 	}
 }
-//void PidState::updateRamp(){
-//	float now = millis();
-//	float deltaSecs = (now-approacingStartMillis)/(float)1000.0;
-//	float deltaT = temperature-approacingStartTemp;
-//	if(deltaSecs>15){
-//		//recalculate the ramp if needed
-////		if(abs(deltaT)<0.1){
-////			//UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
-////			return;
-////		}
-//		UdpTracer->print(F("DT:"));UdpTracer->printFloat(deltaT,4);UdpTracer->println();
-//		UdpTracer->print(F("DSecs:"));UdpTracer->printFloat(deltaSecs,4);UdpTracer->println();
-//		float tDeriv = deltaT/deltaSecs;
-////		if(abs(tDeriv)<0.0001){
-////			//UdpTracer->print(F("deltaT/deltaSecs:x "));UdpTracer->printFloat(tDeriv,4);UdpTracer->println();
-////			return;
-////		}else{
-////			//UdpTracer->print(F("deltaT/deltaSecs:y "));UdpTracer->printFloat(tDeriv,4);UdpTracer->println();
-////		}
-//
-//		tDeriv = tDeriv*(float)60.0;
-////		UdpTracer->print(F("deltaT/deltaSecs/(float)60:"));UdpTracer->printFloat(der,4);UdpTracer->println();
-//		UdpTracer->print(F("Ramp ratio (°C/Min):"));UdpTracer->printFloat(tDeriv,4);UdpTracer->println();
-//		UdpTracer->print(F("Forecast temperature: "));UdpTracer->printFloat(approacingStartTemp+tDeriv,4);UdpTracer->println();
-//		//when tDeriv=1 we are on the right way
-//		//when tDeriv>1 we must decrease the dynamic setpoint forecast
-//		//when tDeriv<1 we must increase the dynamic setpoint forecast
-//		float correctionDeriv = 1-tDeriv;
-//		//when correctionDeriv=0 we are on the right way
-//		//when correctionDeriv>0 we must decrease the dynamic setpoint forecast
-//		//when correctionDeriv<0 we must increase the dynamic setpoint forecast
-//
-//		float ratioForecastDeltaT = 1/tDeriv;
-//		DynamicSetpoint += correctionDeriv/4; //15 secs already passed
-//		approacingStartTemp = temperature;
-//		approacingStartMillis = now;
-//		UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
-//	}
-//	//
-//}
-
-
 
 void PidState::update(double temp,int encoderPos, boolean encoderPress){
 
@@ -441,6 +398,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				} else if(temp>=Setpoint){
 					fsmState = psKeepTemp;
 					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					pid.Initialize();
 					updatePidStatus();
 				}
 				break;
@@ -455,21 +413,22 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				} else if(temp>=Setpoint){
 					fsmState = psKeepTemp;
 					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					pid.Initialize();
 					updatePidStatus();
 				}
 				break;
 			case psKeepTemp:
 				// a change in state only allowed if more than 30 seconds have passed
-				if(temp<=Setpoint-6.3){
+				if(temp<=Setpoint-1){
 					fsmState = psRampimg; //possible? yes in case of power restore?
 					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
 					updatePidStatus();
 					startRamp();
-				}  else if(temp>Setpoint-6.3 && temp<Setpoint){
+				}  else if(temp>Setpoint-1 && temp<Setpoint){
 					fsmState = psApproacing; //remain in approacing
 					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					pid.Initialize();
 					updatePidStatus();
-
 				} else if(temp>=Setpoint){
 					//fsmState = psKeepTemp;
 				}
@@ -482,11 +441,10 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 
 			if(computed){
-//			if(now-lastLog>=(pidSampleTimeSecs*1000)){
 				Serial.print(DynamicSetpoint,4);Serial.print(F(" "));Serial.print(Setpoint,4);Serial.print(F(" "));Serial.print(temp,4);Serial.print(F(" "));Serial.println(Output);
 				UdpTracer->print(F("LOG:")      );UdpTracer->print(now,4);
 			    UdpTracer->print(F(";SETP:")    );UdpTracer->print(Setpoint,4);
-			    UdpTracer->print(F(";DSETP:")    );UdpTracer->print(DynamicSetpoint,4);
+			    UdpTracer->print(F(";DSETP:")   );UdpTracer->print(DynamicSetpoint,4);
 				UdpTracer->print(F(";TEMP:")    );UdpTracer->print(temp,4);
 				UdpTracer->print(F(";OUT:")     );UdpTracer->print(Output,4);
 				UdpTracer->print(F(";PGAIN:")   );UdpTracer->print(myPTerm,4);
@@ -494,7 +452,6 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				UdpTracer->print(F(";DGAIN:")   );UdpTracer->print(myDTerm,4);
 				UdpTracer->print(F(";OUTSUM:")  );UdpTracer->print(myOutputSum,4);
 				UdpTracer->print(F(";PIDDTEMP:"));UdpTracer->println(myDInput,4);
-//				lastLog = now;
 			}
 			break;
 		}

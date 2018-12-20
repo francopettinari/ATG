@@ -72,7 +72,7 @@ public:
 	float approacingStartMillis,lastDynSetpointCalcMillis = 0;
 	float approacingStartTemp = 0;
 	double autotuneSetPoint = 0;
-	double Output,PrevOutput=0;
+	double Output,prevDegree=0;
 	float PrevOutputChangeMillis = 0;
 	void SetServoOff(bool value);
 	bool IsServoOff();
