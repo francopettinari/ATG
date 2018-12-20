@@ -135,105 +135,111 @@ EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
 	return EncMoveNone;
 }
 
+void PidState::writeServoPosition(int degree){
+	servo.write(degree);
+	delay(15);
+	if(servoDirection==ServoDirectionCW){
+		SetServoOff(degree<=servoMinValue);
+	}else{
+		SetServoOff(degree>=servoMaxValue);
+	}
+	UdpTracer->print(F("Servo position: "));UdpTracer->println(degree);
+}
+
 void PidState::setServoPosition(int degree){
-	bool changed = false;
 	float now = millis();
 	if(servoDirection==ServoDirectionCW){
-		if (degree<=servoMinValue && prevDegree>servoMinValue){
+		if(degree<=servoMinValue && IsServoOff()) return; //burner is already off
 
+		if (degree<=servoMinValue && prevDegree>servoMinValue){
 			//now swtiching off
 			if(now-PrevOutputChangeMillis>5000){
-				UdpTracer->println(F("Switch off"));
-				servo.write(0);
-				changed=true;
+				writeServoPosition(0);
 			}else{
 				//skip and wait
 				UdpTracer->println(F("Switch off: wait 5 seconds..."));
+				return;
 			}
 		}else if (degree>servoMinValue && prevDegree<=servoMinValue){
 			//now switchin on
 			if(now-PrevOutputChangeMillis>5000){
-				UdpTracer->println(F("Switch on"));
-				servo.write(180);
-				changed=true;
+				writeServoPosition(degree);
 			}else{
 				//skip and wait
 				UdpTracer->println(F("Switch on: wait 5 seconds..."));
+				return;
 			}
 		} else{
-			//noi problem, no transition ON->OFF or OFF->ON
-			servo.write(degree);
-			changed=true;
+			//no problem, no transition ON->OFF or OFF->ON
+			writeServoPosition(degree);
 		}
 	}else{
+		if(degree>=servoMaxValue && IsServoOff()) return; //burner is already off
 		if (degree>=servoMaxValue && prevDegree<servoMaxValue){
 			//now swtiching off
 			if(now-PrevOutputChangeMillis>5000){
-				UdpTracer->println(F("Switch off"));
-				servo.write(degree);
-				changed=true;
+				writeServoPosition(180);
 			}else{
 				//skip and wait
 				UdpTracer->println(F("Switch off: wait 5 seconds..."));
+				return;
 			}
 		}else if (degree<=servoMaxValue && prevDegree>servoMaxValue){
 			//now switchin on
 			if(now-PrevOutputChangeMillis>5000){
-				UdpTracer->println(F("Switch on"));
-				servo.write(degree);
-				changed=true;
+				writeServoPosition(degree);
 			}else{
 				//skip and wait
 				UdpTracer->println(F("Switch on: wait 5 seconds..."));
+				return;
 			}
 		} else{
-			//noi problem, no transition ON->OFF or OFF->ON
-			UdpTracer->print(F("Servo position: "));UdpTracer->println(degree);
-			servo.write(degree);
-			changed=true;
+			//no problem, no transition ON->OFF or OFF->ON
+			writeServoPosition(degree);
 		}
 	}
-	if(changed){
-		prevDegree = degree;
-		PrevOutputChangeMillis = now;
-		delay(15);
-	}
+	prevDegree = degree;
+	PrevOutputChangeMillis = now;
 }
 
 void PidState::SetServoOff(bool value){
 //	Serial.print(F("ServoOFF = "));
 //	Serial.println(value?F("true"):F("false"));
+	if(value!=servoOFF){
+		if(!value)UdpTracer->println(F("Burner OFF->ON"));
+		else UdpTracer->println(F("Burner ON->OFF"));
+	}
 	servoOFF=value;
 }
 bool PidState::IsServoOff(){return servoOFF;}
 
-bool PidState::IsServoUnderFireOff(){
-	if(servoDirection==ServoDirectionCW){
-		bool calculatedServoOff = Output<=servoMinValue;
-		if(calculatedServoOff){
-			if(!IsServoOff()){
-//				Serial.println(F("SWITCH TO Fire OFF"));
-				setServoPosition(0);
-				SetServoOff(true);
-			}else{
-//				Serial.println(F("Fire is OFF"));
-			}
-			return true;
-		}
-		SetServoOff(false);
-		return false;
-	}else{
-		if(servo.read()==180) return true;
-		if(Output>=servoMaxValue){
-//			Serial.println(F("CCW Fire OFF"));
-			setServoPosition(180);
-			return true;
-		}
-		return false;
-	}
-//	Serial.println(F("Fire is ON"));
-	return false;
-}
+//bool PidState::IsServoUnderFireOff(){
+//	if(servoDirection==ServoDirectionCW){
+//		bool calculatedServoOff = Output<=servoMinValue;
+//		if(calculatedServoOff){
+//			if(!IsServoOff()){
+////				Serial.println(F("SWITCH TO Fire OFF"));
+//				setServoPosition(0);
+//				SetServoOff(true);
+//			}else{
+////				Serial.println(F("Fire is OFF"));
+//			}
+//			return true;
+//		}
+//		SetServoOff(false);
+//		return false;
+//	}else{
+//		if(servo.read()==180) return true;
+//		if(Output>=servoMaxValue){
+////			Serial.println(F("CCW Fire OFF"));
+//			setServoPosition(180);
+//			return true;
+//		}
+//		return false;
+//	}
+////	Serial.println(F("Fire is ON"));
+//	return false;
+//}
 
 void PidState::updatePidStatus(){
 	UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
@@ -436,9 +442,9 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 
 			bool computed = pid.Compute();
-			if(!IsServoUnderFireOff()){
-				setServoPosition(Output);
-			}
+//			if(!IsServoUnderFireOff()){
+			setServoPosition(Output);
+//			}
 
 			if(computed){
 				Serial.print(DynamicSetpoint,4);Serial.print(F(" "));Serial.print(Setpoint,4);Serial.print(F(" "));Serial.print(temp,4);Serial.print(F(" "));Serial.println(Output);

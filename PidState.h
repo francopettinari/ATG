@@ -49,7 +49,7 @@ private:
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
 
 	byte eepromVer = 03;  // eeprom data tracking
-
+	void writeServoPosition(int degree);
 protected:
 	PID pid;
 
@@ -76,7 +76,7 @@ public:
 	float PrevOutputChangeMillis = 0;
 	void SetServoOff(bool value);
 	bool IsServoOff();
-	bool IsServoUnderFireOff();
+//	bool IsServoUnderFireOff();
 	boolean autoTune = false;
 	double kp=2,ki=0.5,kd=2;
 	double akp=2,aki=0.5,akd=2;
