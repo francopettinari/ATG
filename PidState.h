@@ -36,7 +36,7 @@ enum PidStateValue {
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
-enum FsmState {psIdle,psRampimg=10,psApproacing=20,psKeepTemp=30};
+enum FsmState {psIdle=0,psWaitDelay=5,psRampimg=10,psApproacing=20,psKeepTemp=30};
 
 class PidState {
 	float lastPressMillis=0;
@@ -74,6 +74,7 @@ public:
 	double autotuneSetPoint = 0;
 	double Output,prevDegree=0;
 	float PrevOutputChangeMillis = 0;
+	int servoPosition=0;
 	void SetServoOff(bool value);
 	bool IsServoOff();
 //	bool IsServoUnderFireOff();
@@ -177,6 +178,7 @@ public:
 	void update(double temp,int encoderPos, boolean encoderPress);
 	void updatePidStatus();
 	void startRamp();
+	bool waitRampStart();
 	void updateRamp();
 	void loadFromEEProm();
 	void savetoEEprom();

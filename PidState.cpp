@@ -143,7 +143,7 @@ void PidState::writeServoPosition(int degree){
 	}else{
 		SetServoOff(degree>=servoMaxValue);
 	}
-	UdpTracer->print(F("Servo position: "));UdpTracer->println(degree);
+	servoPosition = degree;
 }
 
 void PidState::setServoPosition(int degree){
@@ -248,9 +248,10 @@ void PidState::updatePidStatus(){
 			pid.SetTunings(kp,ki,kd);
 			DynamicSetpoint=Setpoint;
 		break;
+	case psWaitDelay:
 	case psRampimg:
 			DynamicSetpoint=Setpoint; //this has to be recalculated time by time
-			pid.SetTunings(kp,2.5,0);
+			pid.SetTunings(kp,0.2,0);
 		break;
 	case psApproacing:
 			DynamicSetpoint=Setpoint;
@@ -272,6 +273,10 @@ void PidState::startRamp(){
 	}
 	pDynamicSetpoint = DynamicSetpoint;
 }
+bool PidState::waitRampStart(){
+	if(temperature-approacingStartTemp<0.1) return false;
+	return true;
+}
 void PidState::updateRamp(){
 	float now = millis();
 
@@ -283,12 +288,16 @@ void PidState::updateRamp(){
 			DynamicSetpoint = Setpoint;
 		}
 		else{ //If more ramping is required, calculate the change required for the time period passed to keep the rate of change constant, and add it to the drive.
-		  if(Setpoint>pDynamicSetpoint){  //possitive direction
+		  if(Setpoint>pDynamicSetpoint){  //positive direction
 			  DynamicSetpoint = pDynamicSetpoint+(roChange*(now-lastDynSetpointCalcMillis));
 		  }
 		  else{   //negative direction
 			  DynamicSetpoint = pDynamicSetpoint-(roChange*(now-lastDynSetpointCalcMillis));
 		  }
+		}
+		if(temperature>=DynamicSetpoint){
+			DynamicSetpoint=temperature;
+			pid.Reset();
 		}
 		lastDynSetpointCalcMillis = now;;
 		pDynamicSetpoint = DynamicSetpoint;
@@ -308,9 +317,10 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 	   state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
 	{
 		pid.SetMode(MANUAL);
+		pid.Initialize();
 		Serial.println(F("PID switched to MANUAL"));
 		Output=0;
-		setServoPosition(Output);
+		writeServoPosition(Output);
 	}
 
 
@@ -373,11 +383,11 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 
 			float now = millis();
-
+//			UdpTracer->print(F("Current state:"));UdpTracer->println(fsmState);
 			switch(fsmState){
 			case psIdle:
 				if(temp<=Setpoint-1){
-					fsmState = psRampimg;
+					fsmState = psWaitDelay;
 					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
 					updatePidStatus();
 					startRamp();
@@ -388,22 +398,33 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				} else if(temp>=Setpoint){
 					fsmState = psKeepTemp;
 					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					Output=0;
+					pid.Initialize();
 					updatePidStatus();
 				}
 				UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
 				break;
+			case psWaitDelay:
 			case psRampimg:
+				if(fsmState == psWaitDelay && waitRampStart()){
+					fsmState = psRampimg;
+					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					updatePidStatus();
+//					pid.Initialize();
+					startRamp();
+				}
 				if(temp<=Setpoint-1){
 					//fsmState = psRampimg; //keep staying in ramping
 					updateRamp();
 				} else if(temp>Setpoint-1 && temp<Setpoint){
 					fsmState = psApproacing;
 					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-					pid.Initialize();
+//					pid.Initialize();
 					updatePidStatus();
 				} else if(temp>=Setpoint){
 					fsmState = psKeepTemp;
 					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					Output=0;
 					pid.Initialize();
 					updatePidStatus();
 				}
@@ -419,6 +440,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				} else if(temp>=Setpoint){
 					fsmState = psKeepTemp;
 					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+					Output=0;
 					pid.Initialize();
 					updatePidStatus();
 				}
@@ -433,7 +455,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				}  else if(temp>Setpoint-1 && temp<Setpoint){
 					fsmState = psApproacing; //remain in approacing
 					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-					pid.Initialize();
+//					pid.Initialize();
 					updatePidStatus();
 				} else if(temp>=Setpoint){
 					//fsmState = psKeepTemp;
@@ -453,6 +475,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			    UdpTracer->print(F(";DSETP:")   );UdpTracer->print(DynamicSetpoint,4);
 				UdpTracer->print(F(";TEMP:")    );UdpTracer->print(temp,4);
 				UdpTracer->print(F(";OUT:")     );UdpTracer->print(Output,4);
+				UdpTracer->print(F(";SERVOPOS:")     );UdpTracer->print((float)servoPosition,0);
 				UdpTracer->print(F(";PGAIN:")   );UdpTracer->print(myPTerm,4);
 				UdpTracer->print(F(";IGAIN:")   );UdpTracer->print(myITerm,4);
 				UdpTracer->print(F(";DGAIN:")   );UdpTracer->print(myDTerm,4);
