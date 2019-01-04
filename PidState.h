@@ -26,7 +26,7 @@ class MenuItem;
 
 enum PidStateValue {
 	svUndefiend=-1,svMain=0,
-	svRun=9, svRunAuto=10,svRunAutoTune=11,svRunAutoTuneResult=12,svRunAutoSetpoint=13,svRunAutoTimer=14,
+	svRun=9, svRunAuto=10,svRunAutoTune=11,svRunAutoTuneResult=12,svRunAutoSetpoint=13,svRunAutoTimer=14,svRunManual=15,svRunAutoRamp=16,
 	svConfig=20,
 	svPidConfig=22,
 	svPidKpiConfig=23,svPidKpdConfig=24,
@@ -36,7 +36,7 @@ enum PidStateValue {
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
-enum FsmState {psIdle=0,psWaitDelay=5,psRampimg=10,psApproacing=20,psKeepTemp=30};
+enum FsmState {psIdle=0,psWaitDelay=5,psRampimg=10,psKeepTemp=30};
 
 class PidState {
 	float lastPressMillis=0;
@@ -49,7 +49,7 @@ private:
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
 
 	byte eepromVer = 03;  // eeprom data tracking
-	void writeServoPosition(int degree);
+
 protected:
 	PID pid;
 
@@ -67,17 +67,17 @@ public:
 	int              currEncoderPos=0,prevEncoderPos=0;    // a counter for the rotary encoder dial
 	double           temperature = 0, lastTemperature=0/*,dTemperature*/;
 	float pidSampleTimeSecs = 5;
-	float lastTemperatureMillis=0;
-	double Setpoint = 25,DynamicSetpoint=25,pDynamicSetpoint=0;
+	float lastManualLog=0;
+	double Setpoint = 25,DynamicSetpoint=25,pDynamicSetpoint=0,Ramp=1;
 	float approacingStartMillis,lastDynSetpointCalcMillis = 0;
 	float approacingStartTemp = 0;
 	double autotuneSetPoint = 0;
-	double Output,prevDegree=0;
-	float PrevOutputChangeMillis = 0;
+	double Output;
+	float PrevSwitchOnOffMillis = 0;
 	int servoPosition=0;
+	void writeServoPosition(int degree);
 	void SetServoOff(bool value);
 	bool IsServoOff();
-//	bool IsServoUnderFireOff();
 	boolean autoTune = false;
 	double kp=2,ki=0.5,kd=2;
 	double akp=2,aki=0.5,akd=2;
@@ -176,6 +176,7 @@ public:
 	}
 
 	void update(double temp,int encoderPos, boolean encoderPress);
+	void SetFsmState(FsmState value);
 	void updatePidStatus();
 	void startRamp();
 	bool waitRampStart();
@@ -189,3 +190,4 @@ public:
 
 
 #endif /* PIDSTATE_H_ */
+

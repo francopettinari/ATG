@@ -27,6 +27,7 @@ typedef MenuItem* MenuItemPtr;
 class MenuItem {
 protected:
 public:
+	bool Selected=false;
     int mappedState = -1; //mapped to an int because unable to resolve compile errors
 	String Caption;
 	std::vector<MenuItem *> subMenuItems;
@@ -177,6 +178,13 @@ public:
 	void HandleEncoderMovement(EncoderMovement mvmnt);
 };
 
+class RunAutoRampMenu : public MenuItem {
+public:
+	RunAutoRampMenu();
+	void OnSelectedInMenu();
+	void HandleEncoderMovement(EncoderMovement mvmnt);
+};
+
 class RunAutoTimerMenu : public MenuItem {
 public:
 	RunAutoTimerMenu();
@@ -190,10 +198,22 @@ public:
 	void OnSelectedInMenu();
 
 	RunAutoSetpointMenu* setpointMenu;
+	RunAutoRampMenu* rampMenu;
 	RunAutoTimerMenu* timerMenu;
 
 	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderMovement(EncoderMovement mvmnt);
 };
+
+class RunManualMenu : public MenuItem {
+public:
+	RunManualMenu();
+	void OnSelectedInMenu();
+
+	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderMovement(EncoderMovement mvmnt);
+};
+
 
 class RunMenu : public MenuItem {
 public:
@@ -201,6 +221,7 @@ public:
 	void OnSelectedInMenu();
 
 	RunAutoMenu* runAutoMenu;
+	RunManualMenu* runManualMenu;
 	RunAutoTuneMenu* runAutoTuneMenu;
 };
 

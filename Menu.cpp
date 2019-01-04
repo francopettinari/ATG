@@ -105,7 +105,7 @@ void ServoConfigDirMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	}else if(mvmnt==EncMoveCW){
 		if(pidState.servoDirection==ServoDirectionCCW)pidState.servoDirection=ServoDirectionCW;
 	}
-	pidState.setServoPosition(pidState.servoMinValue);
+	pidState.writeServoPosition(pidState.servoMinValue);
 }
 void ServoConfigDirMenu:: HandleEncoderPush(EncoderPushButtonState pst){
 	pidState.state = svServo_Config;
@@ -128,7 +128,7 @@ void ServoConfigMinMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 		if(pidState.servoMinValue<pidState.servoMaxValue-1)pidState.servoMinValue++;
 		if(pidState.servoMinValue>=180)pidState.servoMinValue=179;
 	}
-	pidState.setServoPosition(pidState.servoMinValue);
+	pidState.writeServoPosition(pidState.servoMinValue);
 }
 void ServoConfigMinMenu:: HandleEncoderPush(EncoderPushButtonState pst){
 	pidState.state = svServo_Config;
@@ -151,7 +151,7 @@ void ServoConfigMaxMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 		pidState.servoMaxValue++;
 		if(pidState.servoMaxValue>180)pidState.servoMaxValue=180;
 	}
-	pidState.setServoPosition(pidState.servoMaxValue);
+	pidState.writeServoPosition(pidState.servoMaxValue);
 }
 void ServoConfigMaxMenu::HandleEncoderPush(EncoderPushButtonState pst){
 	pidState.state = svServo_Config;
@@ -398,27 +398,46 @@ void RunAutoTuneMenu::HandleEncoderPush(EncoderPushButtonState pst){
 
 RunAutoSetpointMenu::RunAutoSetpointMenu():MenuItem(svRunAutoSetpoint){
 	Caption=F("Setpoint");
-	subMenuItems.resize(1);
-	subMenuItems[0] = new UpMenu(svRunAuto);
+//	subMenuItems.resize(1);
+//	subMenuItems[0] = new UpMenu(svRunAuto);
 }
 void RunAutoSetpointMenu::HandleEncoderMovement(EncoderMovement mvmnt){
-	if(mvmnt==EncMoveCCW){
-		pidState.Setpoint -= 1;
-		if(pidState.Setpoint<0)pidState.Setpoint=0;
-//				saveSetPointTotoEEprom();
-	}else if(mvmnt==EncMoveCW){
-		pidState.Setpoint+=1;
-		if(pidState.Setpoint>=120)pidState.Setpoint=120;
-//				saveSetPointTotoEEprom();
-	}
+//	if(mvmnt==EncMoveCCW){
+//		pidState.Setpoint -= 1;
+//		if(pidState.Setpoint<0)pidState.Setpoint=0;
+//	}else if(mvmnt==EncMoveCW){
+//		pidState.Setpoint+=1;
+//		if(pidState.Setpoint>=120)pidState.Setpoint=120;
+//	}
 }
 void RunAutoSetpointMenu::OnSelectedInMenu(){
 	Serial.print(F(">>>>>> Push Run Setpoint <<<<<<  "));Serial.println(pidState.state);
-//	if(pidState.getState() == svRunAuto){
-		pidState.SetState(svRunAutoSetpoint,true);
-		Serial.println(pidState.state);
+//	pidState.SetState(svRunAutoSetpoint,false);
+	Selected=!Selected;
+	Serial.println(pidState.state);
+}
+
+RunAutoRampMenu::RunAutoRampMenu():MenuItem(svRunAutoRamp){
+	Caption=F("Ramp");
+//	subMenuItems.resize(1);
+//	subMenuItems[0] = new UpMenu(svRunAuto);
+}
+void RunAutoRampMenu::OnSelectedInMenu(){
+	Serial.print(F(">>>>>> Push Run Ramp <<<<<<  "));Serial.println(pidState.state);
+//	if(!Selected){
+//		pidState.SetState(svRunAutoRamp,false);
 //	}else{
-//		pidState.SetState(svRunAuto);
+//		pidState.SetState(svRunAuto,false);
+//	}
+	Serial.println(pidState.state);
+	Selected = !Selected;
+}
+void RunAutoRampMenu::HandleEncoderMovement(EncoderMovement mvmnt){
+//	if(mvmnt==EncMoveCCW){
+//		pidState.Ramp -= 1;
+//		if(pidState.Ramp<0)pidState.Ramp=0;
+//	}else if(mvmnt==EncMoveCW){
+//		pidState.Ramp+=1;
 //	}
 }
 
@@ -438,11 +457,12 @@ void RunAutoTimerMenu::OnSelectedInMenu(){
 
 RunAutoMenu::RunAutoMenu():MenuItem(svRunAuto){
 	Caption=F("Auto");
-	subMenuItems.resize(3);
+	subMenuItems.resize(4);
 	
 	subMenuItems[0] = new UpMenu(svRun);
 	subMenuItems[1] = setpointMenu = new RunAutoSetpointMenu();
-	subMenuItems[2] = timerMenu = new RunAutoTimerMenu();
+	subMenuItems[2] = rampMenu = new RunAutoRampMenu();
+	subMenuItems[3] = timerMenu = new RunAutoTimerMenu();
 }
 
 void RunAutoMenu::OnSelectedInMenu(){
@@ -455,13 +475,64 @@ void RunAutoMenu::HandleEncoderPush(EncoderPushButtonState pst){
 //	pidState.SetState(svRun);
 }
 
+void RunAutoMenu::HandleEncoderMovement(EncoderMovement mvmnt){
+	if(!rampMenu->Selected&&!setpointMenu->Selected){
+		MenuItem::HandleEncoderMovement(mvmnt);
+	}
+	if(rampMenu->Selected){
+		if(mvmnt==EncMoveCCW){
+			pidState.Ramp -= 1;
+			if(pidState.Ramp<0)pidState.Ramp=0;
+		}else if(mvmnt==EncMoveCW){
+			pidState.Ramp+=1;
+		}
+	}else if(setpointMenu->Selected){
+		if(mvmnt==EncMoveCCW){
+			pidState.Setpoint -= 1;
+			if(pidState.Setpoint<0)pidState.Setpoint=0;
+		}else if(mvmnt==EncMoveCW){
+			pidState.Setpoint+=1;
+			if(pidState.Setpoint>=120)pidState.Setpoint=120;
+		}
+	}
+}
+
+RunManualMenu::RunManualMenu():MenuItem(svRunManual){
+	Caption=F("Manual");
+	subMenuItems.resize(1);
+    subMenuItems[0] = new UpMenu(svRun);
+}
+void RunManualMenu::OnSelectedInMenu(){
+	pidState.SetState(svRunManual);
+	pidState.Output=pidState.servoMinValue-1;
+}
+void RunManualMenu::HandleEncoderPush(EncoderPushButtonState pst){
+	MenuItem::HandleEncoderPush(pst);
+}
+
+void RunManualMenu::HandleEncoderMovement(EncoderMovement mvmnt){
+	if(mvmnt==EncMoveCCW){
+		pidState.Output -= 1;
+//		if(pidState.Output<0)pidState.Output=0;
+		if(pidState.Output<pidState.servoMinValue-1){
+			pidState.Output=pidState.servoMinValue-1;
+		}
+	}else if(mvmnt==EncMoveCW){
+
+		pidState.Output+=1;
+
+		if(pidState.Output>=180)pidState.Output=180;
+	}
+}
+
 RunMenu::RunMenu():MenuItem(svRun){
 	Caption = F("Run");
-	subMenuItems.resize(3);
+	subMenuItems.resize(4);
 
 	subMenuItems[0] = new UpMenu(svMain);
 	subMenuItems[1] = runAutoMenu = new RunAutoMenu();
-	subMenuItems[2] = runAutoTuneMenu = new RunAutoTuneMenu();
+	subMenuItems[2] = runManualMenu = new RunManualMenu();
+	subMenuItems[3] = runAutoTuneMenu = new RunAutoTuneMenu();
 }
 
 void RunMenu::OnSelectedInMenu(){

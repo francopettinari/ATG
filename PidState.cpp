@@ -28,6 +28,7 @@ PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P
 	pid.myDTimeMillis= &myDTimeMillis;
 	pid.myError = &myError;
 	pid.myOutputSum = &myOutputSum;
+	PrevSwitchOnOffMillis = 0;
 }
 
 MenuItem* PidState::decodeCurrentMenu(){
@@ -44,10 +45,14 @@ MenuItem* PidState::decodeCurrentMenu(){
 			return pmm->runMenu->runAutoMenu->timerMenu;
 		case svRunAutoSetpoint :
 			return pmm->runMenu->runAutoMenu->setpointMenu;
+		case svRunAutoRamp :
+			return pmm->runMenu->runAutoMenu->rampMenu;
+		case svRunManual :
+			return pmm->runMenu->runManualMenu;
 		case svRunAutoTuneResult :
 			return pmm->runMenu->runAutoTuneMenu->autoTuneResultMenu;
 		case svRunAutoTune :
-			return pmm->runMenu->runAutoTuneMenu;
+			return pmm->runMenu->runAutoMenu;
 		case svConfig:
 			return pmm->configMenu;
 		case svServo_Config:
@@ -135,71 +140,96 @@ EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
 	return EncMoveNone;
 }
 
+bool PidState::IsServoOff(){return servoOFF;}
+
 void PidState::writeServoPosition(int degree){
-	servo.write(degree);
-	delay(15);
 	if(servoDirection==ServoDirectionCW){
-		SetServoOff(degree<=servoMinValue);
+		if(degree<servoMinValue)degree=0;
+		servo.write(degree);
+		SetServoOff(degree==0);
 	}else{
-		SetServoOff(degree>=servoMaxValue);
+		if(degree>servoMaxValue)degree=180;
+		SetServoOff(degree==180);
 	}
 	servoPosition = degree;
+	delay(15);
 }
-
+//isServoOff non funziona nel caSso di setpoint raggiunto e superato con switch off e poi altro setpoint impostato
 void PidState::setServoPosition(int degree){
 	float now = millis();
-	if(servoDirection==ServoDirectionCW){
-		if(degree<=servoMinValue && IsServoOff()) return; //burner is already off
+	Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
+				Serial.print(F(" Degree:"));Serial.print(degree);
+				Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
+				Serial.print(F(" ServoMinVal:"));Serial.print(servoMinValue);
+				Serial.print(F(" IsSeervoOff:"));Serial.println(IsServoOff()?F("true"):F("false"));
+	if(fsmState==psKeepTemp){//if temp is < SetPoint the minumum burner positin is servoMinValue:
+		                     //in this case the burner is not switched off and is kept at minimum.
+		                     //if temp is > SetPoint, when the output is equal to servoMinValue the burner is switched off:
+		                     //this should minimize the overshoot
+		if(servoDirection==ServoDirectionCW){
 
-		if (degree<=servoMinValue && prevDegree>servoMinValue){
-			//now swtiching off
-			if(now-PrevOutputChangeMillis>5000){
-				writeServoPosition(0);
-			}else{
-				//skip and wait
-				UdpTracer->println(F("Switch off: wait 5 seconds..."));
-				return;
-			}
-		}else if (degree>servoMinValue && prevDegree<=servoMinValue){
-			//now switchin on
-			if(now-PrevOutputChangeMillis>5000){
+			if(degree<=servoMinValue && IsServoOff()) return; //burner is already off
+			if (degree<=servoMinValue && servoPosition>=servoMinValue){
+				//now swtiching off
+				if(now-PrevSwitchOnOffMillis>10000){
+					writeServoPosition(servoMaxValue);
+					delay(2);
+					writeServoPosition(0);
+					PrevSwitchOnOffMillis = now;
+				}else{
+					//skip and wait
+					Serial.println(F("Switch off: wait 4 seconds..."));
+					UdpTracer->println(F("Switch off: wait 4 seconds..."));
+					return;
+				}
+			}else if (degree>servoMinValue && servoPosition<servoMinValue){
+				//now switchin on
+				if(now-PrevSwitchOnOffMillis>10000){
+					writeServoPosition(servoMaxValue);
+					delay(2);
+					writeServoPosition(degree);
+					PrevSwitchOnOffMillis = now;
+				}else{
+					//skip and wait
+					UdpTracer->println(F("Switch on: wait 5 seconds..."));
+					return;
+				}
+			} else{
+				if(IsServoOff()) return;
+				//no problem, no transition ON->OFF or OFF->ON
 				writeServoPosition(degree);
-			}else{
-				//skip and wait
-				UdpTracer->println(F("Switch on: wait 5 seconds..."));
-				return;
 			}
-		} else{
-			//no problem, no transition ON->OFF or OFF->ON
-			writeServoPosition(degree);
-		}
-	}else{
-		if(degree>=servoMaxValue && IsServoOff()) return; //burner is already off
-		if (degree>=servoMaxValue && prevDegree<servoMaxValue){
-			//now swtiching off
-			if(now-PrevOutputChangeMillis>5000){
-				writeServoPosition(180);
-			}else{
-				//skip and wait
-				UdpTracer->println(F("Switch off: wait 5 seconds..."));
-				return;
-			}
-		}else if (degree<=servoMaxValue && prevDegree>servoMaxValue){
-			//now switchin on
-			if(now-PrevOutputChangeMillis>5000){
+		}else {
+			if(degree>=servoMaxValue && IsServoOff()) return; //burner is already off
+			if (degree>=servoMaxValue && servoPosition<servoMaxValue){
+				//now swtiching off
+				if(now-PrevSwitchOnOffMillis>10000){
+					writeServoPosition(180);
+					PrevSwitchOnOffMillis = now;
+				}else{
+					//skip and wait
+					UdpTracer->println(F("Switch off: wait 5 seconds..."));
+					return;
+				}
+			}else if (degree<=servoMaxValue && servoPosition>servoMaxValue){
+				//now switchin on
+				if(now-PrevSwitchOnOffMillis>10000){
+					writeServoPosition(degree);
+					PrevSwitchOnOffMillis = now;
+				}else{
+					//skip and wait
+					UdpTracer->println(F("Switch on: wait 5 seconds..."));
+					return;
+				}
+			} else{
+				if(IsServoOff()) return;
+				//no problem, no transition ON->OFF or OFF->ON
 				writeServoPosition(degree);
-			}else{
-				//skip and wait
-				UdpTracer->println(F("Switch on: wait 5 seconds..."));
-				return;
 			}
-		} else{
-			//no problem, no transition ON->OFF or OFF->ON
-			writeServoPosition(degree);
 		}
+	} else {
+		writeServoPosition(degree);
 	}
-	prevDegree = degree;
-	PrevOutputChangeMillis = now;
 }
 
 void PidState::SetServoOff(bool value){
@@ -211,35 +241,11 @@ void PidState::SetServoOff(bool value){
 	}
 	servoOFF=value;
 }
-bool PidState::IsServoOff(){return servoOFF;}
 
-//bool PidState::IsServoUnderFireOff(){
-//	if(servoDirection==ServoDirectionCW){
-//		bool calculatedServoOff = Output<=servoMinValue;
-//		if(calculatedServoOff){
-//			if(!IsServoOff()){
-////				Serial.println(F("SWITCH TO Fire OFF"));
-//				setServoPosition(0);
-//				SetServoOff(true);
-//			}else{
-////				Serial.println(F("Fire is OFF"));
-//			}
-//			return true;
-//		}
-//		SetServoOff(false);
-//		return false;
-//	}else{
-//		if(servo.read()==180) return true;
-//		if(Output>=servoMaxValue){
-////			Serial.println(F("CCW Fire OFF"));
-//			setServoPosition(180);
-//			return true;
-//		}
-//		return false;
-//	}
-////	Serial.println(F("Fire is ON"));
-//	return false;
-//}
+void PidState::SetFsmState(FsmState value){
+	fsmState = value;
+	updatePidStatus();
+}
 
 void PidState::updatePidStatus(){
 	UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
@@ -253,12 +259,8 @@ void PidState::updatePidStatus(){
 			DynamicSetpoint=Setpoint; //this has to be recalculated time by time
 			pid.SetTunings(kp,0.2,0);
 		break;
-	case psApproacing:
-			DynamicSetpoint=Setpoint;
-			pid.SetTunings(kp,ki,kd);
-		break;
 	case psKeepTemp:
-			DynamicSetpoint=Setpoint;//FIXME build a ramp
+			DynamicSetpoint=Setpoint;
 			pid.SetTunings(kp,ki,kd);
 		break;
 	}
@@ -297,7 +299,7 @@ void PidState::updateRamp(){
 		}
 		if(temperature>=DynamicSetpoint){
 			DynamicSetpoint=temperature;
-			pid.Reset();
+//			pid.Reset();
 		}
 		lastDynSetpointCalcMillis = now;;
 		pDynamicSetpoint = DynamicSetpoint;
@@ -313,7 +315,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 		setTemperature(temp);
 	}
 
-	if(state!=svRunAuto && state!=svRunAutoTimer && state!=svRunAutoSetpoint &&
+	if(pid.GetMode()!=MANUAL && state!=svRunAuto && state!=svRunAutoTimer && state!=svRunAutoSetpoint &&
 	   state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
 	{
 		pid.SetMode(MANUAL);
@@ -364,11 +366,13 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 		getCurrentMenu()->HandleEncoderPush(encoderPushButtonState);
 	}
 
+	float now = millis();
 	ESP.wdtFeed();
 //	Serial.print(F("State: "));Serial.println(state);
 	switch(state){
 		case svRunAuto :
 		case svRunAutoSetpoint :
+		case svRunAutoRamp :
 		case svRunAutoTimer : {
 			if(temp<=-100){
 				return;
@@ -382,91 +386,51 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				pid.SetMode(AUTOMATIC);
 			}
 
-			float now = millis();
+			if(Ramp<=0 && fsmState!=psKeepTemp){
+				SetFsmState(psKeepTemp);
+			}
+
+
 //			UdpTracer->print(F("Current state:"));UdpTracer->println(fsmState);
 			switch(fsmState){
 			case psIdle:
 				if(temp<=Setpoint-1){
-					fsmState = psWaitDelay;
-					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-					updatePidStatus();
+					SetFsmState(psWaitDelay);
 					startRamp();
-				} else if(temp>Setpoint-1 && temp<Setpoint){
-					fsmState = psApproacing;
-					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-					updatePidStatus();
-				} else if(temp>=Setpoint){
-					fsmState = psKeepTemp;
-					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-					Output=0;
-					pid.Initialize();
-					updatePidStatus();
+				} else if(temp>Setpoint-1 /*&& temp<Setpoint*/){
+					SetFsmState(psKeepTemp);
 				}
+//				else if(temp>=Setpoint){
+//  				SetFsmState(psKeepTemp);
+//					Output=0;
+//					pid.Initialize();
+//				}
 				UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
 				break;
 			case psWaitDelay:
 			case psRampimg:
 				if(fsmState == psWaitDelay && waitRampStart()){
-					fsmState = psRampimg;
-					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-					updatePidStatus();
-//					pid.Initialize();
+					SetFsmState(psRampimg);
+					pid.Reset();
 					startRamp();
 				}
 				if(temp<=Setpoint-1){
-					//fsmState = psRampimg; //keep staying in ramping
 					updateRamp();
-				} else if(temp>Setpoint-1 && temp<Setpoint){
-					fsmState = psApproacing;
-					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-//					pid.Initialize();
-					updatePidStatus();
-				} else if(temp>=Setpoint){
-					fsmState = psKeepTemp;
-					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-					Output=0;
-					pid.Initialize();
-					updatePidStatus();
-				}
-				break;
-			case psApproacing:
-				if(temp<=Setpoint-1){
-					fsmState = psRampimg;
-					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-					updatePidStatus();
-					startRamp();
-				}  else if(temp>Setpoint-1 && temp<Setpoint){
-					//fsmState = psApproacing; //remain in approacing
-				} else if(temp>=Setpoint){
-					fsmState = psKeepTemp;
-					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-					Output=0;
-					pid.Initialize();
-					updatePidStatus();
+				} else if(temp>Setpoint-1 /*&& temp<Setpoint*/){
+					SetFsmState(psKeepTemp);
+					pid.Reset();
 				}
 				break;
 			case psKeepTemp:
 				// a change in state only allowed if more than 30 seconds have passed
-				if(temp<=Setpoint-1){
-					fsmState = psRampimg; //possible? yes in case of power restore?
-					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-					updatePidStatus();
-					startRamp();
-				}  else if(temp>Setpoint-1 && temp<Setpoint){
-					fsmState = psApproacing; //remain in approacing
-					UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
-//					pid.Initialize();
-					updatePidStatus();
-				} else if(temp>=Setpoint){
-					//fsmState = psKeepTemp;
+				if(Ramp>0 && temp<=Setpoint-1){
+					SetFsmState(psIdle);
 				}
 				break;
 			}
 
 			bool computed = pid.Compute();
-//			if(!IsServoUnderFireOff()){
 			setServoPosition(Output);
-//			}
 
 			if(computed){
 				Serial.print(DynamicSetpoint,4);Serial.print(F(" "));Serial.print(Setpoint,4);Serial.print(F(" "));Serial.print(temp,4);Serial.print(F(" "));Serial.println(Output);
@@ -485,6 +449,21 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			break;
 		}
 		break;
+		case svRunManual:
+			if(temp<=-100){
+				return;
+			}
+			setServoPosition(Output);
+			if(now-lastManualLog>1000){
+				Serial.print(Setpoint,4);Serial.print(F(" "));Serial.print(temp,4);Serial.print(F(" "));Serial.println(Output);
+				UdpTracer->print(F("LOG:")      );UdpTracer->print(now,4);
+				UdpTracer->print(F(";SETP:")    );UdpTracer->print(Setpoint,4);
+				UdpTracer->print(F(";TEMP:")    );UdpTracer->print(temp,4);
+				UdpTracer->print(F(";OUT:")     );UdpTracer->print(Output,4);
+				UdpTracer->print(F(";SERVOPOS:"));UdpTracer->print((float)servoPosition,0);
+				lastManualLog = now;
+			}
+			break;
 		case svRunAutoTune:
 			if(temp<=-100){
 				return;

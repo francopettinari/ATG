@@ -175,7 +175,6 @@ void loop() {
 			pidState.update(-200,enc.read(),isEncoderPressed);
 		}
 	}
-
 	ESP.wdtFeed();
 	lcdHelper.display(pidState);
 //	Serial.println(F("loop end"));

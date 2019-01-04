@@ -64,11 +64,24 @@ byte derivateCustomChar[] = {
 		  B00000
 };
 
+byte degMinChar[] = {
+  B11000,
+  B11000,
+  B00000,
+  B11111,
+  B00000,
+  B01010,
+  B10101,
+  B10101
+};
+
+
 static const int TEMPERATURE_CHAR = 0;
 static const int DEGREE_CHAR = 1;
 static const int SETPOINT_CHAR = 2;
 static const int HEAT_CHAR = 3;
 static const int DERIV_CHAR = 4;
+static const int DEGMIN_CHAR = 5;
 
 LCDHelper::LCDHelper():lcd(20,4) {
 	lcd.getLcd()->createChar(TEMPERATURE_CHAR, tempCustomChar);
@@ -76,6 +89,7 @@ LCDHelper::LCDHelper():lcd(20,4) {
 	lcd.getLcd()->createChar(SETPOINT_CHAR, setpointCustomChar);
 	lcd.getLcd()->createChar(HEAT_CHAR, heatCustomChar);
 	lcd.getLcd()->createChar(DERIV_CHAR, derivateCustomChar);
+	lcd.getLcd()->createChar(DEGMIN_CHAR, degMinChar);
 }
 
 void LCDHelper::display(PidState pstate){
@@ -84,6 +98,7 @@ void LCDHelper::display(PidState pstate){
 	//Serial.println(F("LCDHelper::display"));
 	lcd.clear();
 	lcd.PrintString(0,0,pstate.getCurrentMenu()->Caption.c_str());
+
 	//if(pstate.getState()!=svRunAuto){
 		for(int idx = pstate.currMenuStart;idx<pstate.currMenuStart+3;idx++){
 			int y=idx+1-pstate.currMenuStart;
@@ -91,6 +106,10 @@ void LCDHelper::display(PidState pstate){
 				lcd.PrintF(0,y,F(">"));
 			}else{
 				lcd.PrintF(0,y,F(" "));
+			}
+
+			if(idx<pstate.getCurrentMenu()->subMenuItemsLen() && pstate.getCurrentMenu()->subMenuItems[idx]->Selected){
+				lcd.PrintF(0,y,F("o"));
 			}
 			if(idx<pstate.getCurrentMenu()->subMenuItemsLen()){
 				//Serial.println(pstate.getCurrentMenu()->subMenuItemsLen);
@@ -104,6 +123,9 @@ void LCDHelper::display(PidState pstate){
 		case svRunAutoSetpoint:
 		case svRunAutoTimer:
 			displayRun(pstate);
+			break;
+		case svRunManual:
+			displayManual(pstate);
 			break;
 		case svRunAutoTune:
 			displayAutoTune(pstate);
@@ -163,18 +185,45 @@ void LCDHelper::displayRun(PidState pstate){
 	int o = 0;
 	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
 	if(pstate.servoDirection==ServoDirectionCW){
-		o = 100.0*(pstate.Output-pstate.servoMinValue)/outRange;
+			if(pstate.Output<pstate.servoMinValue) o = 0;
+			else o = 100.0*(pstate.Output-pstate.servoMinValue)/outRange;
+		}else{
+			if(pstate.Output>pstate.servoMaxValue) o = 0;
+			else o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
+		}
+	lcd.PrintChar(12, 2,(char)HEAT_CHAR); lcd.PrintDouble(13, 2,o,2); 	lcd.PrintF(19, 2,F("%"));
+
+//	lcd.PrintF(12, 3,F("d"));
+//	float tempDerivate = pstate.myDInput/pstate.myDTimeMillis*(float)60000.0; //DTemp/DTime(minutes) °C/min
+//	lcd.PrintDouble(13, 3,tempDerivate,2);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
+
+	lcd.PrintF(12, 3,F("/"));
+	lcd.PrintDouble(13, 3,pstate.Ramp,0);lcd.PrintChar(19, 3,(char)DEGMIN_CHAR);
+
+}
+
+void LCDHelper::displayManual(PidState pstate){
+	lcd.PrintChar(12, 0,(char)TEMPERATURE_CHAR); lcd.PrintDouble(13, 0,pstate.getTemperature(),2);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+//	lcd.PrintChar(12, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(13, 1,pstate.Setpoint        ,2);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
+
+	int o = 0;
+	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
+	if(pstate.servoDirection==ServoDirectionCW){
+		if(pstate.Output<pstate.servoMinValue) o = 0;
+		else o = 100.0*(pstate.Output-pstate.servoMinValue)/outRange;
 	}else{
-		o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
+		if(pstate.Output>pstate.servoMaxValue) o = 0;
+		else o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
 	}
 	lcd.PrintChar(12, 2,(char)HEAT_CHAR); lcd.PrintDouble(13, 2,o,2); 	lcd.PrintF(19, 2,F("%"));
 
 	//lcd.PrintDouble(14, 3,pstate.Output,1);
-	lcd.PrintF(12, 3,F("d"));
-	float tempDerivate = pstate.myDInput/pstate.myDTimeMillis*(float)60000.0; //DTemp/DTime(minutes) °C/min
-	lcd.PrintDouble(13, 3,tempDerivate,2);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
+//	lcd.PrintF(12, 3,F("d"));
+//	float tempDerivate = pstate.myDInput/pstate.myDTimeMillis*(float)60000.0; //DTemp/DTime(minutes) °C/min
+//	lcd.PrintDouble(13, 3,tempDerivate,2);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
 
 }
+
 
 void LCDHelper::displayAutoTune(PidState pstate){
 	double tp = pstate.getTemperature();
