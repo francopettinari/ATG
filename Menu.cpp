@@ -105,7 +105,7 @@ void ServoConfigDirMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	}else if(mvmnt==EncMoveCW){
 		if(pidState.servoDirection==ServoDirectionCCW)pidState.servoDirection=ServoDirectionCW;
 	}
-	pidState.writeServoPosition(pidState.servoMinValue);
+	pidState.writeServoPosition(pidState.servoMinValue,false);
 }
 void ServoConfigDirMenu:: HandleEncoderPush(EncoderPushButtonState pst){
 	pidState.state = svServo_Config;
@@ -128,7 +128,7 @@ void ServoConfigMinMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 		if(pidState.servoMinValue<pidState.servoMaxValue-1)pidState.servoMinValue++;
 		if(pidState.servoMinValue>=180)pidState.servoMinValue=179;
 	}
-	pidState.writeServoPosition(pidState.servoMinValue);
+	pidState.writeServoPosition(pidState.servoMinValue,false);
 }
 void ServoConfigMinMenu:: HandleEncoderPush(EncoderPushButtonState pst){
 	pidState.state = svServo_Config;
@@ -151,7 +151,7 @@ void ServoConfigMaxMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 		pidState.servoMaxValue++;
 		if(pidState.servoMaxValue>180)pidState.servoMaxValue=180;
 	}
-	pidState.writeServoPosition(pidState.servoMaxValue);
+	pidState.writeServoPosition(pidState.servoMaxValue,false);
 }
 void ServoConfigMaxMenu::HandleEncoderPush(EncoderPushButtonState pst){
 	pidState.state = svServo_Config;

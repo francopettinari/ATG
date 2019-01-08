@@ -37,6 +37,7 @@ enum PidStateValue {
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
 enum FsmState {psIdle=0,psWaitDelay=5,psRampimg=10,psKeepTemp=30};
+enum TemperatureTransitionState {TempStateUndefined=0,TempStateOff=10,TempStateOn=20,TempStateSwitchingOn=30,TempStateSwitchingOff=40};
 
 class PidState {
 	float lastPressMillis=0;
@@ -44,6 +45,7 @@ class PidState {
 	void updateLcd();
 private:
 	FsmState fsmState=psIdle;
+	TemperatureTransitionState TempState = TempStateUndefined;
 	EncoderPushButtonState decodeEncoderPushBtnState (boolean encoderPress);
 	boolean IsEncoderPressed(boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
@@ -75,7 +77,10 @@ public:
 	double Output;
 	float PrevSwitchOnOffMillis = 0;
 	int servoPosition=0;
-	void writeServoPosition(int degree);
+	void _writeServo(int degree);
+	void writeServoPosition(int degree, bool minValueSwitchOff);
+	void writeServoPositionCW(int degree, bool minValueSwitchOff);
+	void writeServoPositionCCW(int degree, bool minValueSwitchOff);
 	void SetServoOff(bool value);
 	bool IsServoOff();
 	boolean autoTune = false;
@@ -94,7 +99,6 @@ public:
 	double myOutputSum;
 
 	PID_ATune getATune(){return aTune;}
-	void setServoPosition(int degree);
 
 	void SetAutotuneResult(double arkp,double arki, double arkd){
 		akp = arkp;
