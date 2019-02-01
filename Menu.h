@@ -27,6 +27,7 @@ typedef MenuItem* MenuItemPtr;
 class MenuItem {
 protected:
 public:
+	bool Visible=true;
 	bool Selected=false;
     int mappedState = -1; //mapped to an int because unable to resolve compile errors
 	String Caption;
@@ -180,15 +181,26 @@ public:
 
 class RunAutoRampMenu : public MenuItem {
 public:
+
 	RunAutoRampMenu();
 	void OnSelectedInMenu();
 	void HandleEncoderMovement(EncoderMovement mvmnt);
+};
+
+class RunAutoTimerMinutesMenu : public MenuItem {
+public:
+	RunAutoTimerMinutesMenu();
+	void OnSelectedInMenu();
+	void HandleEncoderMovement(EncoderMovement mvmnt);
+	void HandleEncoderPush(EncoderPushButtonState pst);
 };
 
 class RunAutoTimerMenu : public MenuItem {
 public:
 	RunAutoTimerMenu();
 	void OnSelectedInMenu();
+    void SetVisibilities();
+	RunAutoTimerMinutesMenu* timerValueMenu;
 };
 
 

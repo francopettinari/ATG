@@ -141,12 +141,14 @@ void setup() {
 
 	pinMode(pushButtonPin, INPUT_PULLUP);
 	attachInterrupt(pushButtonPin, handleEncPush, CHANGE);
+	pidState.loadFromEEProm();
+
 	InitializeMenus();
 
 	ESP.wdtDisable();
 	ESP.wdtEnable(WDTO_8S);
 
-	pidState.loadFromEEProm();
+
 	Serial.println(F("Initialized from EEProm"));
 
 

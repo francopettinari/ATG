@@ -36,14 +36,37 @@ void MenuItem::OnSelectedInMenu(){
 }
 
 void MenuItem::HandleEncoderMovement(EncoderMovement mvmnt){
+	int sel = pidState.stateSelection;
+	std::vector<MenuItem *> subMenuItems = pidState.getCurrentMenu()->subMenuItems;
+	int max = subMenuItems.size()-1;
+
 	if(mvmnt==EncMoveCCW){
-		pidState.stateSelection--;
-		if(pidState.stateSelection<0) pidState.stateSelection=0;
-		if(pidState.stateSelection<pidState.currMenuStart)pidState.currMenuStart--;
+		if(pidState.stateSelection==0) return;//not possible to go down
+		do{
+			sel--;
+		} while(sel>=0 && !subMenuItems[sel]->Visible);
 	}else if(mvmnt==EncMoveCW){
-		pidState.stateSelection++;
-		if(pidState.stateSelection>pidState.currentMenu->subMenuItemsLen()-1) pidState.stateSelection=pidState.currentMenu->subMenuItemsLen()-1;
-		if(pidState.stateSelection-pidState.currMenuStart>=3)pidState.currMenuStart++;
+		if(pidState.stateSelection>=max) return;//not possible to go up
+		do{
+			sel++;
+		} while(sel<=max && !subMenuItems[sel]->Visible);
+	}
+	if(sel<0) sel=0;
+	if(sel>max) sel=max;
+	if(!subMenuItems[sel]->Visible)return;//no visible menus available
+	pidState.stateSelection=sel;
+
+	//check if currMenuStart has to be decremented
+	if(sel<pidState.currMenuStart)pidState.currMenuStart=sel;
+
+	//check if currMenuStart has to be incremented
+	int nOfVisible = 0;
+	for(int i=sel;i>=pidState.currMenuStart;i--){
+		if(subMenuItems[i]->Visible)nOfVisible++;
+		if(nOfVisible>=3){
+			pidState.currMenuStart=i;
+			break;
+		}
 	}
 }
 
@@ -441,10 +464,62 @@ void RunAutoRampMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 //	}
 }
 
+RunAutoTimerMinutesMenu::RunAutoTimerMinutesMenu():MenuItem(svRunAutoTimerMinutes){
+	Caption=F("Minutes");
+}
+void RunAutoTimerMinutesMenu::OnSelectedInMenu(){
+	if(pidState.timerState==3){
+		pidState.timerState=0;
+		return;
+	}
+	pidState.SetState(svRunAutoTimerMinutes,false);
+}
+void RunAutoTimerMinutesMenu::HandleEncoderMovement(EncoderMovement mvmnt) {
+	if(mvmnt==EncMoveCCW){
+		pidState.timerValueMins -= 1;
+		if(pidState.timerValueMins<0)pidState.timerValueMins=0;
+	}else if(mvmnt==EncMoveCW){
+		pidState.timerValueMins+=1;
+	}
+}
+
+void RunAutoTimerMinutesMenu::HandleEncoderPush(EncoderPushButtonState pst){
+	pidState.SetState(svRunAutoTimer);
+	pidState.savetoEEprom();
+	if(pidState.timerState==3){
+		pidState.timerState=0;
+		return;
+	}
+}
+
 RunAutoTimerMenu::RunAutoTimerMenu():MenuItem(svRunAutoTimer){
 	Caption=F("Timer");
-	subMenuItems.resize(1);
+	subMenuItems.resize(5);
 	subMenuItems[0] = new UpMenu(svRunAuto);
+	subMenuItems[1] = timerValueMenu = new RunAutoTimerMinutesMenu();
+	subMenuItems[2] = new CallbackMenuItem(svRunAutoTimer,F("Start"),[](){
+		pidState.StartTimer();
+		pidState.SetState(svRunAutoTimer);
+		((MainMenu*)pidState.topMenu)->runMenu->runAutoMenu->timerMenu->SetVisibilities();
+	});
+	subMenuItems[3] = new CallbackMenuItem(svRunAutoTimer,F("Pause"),[](){
+		pidState.PauseTimer();
+		pidState.SetState(svRunAutoTimer);
+		((MainMenu*)pidState.topMenu)->runMenu->runAutoMenu->timerMenu->SetVisibilities();
+	});
+	subMenuItems[4] = new CallbackMenuItem(svRunAutoTimer,F("Stop"),[](){
+		pidState.StopTimer();
+		pidState.SetState(svRunAutoTimer);
+		((MainMenu*)pidState.topMenu)->runMenu->runAutoMenu->timerMenu->SetVisibilities();
+	});
+
+	SetVisibilities();
+}
+
+void RunAutoTimerMenu::SetVisibilities(){
+	subMenuItems[2]->Visible = pidState.timerState!=1 && pidState.timerValueMins>0;
+	subMenuItems[3]->Visible = pidState.timerState==1;
+	subMenuItems[4]->Visible = pidState.timerState==1;
 }
 
 void RunAutoTimerMenu::OnSelectedInMenu(){

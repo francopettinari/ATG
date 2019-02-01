@@ -98,6 +98,7 @@ void LCDBuffer::PrintF(const int x, const int y,const __FlashStringHelper *ifsh)
     }
 }
 
+
 extern void formatFloat(float f,char *buff, int digits);
 //void formatFloat(float f,char *buff, int digits){
 //	if(digits<=0){
@@ -114,18 +115,44 @@ float roundToDp( float f, int digits ) {
 }
 
 
-void formatDouble(double d,char *buff, int digits){
-	d = roundToDp(d,digits);
-	if(digits<=0){
+void formatDouble(double d,char *buff, int decimals){
+	d = roundToDp(d,decimals);
+	if(decimals<=0){
 		dtostrf(d, 3, 0, buff);
 	}else{
-		dtostrf(d, 4+digits, digits, buff);
+		dtostrf(d, 4+decimals, decimals, buff);
 	}
 }
 
-void LCDBuffer::PrintDouble(const int x, const int y,double d, int digits){
+void formatDouble(double d,char *buff,int numbers, int decimals){
+	d = roundToDp(d,decimals);
+	if(decimals<=0){
+		dtostrf(d, numbers, 0, buff);
+		if(d<10)buff[0]='0';
+	}else{
+		dtostrf(d, numbers+1+decimals, decimals, buff);
+	}
+}
+
+void LCDBuffer::pprintf(const int x, const int y, char* format,...){
 	char line[_width+1];
-	formatDouble(d,line,digits);
+	va_list argptr;
+	va_start(argptr, format);
+	sprintf(line,format,argptr);
+	va_end(argptr);
+
+	PrintPChar(x,y,line);
+}
+
+void LCDBuffer::PrintDoubleFD(const int x, const int y,double d,int fixed, int decimals){
+	char line[_width+1];
+	formatDouble(d,line,fixed,decimals);
+	PrintPChar(x,y,line);
+}
+
+void LCDBuffer::PrintDoubleD(const int x, const int y,double d, int decimals){
+	char line[_width+1];
+	formatDouble(d,line,decimals);
 	PrintPChar(x,y,line);
 }
 

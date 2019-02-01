@@ -26,7 +26,7 @@ class MenuItem;
 
 enum PidStateValue {
 	svUndefiend=-1,svMain=0,
-	svRun=9, svRunAuto=10,svRunAutoTune=11,svRunAutoTuneResult=12,svRunAutoSetpoint=13,svRunAutoTimer=14,svRunManual=15,svRunAutoRamp=16,
+	svRun=9, svRunAuto=10,svRunAutoTune=11,svRunAutoTuneResult=12,svRunAutoSetpoint=13,svRunAutoTimer=14,svRunAutoTimerMinutes=15,svRunManual=16,svRunAutoRamp=17,
 	svConfig=20,
 	svPidConfig=22,
 	svPidKpiConfig=23,svPidKpdConfig=24,
@@ -50,12 +50,11 @@ private:
 	boolean IsEncoderPressed(boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
 
-	byte eepromVer = 03;  // eeprom data tracking
+	byte eepromVer = 04;  // eeprom data tracking
 
 protected:
 	PID pid;
 
-    bool servoOFF = false;
 public:
 	Servo servo;
 	MenuItem         *currentMenu=NULL;
@@ -70,6 +69,10 @@ public:
 	double           temperature = 0, lastTemperature=0/*,dTemperature*/;
 	float pidSampleTimeSecs = 5;
 	float lastManualLog=0;
+	int timerValueMins=0; //when >=0 means that a timer is set
+	int timerState = 0;//0:inactive, 1:active, 2:paused, 3:elapsed
+	float timerStartMillis = 0;
+	int timerElapsedSecs = -1; //when >=0 means a timer count down is active
 	double Setpoint = 25,DynamicSetpoint=25,pDynamicSetpoint=0,Ramp=1;
 	float approacingStartMillis,lastDynSetpointCalcMillis = 0;
 	float approacingStartTemp = 0;
@@ -81,8 +84,6 @@ public:
 	void writeServoPosition(int degree, bool minValueSwitchOff);
 	void writeServoPositionCW(int degree, bool minValueSwitchOff);
 	void writeServoPositionCCW(int degree, bool minValueSwitchOff);
-	void SetServoOff(bool value);
-	bool IsServoOff();
 	boolean autoTune = false;
 	double kp=2,ki=0.5,kd=2;
 	double akp=2,aki=0.5,akd=2;
@@ -179,6 +180,32 @@ public:
 		return currentMenu;
 	}
 
+	void StartTimer(){
+		timerState = 1;
+		timerStartMillis = millis();
+		if(timerElapsedSecs<0){
+			timerElapsedSecs = 0;
+		}
+		savetoEEprom();
+	}
+
+	void PauseTimer(){
+		timerState = 2;
+		savetoEEprom();
+	}
+
+	void StopTimer(){
+		timerState = 0;
+		timerElapsedSecs = 0;
+		savetoEEprom();
+	}
+
+	void TimerDone(){
+		timerState = 3;
+		timerElapsedSecs = 0;
+		savetoEEprom();
+	}
+
 	void update(double temp,int encoderPos, boolean encoderPress);
 	void SetFsmState(FsmState value);
 	void updatePidStatus();
@@ -188,6 +215,7 @@ public:
 	void loadFromEEProm();
 	void savetoEEprom();
 
+	void savetoTimerElapsedSecsEEprom();
 	void saveSetPointTotoEEprom();
 	void saveServoDirToEEprom();
 };
