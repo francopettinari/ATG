@@ -144,7 +144,7 @@ EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
 }
 
 void PidState::_writeServo(int degree){
-	Serial.print(F("WriteDegree:"));Serial.println(degree);
+	//Serial.print(F("WriteDegree:"));Serial.println(degree);
 	servo.write(degree);
 	delay(15);
 	servoPosition = degree;
@@ -156,11 +156,11 @@ void PidState::_writeServo(int degree){
  */
 void PidState::writeServoPositionCW(int degree, bool minValueSwitchOff){
 	float now = millis();
-	Serial.print(F("Current temp state: "));Serial.println(TempState);
-	Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
-	Serial.print(F(" Degree:"));Serial.print(degree);
-	Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
-	Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
+//	Serial.print(F("Current temp state: "));Serial.println(TempState);
+//	Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
+//	Serial.print(F(" Degree:"));Serial.print(degree);
+//	Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
+//	Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
 
 	if(degree<servoMinValue || (minValueSwitchOff && degree==servoMinValue)) degree=0; //switch off on minVal
 	switch(TempState){
@@ -248,11 +248,11 @@ void PidState::writeServoPositionCW(int degree, bool minValueSwitchOff){
 
 void PidState::writeServoPositionCCW(int degree, bool minValueSwitchOff){
 	float now = millis();
-	Serial.print(F("Current temp state: "));Serial.println(TempState);
-	Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
-	Serial.print(F(" Degree:"));Serial.print(degree);
-	Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
-	Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
+//	Serial.print(F("Current temp state: "));Serial.println(TempState);
+//	Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
+//	Serial.print(F(" Degree:"));Serial.print(degree);
+//	Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
+//	Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
 
 	if(degree<servoMinValue || (minValueSwitchOff && degree==servoMinValue)) degree=0; //switch off on minVal
 	switch(TempState){
@@ -352,6 +352,7 @@ void PidState::SetFsmState(FsmState value){
 }
 
 void PidState::updatePidStatus(){
+	Serial.print(F("State:"));Serial.println(fsmState);
 	UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
 	switch(fsmState){
 	case psIdle:
@@ -377,28 +378,36 @@ void PidState::startRamp(){
 	if(DynamicSetpoint>Setpoint){
 		DynamicSetpoint=Setpoint;
 	}
-	pDynamicSetpoint = DynamicSetpoint;
+	pDynamicSetpoint = temperature;
 }
 bool PidState::waitRampStart(){
-	if(temperature-approacingStartTemp<0.1) return false;
-	return true;
+	return temperature<approacingStartTemp+0.1;
 }
 void PidState::updateRamp(){
 	float now = millis();
+//	Serial.print(F("Update ramp: "));Serial.print(lastDynSetpointCalcMillis);
 
 	if (lastDynSetpointCalcMillis==0)lastDynSetpointCalcMillis=now;
 	float deltaSecs = (now-lastDynSetpointCalcMillis)/(float)1000.0;
+//	Serial.print(F(" "));Serial.println(deltaSecs);
 	if(deltaSecs>5){
-//		float roChange = 1.0/(float)60000.0;//°C/min
-		if(abs(pDynamicSetpoint-Setpoint) <= Ramp*(now-lastDynSetpointCalcMillis)){ //if the rate of change is going to push the drive past the setpoint, just make it equal the setpoint otherwise it'll oscillate
+		//		Serial.print(DynamicSetpoint);Serial.print(F(" "));Serial.print(pDynamicSetpoint);
+		float deltaTemp = Ramp/(float)60.0*deltaSecs;
+
+		if(fsmState==psWaitDelay|| abs(pDynamicSetpoint-Setpoint) <= deltaTemp){ //if the rate of change is going to drive past the setpoint, just make it equal the setpoint otherwise it'll oscillate
 			DynamicSetpoint = Setpoint;
-		}
-		else{ //If more ramping is required, calculate the change required for the time period passed to keep the rate of change constant, and add it to the drive.
+		} else{ //If more ramping is required, calculate the change required for the time period passed to keep the rate of change constant, and add it to the drive.
+			//if DynamicSetpoint is too far from actual temperature, then keep it limited so that not too mutch fire is applied.
+			//in the end, what we are looking for, is to keep temp ramp constant, not DynamicSetpoint.
+			//DynamicSetpoint must only be a driver
+			if(pDynamicSetpoint-temperature>1){
+				pDynamicSetpoint = temperature+1;
+			}
 		  if(Setpoint>pDynamicSetpoint){  //positive direction
-			  DynamicSetpoint = pDynamicSetpoint+(Ramp*(now-lastDynSetpointCalcMillis));
+			  DynamicSetpoint = pDynamicSetpoint+deltaTemp;
 		  }
 		  else{   //negative direction
-			  DynamicSetpoint = pDynamicSetpoint-(Ramp*(now-lastDynSetpointCalcMillis));
+			  DynamicSetpoint = pDynamicSetpoint-deltaTemp;
 		  }
 		}
 		if(temperature>=DynamicSetpoint){
@@ -409,8 +418,12 @@ void PidState::updateRamp(){
 		pDynamicSetpoint = DynamicSetpoint;
 
 		lastDynSetpointCalcMillis = now;
+		Serial.print(F("New dyn setpoint:"));Serial.println(DynamicSetpoint,4);
 		UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
 	}
+//	else{
+//		Serial.println();
+//	}
 }
 
 void PidState::update(double temp,int encoderPos, boolean encoderPress){
@@ -497,6 +510,10 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 		}
 	}
 
+	if(state!=svRunAuto && state!=svRunAutoSetpoint && state!=svRunAutoRamp && state!=svRunAutoTimer){
+		fsmState = psIdle;
+	}
+
 //	Serial.print(F("State: "));Serial.println(state);
 	switch(state){
 		case svRunAuto :
@@ -519,7 +536,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				SetFsmState(psKeepTemp);
 			}
 
-
+//			Serial.print(F("Current state:"));Serial.println(fsmState);
 //			UdpTracer->print(F("Current state:"));UdpTracer->println(fsmState);
 			switch(fsmState){
 			case psIdle:
@@ -534,6 +551,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 //					Output=0;
 //					pid.Initialize();
 //				}
+				Serial.print(F("NEW State:"));Serial.println(fsmState);
 				UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
 				break;
 			case psWaitDelay:
@@ -558,11 +576,21 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				break;
 			}
 
-			bool computed = pid.Compute();
-			writeServoPosition(Output,fsmState!=psRampimg);
-
+			bool computed = false;
+			if((DynamicSetpoint - temperature)<3.5){
+				//activate pid modulation
+				computed = pid.Compute();
+				writeServoPosition(Output,fsmState!=psRampimg);
+			}else{
+				//max fire applied
+				writeServoPosition(servoMaxValue,false);
+			}
 			if(computed){
-				Serial.print(DynamicSetpoint,4);Serial.print(F(" "));Serial.print(Setpoint,4);Serial.print(F(" "));Serial.print(temp,4);Serial.print(F(" "));Serial.println(Output);
+				Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
+				Serial.print(Setpoint,4);Serial.print(F(" "));
+				Serial.print(temp,4);Serial.print(F(" "));
+				Serial.println(Output);
+
 				UdpTracer->print(F("LOG:")      );UdpTracer->print(now,4);
 			    UdpTracer->print(F(";SETP:")    );UdpTracer->print(Setpoint,4);
 			    UdpTracer->print(F(";DSETP:")   );UdpTracer->print(DynamicSetpoint,4);
