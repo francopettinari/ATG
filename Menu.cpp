@@ -545,6 +545,11 @@ void RunAutoMenu::OnSelectedInMenu(){
 }
 
 void RunAutoMenu::HandleEncoderPush(EncoderPushButtonState pst){
+//	MenuItem* selMI = pidState.currentMenu->subMenuItems[pidState.stateSelection];
+//	if(selMI==subMenuItems[0]){
+//		pidState.Output=0;
+//		pidState.writeServoPosition(pidState.Output,true);
+//	}
 	MenuItem::HandleEncoderPush(pst);
 //	pidState.aTune.Cancel();
 //	pidState.SetState(svRun);

@@ -10,8 +10,8 @@
 
 UDPTracer* UdpTracer = new UDPTracer();
 //IPAddress broadcastIp;
-//IPAddress multicastIp (192,168,1,111);
-IPAddress multicastIp ({224, 0, 0, 1});
+IPAddress multicastIp (192,168,1,105);
+//IPAddress multicastIp ({224, 0, 0, 1});
 //IPAddress multicastIp(10,11,2,55);
 unsigned int bmulticastPort = 8267;
 

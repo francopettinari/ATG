@@ -156,11 +156,11 @@ void PidState::_writeServo(int degree){
  */
 void PidState::writeServoPositionCW(int degree, bool minValueSwitchOff){
 	float now = millis();
-//	Serial.print(F("Current temp state: "));Serial.println(TempState);
-//	Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
-//	Serial.print(F(" Degree:"));Serial.print(degree);
-//	Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
-//	Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
+	Serial.print(F("Current temp state: "));Serial.println(TempState);
+	Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
+	Serial.print(F(" Degree:"));Serial.print(degree);
+	Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
+	Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
 
 	if(degree<servoMinValue || (minValueSwitchOff && degree==servoMinValue)) degree=0; //switch off on minVal
 	switch(TempState){
@@ -354,6 +354,7 @@ void PidState::SetFsmState(FsmState value){
 void PidState::updatePidStatus(){
 	Serial.print(F("State:"));Serial.println(fsmState);
 	UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+	//looks not useful anymore. replace with fixed values when
 	switch(fsmState){
 	case psIdle:
 			pid.SetTunings(kp,ki,kd);
@@ -362,7 +363,7 @@ void PidState::updatePidStatus(){
 	case psWaitDelay:
 	case psRampimg:
 			DynamicSetpoint=Setpoint; //this has to be recalculated time by time
-			pid.SetTunings(kp,0.2,0);
+			pid.SetTunings(kp,ki,kd);
 		break;
 	case psKeepTemp:
 			DynamicSetpoint=Setpoint;
@@ -426,21 +427,35 @@ void PidState::updateRamp(){
 //	}
 }
 
+bool isAutoState(int state){
+	return state==svRunAuto || state==svRunAutoTimer || state==svRunAutoSetpoint || state==svRunAutoRamp;
+}
+
 void PidState::update(double temp,int encoderPos, boolean encoderPress){
 
 	if(temp>-100){
 		setTemperature(temp);
 	}
 
-	if(pid.GetMode()!=MANUAL && state!=svRunAuto && state!=svRunAutoTimer && state!=svRunAutoSetpoint &&
+	if(pid.GetMode()!=MANUAL && !isAutoState(state) &&
 	   state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
 	{
 		pid.SetMode(MANUAL);
 		pid.Initialize();
-		Serial.println(F("PID switched to MANUAL"));
+
+	}
+//		Serial.print(F("State: "));Serial.println(state);
+//		Serial.print(F("isAutoState(state): "));Serial.println(isAutoState(state));
+//		Serial.print(F("xxxxxx: "));Serial.println(state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax);
+
+	if(!isAutoState(state) &&
+		state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
+	{
+		Serial.println(F("xxx"));
 		Output=0;
 		writeServoPosition(Output,true);
 	}
+
 
 
 	//encoder position
@@ -510,11 +525,11 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 		}
 	}
 
-	if(state!=svRunAuto && state!=svRunAutoSetpoint && state!=svRunAutoRamp && state!=svRunAutoTimer){
+	if(!isAutoState(state)){
 		fsmState = psIdle;
 	}
 
-//	Serial.print(F("State: "));Serial.println(state);
+
 	switch(state){
 		case svRunAuto :
 		case svRunAutoSetpoint :
