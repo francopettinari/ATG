@@ -31,7 +31,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/DallasTemperature}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ArduinoOTA}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266mDNS}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266WiFi/src}&quot;"/>
 								</option>
@@ -51,7 +50,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/DallasTemperature}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ArduinoOTA}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266mDNS}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266WiFi/src}&quot;"/>
 								</option>
@@ -71,7 +69,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/DallasTemperature}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ArduinoOTA}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266mDNS}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266WiFi/src}&quot;"/>
 								</option>

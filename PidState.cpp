@@ -398,12 +398,6 @@ void PidState::updateRamp(){
 		if(fsmState==psWaitDelay|| abs(pDynamicSetpoint-Setpoint) <= deltaTemp){ //if the rate of change is going to drive past the setpoint, just make it equal the setpoint otherwise it'll oscillate
 			DynamicSetpoint = Setpoint;
 		} else{ //If more ramping is required, calculate the change required for the time period passed to keep the rate of change constant, and add it to the drive.
-			//if DynamicSetpoint is too far from actual temperature, then keep it limited so that not too mutch fire is applied.
-			//in the end, what we are looking for, is to keep temp ramp constant, not DynamicSetpoint.
-			//DynamicSetpoint must only be a driver
-			if(pDynamicSetpoint-temperature>1){
-				pDynamicSetpoint = temperature+1;
-			}
 		  if(Setpoint>pDynamicSetpoint){  //positive direction
 			  DynamicSetpoint = pDynamicSetpoint+deltaTemp;
 		  }

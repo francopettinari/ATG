@@ -11,12 +11,14 @@
 #include <WString.h>
 #include "Arduino.h"
 #include <WiFiUdp.h>
-
+#include <WiFiClient.h>
 
 
 class UDPTracer {
 public:
+
 	WiFiUDP Udp;
+
 	UDPTracer();
 	virtual ~UDPTracer();
 

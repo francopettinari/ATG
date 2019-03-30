@@ -47,11 +47,6 @@
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/variants/nodemcu</locationURI>
 		</link>
 		<link>
-			<name>libraries/ArduinoOTA</name>
-			<type>2</type>
-			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/ArduinoOTA</locationURI>
-		</link>
-		<link>
 			<name>libraries/DallasTemperature</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/DallasTemperature/3.8.0</locationURI>
