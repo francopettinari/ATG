@@ -214,33 +214,8 @@ void LCDHelper::displayRun(PidState pstate){
 	}
 }
 
-//void LCDHelper::displayRun(PidState pstate){
-//	lcd.PrintChar(12, 0,(char)TEMPERATURE_CHAR); lcd.PrintDouble(13, 0,pstate.getTemperature(),2);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-//	lcd.PrintChar(12, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(13, 1,pstate.Setpoint        ,2);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
-//
-//	int o = 0;
-//	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
-//	if(pstate.servoDirection==ServoDirectionCW){
-//			if(pstate.Output<pstate.servoMinValue) o = 0;
-//			else o = 100.0*(pstate.Output-pstate.servoMinValue)/outRange;
-//		}else{
-//			if(pstate.Output>pstate.servoMaxValue) o = 0;
-//			else o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
-//		}
-//	lcd.PrintChar(12, 2,(char)HEAT_CHAR); lcd.PrintDouble(13, 2,o,2); 	lcd.PrintF(19, 2,F("%"));
-//
-////	lcd.PrintF(12, 3,F("d"));
-////	float tempDerivate = pstate.myDInput/pstate.myDTimeMillis*(float)60000.0; //DTemp/DTime(minutes) °C/min
-////	lcd.PrintDouble(13, 3,tempDerivate,2);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
-//
-//	lcd.PrintF(12, 3,F("/"));
-//	lcd.PrintDouble(13, 3,pstate.Ramp,0);lcd.PrintChar(19, 3,(char)DEGMIN_CHAR);
-//
-//}
-
 void LCDHelper::displayManual(PidState pstate){
 	lcd.PrintChar(12, 0,(char)TEMPERATURE_CHAR); lcd.PrintDoubleFD(13, 0,pstate.getTemperature(),2,2);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-//	lcd.PrintChar(12, 1,(char)SETPOINT_CHAR);    lcd.PrintDouble(13, 1,pstate.Setpoint        ,2);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
 
 	int o = 0;
 	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
@@ -252,12 +227,6 @@ void LCDHelper::displayManual(PidState pstate){
 		else o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
 	}
 	lcd.PrintChar(12, 2,(char)HEAT_CHAR); lcd.PrintDoubleFD(13, 2,o,2,2); 	lcd.PrintF(19, 2,F("%"));
-
-	//lcd.PrintDouble(14, 3,pstate.Output,1);
-//	lcd.PrintF(12, 3,F("d"));
-//	float tempDerivate = pstate.myDInput/pstate.myDTimeMillis*(float)60000.0; //DTemp/DTime(minutes) °C/min
-//	lcd.PrintDouble(13, 3,tempDerivate,2);lcd.PrintChar(19, 3,(char)DERIV_CHAR);
-
 }
 
 void LCDHelper::displayTimerValue(PidState pstate){
@@ -274,11 +243,6 @@ void LCDHelper::displayConfigServo(PidState pstate){
 	lcd.PrintF(11, 2,F("Max "));lcd.PrintDoubleFD(15, 2,pstate.servoMaxValue,3,0);
 }
 
-//void LCDHelper::print(byte col, byte row, int val){
-//	lcd.Print(col, row,val);
-//}
-
 void LCDHelper::print(byte col, byte row,  __FlashStringHelper *ifsh){
 	lcd.PrintF(col, row,ifsh);
 }
-
