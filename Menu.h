@@ -154,24 +154,6 @@ public:
 	PidConfigMenu* pidMenu;
 };
 
-class AutoTuneResultMenu : public MenuItem {
-public:
-	AutoTuneResultMenu();
-	void OnSelectedInMenu();
-
-	MenuItem* confirmNSaveMenu;
-	MenuItem* discardMenu;
-};
-
-class RunAutoTuneMenu : public MenuItem {
-public:
-	RunAutoTuneMenu();
-	AutoTuneResultMenu* autoTuneResultMenu;
-
-	void OnSelectedInMenu();
-	void HandleEncoderPush(EncoderPushButtonState pst);
-};
-
 class RunAutoSetpointMenu : public MenuItem {
 public:
 	RunAutoSetpointMenu();
@@ -234,7 +216,6 @@ public:
 
 	RunAutoMenu* runAutoMenu;
 	RunManualMenu* runManualMenu;
-	RunAutoTuneMenu* runAutoTuneMenu;
 };
 
 class MainMenu : public MenuItem {

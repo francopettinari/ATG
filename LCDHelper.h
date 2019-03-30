@@ -19,8 +19,6 @@ class LCDHelper {
 	void displayRun(PidState pstate);
 	void displayManual(PidState pstate);
 	void displayTimerValue(PidState pstate);
-	void displayAutoTune(PidState pstate);
-	void displayAutoTuneResult(PidState pstate);
 	void displayConfigServo(PidState pstate);
 	void displayConfigPid(PidState pstate);
 	void displayDefault(PidState pstate);

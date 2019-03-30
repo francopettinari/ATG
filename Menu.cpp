@@ -5,23 +5,6 @@
 #include "PidState.h"
 
 
-//MenuItem* getCurrentMenu(){
-//	MainMenu* pmm = (MainMenu*) pidState.topMenu;
-//	switch(pidState.getState()){
-//		case svMain :
-//			return pmm;
-//		case svRunAuto :
-//			return pmm->runMenu->runAutoMenu;
-//		case svConfig_ServoDirection :
-//			return pmm->configMenu->servoMenu->dirMenu;
-//		case svConfig_ServoMin :
-//			return pmm->configMenu->servoMenu->minMenu;
-//		case svConfig_ServoMax:
-//			return pmm->configMenu->servoMenu->maxMenu;
-//	}
-//	return pmm;
-//}
-
 MenuItem::MenuItem(int state, String s){
 	Caption = s;
 	mappedState = state;
@@ -382,43 +365,6 @@ void ConfigMenu::OnSelectedInMenu(){
 	pidState.SetState(svConfig);
 }
 
-
-AutoTuneResultMenu::AutoTuneResultMenu():MenuItem(svRunAutoTuneResult){
-	Caption = F("Tune res.");
-	subMenuItems.resize(2);
-
-	subMenuItems[0] = confirmNSaveMenu = new CallbackMenuItem(svRun,F("Yes"),[](){
-		pidState.ConfirmAutoTuneResult();
-		pidState.SetState(svRunAuto);
-	});
-	subMenuItems[1] = discardMenu = new CallbackMenuItem(svRun,F("No"),[](){
-		pidState.SetState(svRunAuto);
-	});
-
-}
-
-void AutoTuneResultMenu::OnSelectedInMenu(){
-//at moment not needed because this menu is displayed programmatically after AutoTune is finished
-}
-
-RunAutoTuneMenu::RunAutoTuneMenu():MenuItem(svRunAutoTune){
-	Caption=F("Auto Tune");
-	autoTuneResultMenu = new AutoTuneResultMenu();
-}
-
-void RunAutoTuneMenu::OnSelectedInMenu(){
-	if(pidState.getState() == svRun){
-		pidState.SetState(svRunAutoTune);
-	}else{
-		pidState.SetState(svRun);
-	}
-}
-
-void RunAutoTuneMenu::HandleEncoderPush(EncoderPushButtonState pst){
-	pidState.aTune.Cancel();
-	pidState.SetState(svRun);
-}
-
 RunAutoSetpointMenu::RunAutoSetpointMenu():MenuItem(svRunAutoSetpoint){
 	Caption=F("Setpoint");
 //	subMenuItems.resize(1);
@@ -551,7 +497,6 @@ void RunAutoMenu::HandleEncoderPush(EncoderPushButtonState pst){
 //		pidState.writeServoPosition(pidState.Output,true);
 //	}
 	MenuItem::HandleEncoderPush(pst);
-//	pidState.aTune.Cancel();
 //	pidState.SetState(svRun);
 }
 
@@ -607,12 +552,11 @@ void RunManualMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 
 RunMenu::RunMenu():MenuItem(svRun){
 	Caption = F("Run");
-	subMenuItems.resize(4);
+	subMenuItems.resize(3);
 
 	subMenuItems[0] = new UpMenu(svMain);
 	subMenuItems[1] = runAutoMenu = new RunAutoMenu();
 	subMenuItems[2] = runManualMenu = new RunManualMenu();
-	subMenuItems[3] = runAutoTuneMenu = new RunAutoTuneMenu();
 }
 
 void RunMenu::OnSelectedInMenu(){

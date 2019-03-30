@@ -17,7 +17,6 @@ enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1
 #include "Menu.h"
 #include "PID_v1.h"
 #include <Servo.h>
-#include "PID_AutoTune_v0.h"
 
 class LCDHelper;
 class MenuItem;
@@ -26,7 +25,7 @@ class MenuItem;
 
 enum PidStateValue {
 	svUndefiend=-1,svMain=0,
-	svRun=9, svRunAuto=10,svRunAutoTune=11,svRunAutoTuneResult=12,svRunAutoSetpoint=13,svRunAutoTimer=14,svRunAutoTimerMinutes=15,svRunManual=16,svRunAutoRamp=17,
+	svRun=9, svRunAuto=10,svRunAutoSetpoint=13,svRunAutoTimer=14,svRunAutoTimerMinutes=15,svRunManual=16,svRunAutoRamp=17,
 	svConfig=20,
 	svPidConfig=22,
 	svPidKpiConfig=23,svPidKpdConfig=24,
@@ -58,7 +57,6 @@ protected:
 public:
 	Servo servo;
 	MenuItem         *currentMenu=NULL;
-	PID_ATune aTune;
 
 	PidStateValue state = svMain;
 	LCDHelper        *lcdHelper=NULL;
@@ -76,7 +74,6 @@ public:
 	double Setpoint = 25,DynamicSetpoint=25,pDynamicSetpoint=0,Ramp=1;
 	float approacingStartMillis,lastDynSetpointCalcMillis = 0;
 	float approacingStartTemp = 0;
-	double autotuneSetPoint = 0;
 	double Output;
 	float PrevSwitchOnOffMillis = 0;
 	int servoPosition=0;
@@ -84,12 +81,7 @@ public:
 	void writeServoPosition(int degree, bool minValueSwitchOff);
 	void writeServoPositionCW(int degree, bool minValueSwitchOff);
 	void writeServoPositionCCW(int degree, bool minValueSwitchOff);
-	boolean autoTune = false;
 	double kp=2,ki=0.5,kd=2;
-	double akp=2,aki=0.5,akd=2;
-
-
-
 
 	double myPTerm;
 	double myITerm;
@@ -98,22 +90,6 @@ public:
 	double myDInput;
 	double myError;
 	double myOutputSum;
-
-	PID_ATune getATune(){return aTune;}
-
-	void SetAutotuneResult(double arkp,double arki, double arkd){
-		akp = arkp;
-		aki = arki;
-		akd = arkd;
-	}
-
-	void ConfirmAutoTuneResult(){
-		kp = akp;
-		ki = aki;
-		kd = akd;
-	    pid.SetTunings(kp, ki, kd);
-	    savetoEEprom();
-	}
 
 	void SetState(PidStateValue value, boolean save=true){
 		state = value;
@@ -128,7 +104,6 @@ public:
 	int servoMaxValue = 180; //degrees
 
 	PidState();
-	void changeAutoTune(int value);
 
 	MenuItem* decodeCurrentMenu();
 
@@ -145,10 +120,6 @@ public:
 
 	float getTemperature(){
 		return temperature;
-	}
-
-	double getATuneSetPoint(){
-		return autotuneSetPoint;
 	}
 
 //	float RoundTo025(float Num){

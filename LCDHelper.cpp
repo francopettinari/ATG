@@ -144,12 +144,6 @@ void LCDHelper::display(PidState pstate){
 		case svRunManual:
 			displayManual(pstate);
 			break;
-		case svRunAutoTune:
-			displayAutoTune(pstate);
-			break;
-		case svRunAutoTuneResult:
-			displayAutoTuneResult(pstate);
-			break;
 		case svPidConfig:
 		case svPidKpiConfig:
 		case svPidKpdConfig:
@@ -186,13 +180,6 @@ void LCDHelper::displayConfigPid(PidState pstate){
 	lcd.PrintF(10, 1,F("Ki"));lcd.PrintDoubleFD(13, 1,pstate.ki,2,3);
 	lcd.PrintF(10, 2,F("Kd"));lcd.PrintDoubleFD(13, 2,pstate.kd,2,3);
 	lcd.PrintF(10, 3,F("St"));lcd.PrintDoubleFD(16, 3,pstate.pidSampleTimeSecs,2,0);
-}
-
-void LCDHelper::displayAutoTuneResult(PidState pstate){
-	lcd.PrintF(10, 0,F("Confirm ?"));
-	lcd.PrintF(10, 1,F("Kp"));lcd.PrintDoubleFD(14, 1,pstate.akp,2,3);
-	lcd.PrintF(10, 2,F("Ki"));lcd.PrintDoubleFD(14, 2,pstate.aki,2,3);
-	lcd.PrintF(10, 3,F("Kd"));lcd.PrintDoubleFD(14, 3,pstate.akd,2,3);
 }
 
 void LCDHelper::displayRun(PidState pstate){
@@ -275,22 +262,6 @@ void LCDHelper::displayManual(PidState pstate){
 
 void LCDHelper::displayTimerValue(PidState pstate){
 	lcd.PrintString(12, 1,F("Min "));lcd.PrintDoubleFD(16, 1,pstate.timerValueMins,2,0);
-}
-
-void LCDHelper::displayAutoTune(PidState pstate){
-	double tp = pstate.getTemperature();
-	lcd.PrintChar(13, 0,(char)TEMPERATURE_CHAR); lcd.PrintDoubleFD(14, 0,tp,1,2);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-
-	int o = 0;
-	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
-	if(pstate.servoDirection==ServoDirectionCW){
-		o = 100.0*(pstate.Output-pstate.servoMinValue)/outRange;
-	}else{
-		o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
-	}
-	lcd.PrintDoubleFD(14, 2,o,1,2);
-	lcd.PrintF(19, 2,F("%"));
-	lcd.PrintDoubleFD(14, 3,pstate.Output,1,2);
 }
 
 void LCDHelper::displayConfigServo(PidState pstate){

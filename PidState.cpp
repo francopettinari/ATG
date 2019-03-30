@@ -9,7 +9,7 @@
 #include <EEPROM.h>
 #include "UDPTacer.h"
 
-PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P_ON_E, DIRECT),aTune(&temperature, &Output){
+PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P_ON_E, DIRECT){
 	pid.SetSampleTime(pidSampleTimeSecs*1000);
 	pid.SetMode(MANUAL);
 	servo.attach(D8);  // attaches the servo on pin 9 to the servo object
@@ -17,8 +17,6 @@ PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P
 	currentMenu = new MainMenu();
 	approacingStartMillis=0;
 
-	aTune.SetNoiseBand(0.2);
-	aTune.SetLookbackSec(20);
 //	dTemperature=0;
 
 	pid.myPTerm = &myPTerm;
@@ -52,10 +50,6 @@ MenuItem* PidState::decodeCurrentMenu(){
 			return pmm->runMenu->runAutoMenu->rampMenu;
 		case svRunManual :
 			return pmm->runMenu->runManualMenu;
-		case svRunAutoTuneResult :
-			return pmm->runMenu->runAutoTuneMenu->autoTuneResultMenu;
-		case svRunAutoTune :
-			return pmm->runMenu->runAutoMenu;
 		case svConfig:
 			return pmm->configMenu;
 		case svServo_Config:
@@ -83,26 +77,6 @@ MenuItem* PidState::decodeCurrentMenu(){
 	}
 	return pmm;
 }
-
-void PidState::changeAutoTune(int value)
-{
- if(value>0) {
-    //Set the output to the desired starting frequency.
-	//Output=(servoMax-servoMin)/2+servoMin;
-	//Output=110;
-    aTune.SetNoiseBand(0.2);
-    aTune.SetOutputStep(15);
-    aTune.SetLookbackSec(20);
-    aTune.SetControlType(1);
-    pid.SetMode(MANUAL);
-    autoTune = true;
-  } else { //cancel autotune
-    aTune.Cancel();
-    autoTune = false;
-//    pid.SetMode(MANUAL);
-  }
-}
-
 
 long lastLog=0;
 
@@ -630,29 +604,6 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				lastManualLog = now;
 			}
 			break;
-		case svRunAutoTune:
-			if(temp<=-100){
-				return;
-			}
-			if(millis()-lastLog<1000 || temp<=-100){
-				return;
-			}
-			lastLog = millis();
-			if(!autoTune)changeAutoTune(true);
-			ESP.wdtFeed();
-			if(!aTune.IsRunning()){
-				autotuneSetPoint = temperature;
-			}
-			if (aTune.Runtime()!=0) {
-				Serial.print(F("AutoTune FINISHED!"));
-				SetAutotuneResult(aTune.GetKp(),aTune.GetKi(),aTune.GetKd());
-				changeAutoTune(false);
-				SetState(svRunAutoTuneResult,false);
-				break;
-			}
-
-			writeServoPosition(Output,true);
-			break;
 	}
 }
 
@@ -689,7 +640,6 @@ void PidState::loadFromEEProm(){
 	}
 
 	state=EEPROM.get(addr, state);
-	//state=svRunAutoTuneResult;
 	addr+=sizeof(PidStateValue);Serial.print(F("Size: "));Serial.println(addr);
 	Serial.print(F("Readed state: "));Serial.println(state);
 	if(state<0 || state>100){
