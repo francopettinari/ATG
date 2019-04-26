@@ -30,8 +30,8 @@ const byte encoderDt     = D6; // rotary encoder Data
 boolean isEncoderPressed;
 Encoder enc(encoderCk, encoderDt);
 
-const char *ssid = "atuttogas";
-const char *password = "log4fape";
+const char *ssid = "ATG";
+const char *password = "log4fape@ATG";
 WiFiUDP Udp;
 
 void handleEncPush() {
@@ -51,6 +51,8 @@ void setup() {
 	Serial.begin(115200);
 	//Serial.begin(9600);  //due to serial XY graph
 
+	WiFi.disconnect(true);
+	WiFi.mode(WIFI_AP);
 	WiFi.softAP(ssid, password);
 	Serial.print(F("IP ADDRESS: "));Serial.println(WiFi.localIP());
 	Serial.println(F("Initialized"));
@@ -73,7 +75,65 @@ void setup() {
 
 	Serial.println(F("Initialized from EEProm"));
 
+	Udp = UdpTracer->Udp;
+	Udp.begin(8266);
+}
 
+
+char parOpenChar = '(';
+char separator = ':';
+char parClosedChar = ')';
+//expected format: SET(<property>:<reqId>:<val>)
+void parseIncomingUdp(){
+	char incomingPacket[255];  // buffer for incoming packets
+	int packetSize = Udp.parsePacket();
+	  if (packetSize) {
+	    // receive incoming UDP packets
+	    //Serial.printf(F(">>>>>>>>>>>>> Received %d bytes from %s, port %d\n"), packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+	    int len = Udp.read(incomingPacket, 255);
+	    if (len > 0) {
+	      incomingPacket[len] = 0;
+	    }
+	    String s = String(incomingPacket);
+	    Serial.println(incomingPacket);
+	    if(s.startsWith(F("SET("), 0)){
+	    	int parOpenIdx = s.indexOf(parOpenChar);
+	    	int semicolIdx1 = s.indexOf(separator);
+	    	int semicolIdx2 = s.indexOf(separator,semicolIdx1+1);
+	    	int parClosedIdx = s.indexOf(parClosedChar);
+	    	String property = s.substring(parOpenIdx+1,semicolIdx1);
+	    	String cReqId   = s.substring(semicolIdx1+1,semicolIdx2);
+	    	String value    = s.substring(semicolIdx2+1,parClosedIdx);
+	    	int iReqId = cReqId.toInt();
+	    	if(iReqId<pidState.expectedReqId){
+	    		Serial.print(F("Received reqId: "));Serial.print(cReqId);Serial.print(F(". Expected: "));Serial.print(pidState.expectedReqId);
+	    		return;
+	    	}
+	    	if(iReqId>pidState.expectedReqId){
+				Serial.print(F("Received reqId: "));Serial.print(cReqId);Serial.print(F(". Expected: "));Serial.print(pidState.expectedReqId);
+				pidState.expectedReqId=iReqId;
+			}
+	    	if(property==F("SP")){
+	    		pidState.Setpoint = value.toFloat();
+				pidState.savetoEEprom();
+				pidState.sendStatus();
+	    	} else if(property==F("RP")){
+	    		pidState.Ramp = value.toFloat();
+				pidState.savetoEEprom();
+				pidState.sendStatus();
+	    	} else if(property==F("ST")){
+//	    		pidState.Ramp = value.toFloat();
+//				pidState.savetoEEprom();
+//				pidState.sendStatus();
+	    	}
+
+	    	UdpTracer->Log(F("RESP:"));
+	    	UdpTracer->Log(cReqId);
+	    	UdpTracer->Log(F("\n"));
+
+	    }
+
+	  }
 }
 
 bool tempReadRequested = false;
@@ -98,4 +158,5 @@ void loop() {
 	ESP.wdtFeed();
 	lcdHelper.display(pidState);
 
+	parseIncomingUdp();
 }

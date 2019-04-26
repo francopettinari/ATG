@@ -367,49 +367,23 @@ void ConfigMenu::OnSelectedInMenu(){
 
 RunAutoSetpointMenu::RunAutoSetpointMenu():MenuItem(svRunAutoSetpoint){
 	Caption=F("Setpoint");
-//	subMenuItems.resize(1);
-//	subMenuItems[0] = new UpMenu(svRunAuto);
-}
-void RunAutoSetpointMenu::HandleEncoderMovement(EncoderMovement mvmnt){
-//	if(mvmnt==EncMoveCCW){
-//		pidState.Setpoint -= 1;
-//		if(pidState.Setpoint<0)pidState.Setpoint=0;
-//	}else if(mvmnt==EncMoveCW){
-//		pidState.Setpoint+=1;
-//		if(pidState.Setpoint>=120)pidState.Setpoint=120;
-//	}
 }
 void RunAutoSetpointMenu::OnSelectedInMenu(){
 	Serial.print(F(">>>>>> Push Run Setpoint <<<<<<  "));Serial.println(pidState.state);
-//	pidState.SetState(svRunAutoSetpoint,false);
+	if(Selected)pidState.savetoEEprom();
 	Selected=!Selected;
 	Serial.println(pidState.state);
 }
 
 RunAutoRampMenu::RunAutoRampMenu():MenuItem(svRunAutoRamp){
 	Caption=F("Ramp");
-//	subMenuItems.resize(1);
-//	subMenuItems[0] = new UpMenu(svRunAuto);
 }
 void RunAutoRampMenu::OnSelectedInMenu(){
 	Serial.print(F(">>>>>> Push Run Ramp <<<<<<  "));Serial.println(pidState.state);
-//	if(!Selected){
-//		pidState.SetState(svRunAutoRamp,false);
-//	}else{
-//		pidState.SetState(svRunAuto,false);
-//	}
 	Serial.println(pidState.state);
+	if(Selected)pidState.savetoEEprom();
 	Selected = !Selected;
 }
-void RunAutoRampMenu::HandleEncoderMovement(EncoderMovement mvmnt){
-//	if(mvmnt==EncMoveCCW){
-//		pidState.Ramp -= 1;
-//		if(pidState.Ramp<0)pidState.Ramp=0;
-//	}else if(mvmnt==EncMoveCW){
-//		pidState.Ramp+=1;
-//	}
-}
-
 RunAutoTimerMinutesMenu::RunAutoTimerMinutesMenu():MenuItem(svRunAutoTimerMinutes){
 	Caption=F("Minutes");
 }

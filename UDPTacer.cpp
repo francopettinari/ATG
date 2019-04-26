@@ -9,10 +9,9 @@
 #include <ESP8266WiFi.h>
 
 UDPTracer* UdpTracer = new UDPTracer();
-//IPAddress broadcastIp;
+IPAddress broadcastIp(192,168,4,255);
 //IPAddress multicastIp (192,168,1,105);
-//IPAddress multicastIp ({224, 0, 0, 1});
-IPAddress multicastIp(192,168,4,2);
+//IPAddress multicastIp(192,168,4,2);
 unsigned int bmulticastPort = 8267;
 
 UDPTracer::UDPTracer() {
@@ -25,7 +24,8 @@ UDPTracer::~UDPTracer() {
 }
 
 void UDPTracer::LogChar(char s) {
-	Udp.beginPacketMulticast(multicastIp, bmulticastPort, WiFi.localIP());
+	//Udp.beginPacketMulticast(multicastIp, bmulticastPort, WiFi.localIP(),5);
+	Udp.beginPacket(broadcastIp, bmulticastPort);
 	Udp.write(s);
 	if(s=='\n'){
 		Udp.endPacket();
@@ -44,7 +44,8 @@ void UDPTracer::Log(__FlashStringHelper *ifsh){
 }
 
 void UDPTracer::Log(String s){
-	Udp.beginPacketMulticast(multicastIp, bmulticastPort, WiFi.localIP());
+	//Udp.beginPacketMulticast(multicastIp, bmulticastPort, WiFi.localIP(),5);
+	Udp.beginPacket(broadcastIp, bmulticastPort);
 	Udp.write(s.c_str());
 	if(s.endsWith(F("\n"))){
 		Udp.endPacket();
@@ -82,7 +83,8 @@ void UDPTracer::printNumber(unsigned long n, uint8_t base) {
 }
 
 void UDPTracer::write(uint8_t c) {
-	Udp.beginPacketMulticast(multicastIp, bmulticastPort, WiFi.localIP());
+	//Udp.beginPacketMulticast(multicastIp, bmulticastPort, WiFi.localIP(),5);
+	Udp.beginPacket(broadcastIp, bmulticastPort);
 	Udp.write(c);
 	if(c=='\n'){
 		Udp.endPacket();

@@ -158,7 +158,6 @@ class RunAutoSetpointMenu : public MenuItem {
 public:
 	RunAutoSetpointMenu();
 	void OnSelectedInMenu();
-	void HandleEncoderMovement(EncoderMovement mvmnt);
 };
 
 class RunAutoRampMenu : public MenuItem {
@@ -166,7 +165,6 @@ public:
 
 	RunAutoRampMenu();
 	void OnSelectedInMenu();
-	void HandleEncoderMovement(EncoderMovement mvmnt);
 };
 
 class RunAutoTimerMinutesMenu : public MenuItem {

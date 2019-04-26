@@ -66,7 +66,8 @@ public:
 	int              currEncoderPos=0,prevEncoderPos=0;    // a counter for the rotary encoder dial
 	double           temperature = 0, lastTemperature=0/*,dTemperature*/;
 	float pidSampleTimeSecs = 5;
-	float lastManualLog=0;
+	float lastManualLog = 0;
+	float lastUdpDataSent = 0;
 	int timerValueMins=0; //when >=0 means that a timer is set
 	int timerState = 0;//0:inactive, 1:active, 2:paused, 3:elapsed
 	float timerStartMillis = 0;
@@ -78,10 +79,12 @@ public:
 	float PrevSwitchOnOffMillis = 0;
 	int servoPosition=0;
 	void _writeServo(int degree);
-	void writeServoPosition(int degree, bool minValueSwitchOff);
-	void writeServoPositionCW(int degree, bool minValueSwitchOff);
+	void writeServoPosition(int degree, bool minValueSwitchOff,bool log=true);
+	void writeServoPositionCW(int degree, bool minValueSwitchOff,bool log=true);
 	void writeServoPositionCCW(int degree, bool minValueSwitchOff);
 	double kp=2,ki=0.5,kd=2;
+
+	int expectedReqId = 1; //expected request id
 
 	double myPTerm;
 	double myITerm;
@@ -120,6 +123,19 @@ public:
 
 	float getTemperature(){
 		return temperature;
+	}
+
+	int getOutPerc(){
+		int o = 0;
+		double outRange = servoMaxValue-servoMinValue;
+		if(servoDirection==ServoDirectionCW){
+			if(Output<servoMinValue) o = 0;
+			else o = 100.0*(Output-servoMinValue)/outRange;
+		}else{
+			if(Output>servoMaxValue) o = 0;
+			else o = 100.0*(servoMaxValue - Output)/outRange;
+		}
+		return o;
 	}
 
 //	float RoundTo025(float Num){
@@ -185,6 +201,7 @@ public:
 	void updateRamp();
 	void loadFromEEProm();
 	void savetoEEprom();
+	void sendStatus();
 
 	void savetoTimerElapsedSecsEEprom();
 	void saveSetPointTotoEEprom();

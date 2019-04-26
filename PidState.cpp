@@ -128,14 +128,15 @@ void PidState::_writeServo(int degree){
  * here only the temperature flow is handled and the state transition should not depend
  * on other statuses. a burner switch off/on should always avoid flame bumps!!
  */
-void PidState::writeServoPositionCW(int degree, bool minValueSwitchOff){
+void PidState::writeServoPositionCW(int degree, bool minValueSwitchOff,bool log){
 	float now = millis();
-	Serial.print(F("Current temp state: "));Serial.println(TempState);
-	Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
-	Serial.print(F(" Degree:"));Serial.print(degree);
-	Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
-	Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
-
+	if(log){
+		Serial.print(F("Current temp state: "));Serial.println(TempState);
+		Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
+		Serial.print(F(" Degree:"));Serial.print(degree);
+		Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
+		Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
+	}
 	if(degree<servoMinValue || (minValueSwitchOff && degree==servoMinValue)) degree=0; //switch off on minVal
 	switch(TempState){
 		case TempStateUndefined:
@@ -312,9 +313,9 @@ void PidState::writeServoPositionCCW(int degree, bool minValueSwitchOff){
 	}
 }
 
-void PidState::writeServoPosition(int degree, bool minValueSwitchOff){
+void PidState::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
 	if(servoDirection==ServoDirectionCW){
-		writeServoPositionCW(degree, minValueSwitchOff);
+		writeServoPositionCW(degree, minValueSwitchOff,log);
 	}else{
 		writeServoPositionCCW(degree, minValueSwitchOff);
 	}
@@ -379,16 +380,16 @@ void PidState::updateRamp(){
 			  DynamicSetpoint = pDynamicSetpoint-deltaTemp;
 		  }
 		}
-		if(temperature>=DynamicSetpoint){
-			DynamicSetpoint=temperature;
+		//if(temperature>=DynamicSetpoint){
+			//DynamicSetpoint=temperature;
 //			pid.Reset();
-		}
-		lastDynSetpointCalcMillis = now;;
+		//}
+		lastDynSetpointCalcMillis = now;
 		pDynamicSetpoint = DynamicSetpoint;
 
 		lastDynSetpointCalcMillis = now;
 		Serial.print(F("New dyn setpoint:"));Serial.println(DynamicSetpoint,4);
-		UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
+		//UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
 	}
 //	else{
 //		Serial.println();
@@ -397,6 +398,28 @@ void PidState::updateRamp(){
 
 bool isAutoState(int state){
 	return state==svRunAuto || state==svRunAutoTimer || state==svRunAutoSetpoint || state==svRunAutoRamp;
+}
+
+void PidState::sendStatus(){
+	//Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
+	//Serial.print(Setpoint,4);Serial.print(F(" "));
+	//Serial.print(temp,4);Serial.print(F(" "));
+	//Serial.println(Output);
+	float now = millis();
+	UdpTracer->print(F("LOG:")      );UdpTracer->print(now,4);
+	UdpTracer->print(F(";EXPRQID:") );UdpTracer->print((float)expectedReqId,0);
+	UdpTracer->print(F(";SETP:")    );UdpTracer->print(Setpoint,4);
+	UdpTracer->print(F(";RAMP:")    );UdpTracer->print(Ramp,4);
+	UdpTracer->print(F(";DSETP:")   );UdpTracer->print(DynamicSetpoint,4);
+	UdpTracer->print(F(";TEMP:")    );UdpTracer->print(temperature,4);
+	UdpTracer->print(F(";OUT:")     );UdpTracer->print(Output,4);
+	UdpTracer->print(F(";OUTPERC:") );UdpTracer->print((float)getOutPerc(),0);
+	UdpTracer->print(F(";SERVOPOS:"));UdpTracer->print((float)servoPosition,0);
+	UdpTracer->print(F(";PGAIN:")   );UdpTracer->print(myPTerm,4);
+	UdpTracer->print(F(";IGAIN:")   );UdpTracer->print(myITerm,4);
+	UdpTracer->print(F(";DGAIN:")   );UdpTracer->print(myDTerm,4);
+	UdpTracer->print(F(";OUTSUM:")  );UdpTracer->print(myOutputSum,4);
+	UdpTracer->print(F(";PIDDTEMP:"));UdpTracer->println(myDInput,4);
 }
 
 void PidState::update(double temp,int encoderPos, boolean encoderPress){
@@ -419,9 +442,9 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 	if(!isAutoState(state) &&
 		state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
 	{
-		Serial.println(F("xxx"));
+//		Serial.println(F("xxx"));
 		Output=0;
-		writeServoPosition(Output,true);
+		writeServoPosition(Output,true,false);
 	}
 
 
@@ -568,23 +591,9 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				//max fire applied
 				writeServoPosition(servoMaxValue,false);
 			}
-			if(computed){
-				Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
-				Serial.print(Setpoint,4);Serial.print(F(" "));
-				Serial.print(temp,4);Serial.print(F(" "));
-				Serial.println(Output);
-
-				UdpTracer->print(F("LOG:")      );UdpTracer->print(now,4);
-			    UdpTracer->print(F(";SETP:")    );UdpTracer->print(Setpoint,4);
-			    UdpTracer->print(F(";DSETP:")   );UdpTracer->print(DynamicSetpoint,4);
-				UdpTracer->print(F(";TEMP:")    );UdpTracer->print(temp,4);
-				UdpTracer->print(F(";OUT:")     );UdpTracer->print(Output,4);
-				UdpTracer->print(F(";SERVOPOS:")     );UdpTracer->print((float)servoPosition,0);
-				UdpTracer->print(F(";PGAIN:")   );UdpTracer->print(myPTerm,4);
-				UdpTracer->print(F(";IGAIN:")   );UdpTracer->print(myITerm,4);
-				UdpTracer->print(F(";DGAIN:")   );UdpTracer->print(myDTerm,4);
-				UdpTracer->print(F(";OUTSUM:")  );UdpTracer->print(myOutputSum,4);
-				UdpTracer->print(F(";PIDDTEMP:"));UdpTracer->println(myDInput,4);
+			if(computed || (now-lastUdpDataSent>1000)){
+				sendStatus();
+				lastUdpDataSent = now;
 			}
 			break;
 		}

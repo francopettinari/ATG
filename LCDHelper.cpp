@@ -186,15 +186,7 @@ void LCDHelper::displayRun(PidState pstate){
 	int spPos = pstate.Setpoint<100?17:16;
 	int tPos = pstate.getTemperature()<100?spPos-6:spPos-7;
 	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,pstate.getTemperature(),2,2);lcd.PrintChar(spPos-1, 0,'/'); lcd.PrintDoubleFD(spPos, 0,pstate.Setpoint,2,0);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-	int o = 0;
-	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
-	if(pstate.servoDirection==ServoDirectionCW){
-			if(pstate.Output<pstate.servoMinValue) o = 0;
-			else o = 100.0*(pstate.Output-pstate.servoMinValue)/outRange;
-		}else{
-			if(pstate.Output>pstate.servoMaxValue) o = 0;
-			else o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
-		}
+	int o = pstate.getOutPerc();
 	/*lcd.PrintChar(13, 1,(char)HEAT_CHAR);*/ lcd.PrintDoubleD(15, 1,o,0); 	lcd.PrintF(19, 1,F("%"));
 	/*lcd.PrintF(13, 2,F("/"));*/ lcd.PrintDoubleD(15, 2,pstate.Ramp,0);lcd.PrintChar(19, 2,(char)DEGMIN_CHAR);
 	if(pstate.timerState==0||pstate.timerState==1||pstate.timerState==2){
@@ -217,15 +209,7 @@ void LCDHelper::displayRun(PidState pstate){
 void LCDHelper::displayManual(PidState pstate){
 	lcd.PrintChar(12, 0,(char)TEMPERATURE_CHAR); lcd.PrintDoubleFD(13, 0,pstate.getTemperature(),2,2);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
 
-	int o = 0;
-	double outRange = pstate.servoMaxValue-pstate.servoMinValue;
-	if(pstate.servoDirection==ServoDirectionCW){
-		if(pstate.Output<pstate.servoMinValue) o = 0;
-		else o = 100.0*(pstate.Output-pstate.servoMinValue)/outRange;
-	}else{
-		if(pstate.Output>pstate.servoMaxValue) o = 0;
-		else o = 100.0*(pstate.servoMaxValue - pstate.Output)/outRange;
-	}
+	int o = pstate.getOutPerc();
 	lcd.PrintChar(12, 2,(char)HEAT_CHAR); lcd.PrintDoubleFD(13, 2,o,2,2); 	lcd.PrintF(19, 2,F("%"));
 }
 
