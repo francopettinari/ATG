@@ -25,7 +25,7 @@ class MenuItem;
 
 enum PidStateValue {
 	svUndefiend=-1,svMain=0,
-	svRun=9, svRunAuto=10,svRunAutoSetpoint=13,svRunAutoTimer=14,svRunAutoTimerMinutes=15,svRunManual=16,svRunAutoRamp=17,
+	svRunAuto=10, svRunAutoSetpoint=13,svRunAutoRamp=17,
 	svConfig=20,
 	svPidConfig=22,
 	svPidKpiConfig=23,svPidKpdConfig=24,
@@ -48,8 +48,8 @@ private:
 	EncoderPushButtonState decodeEncoderPushBtnState (boolean encoderPress);
 	boolean IsEncoderPressed(boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
-
-	byte eepromVer = 04;  // eeprom data tracking
+	bool isAutoState(int state);
+	byte eepromVer = 05;  // eeprom data tracking
 
 protected:
 	PID pid;
@@ -59,6 +59,8 @@ public:
 	MenuItem         *currentMenu=NULL;
 
 	PidStateValue state = svMain;
+	int autoModeOn = false; //true=> auto mode on, false auto mode paused
+	int forcedOutput = 0; //0 means automatic, !=0 means forced to value
 	LCDHelper        *lcdHelper=NULL;
 
 	MenuItem         *topMenu = NULL;
@@ -68,10 +70,6 @@ public:
 	float pidSampleTimeSecs = 5;
 	float lastManualLog = 0;
 	float lastUdpDataSent = 0;
-	int timerValueMins=0; //when >=0 means that a timer is set
-	int timerState = 0;//0:inactive, 1:active, 2:paused, 3:elapsed
-	float timerStartMillis = 0;
-	int timerElapsedSecs = -1; //when >=0 means a timer count down is active
 	double Setpoint = 25,DynamicSetpoint=25,pDynamicSetpoint=0,Ramp=1;
 	float approacingStartMillis,lastDynSetpointCalcMillis = 0;
 	float approacingStartTemp = 0;
@@ -125,23 +123,8 @@ public:
 		return temperature;
 	}
 
-	int getOutPerc(){
-		int o = 0;
-		double outRange = servoMaxValue-servoMinValue;
-		if(servoDirection==ServoDirectionCW){
-			if(Output<servoMinValue) o = 0;
-			else o = 100.0*(Output-servoMinValue)/outRange;
-		}else{
-			if(Output>servoMaxValue) o = 0;
-			else o = 100.0*(servoMaxValue - Output)/outRange;
-		}
-		return o;
-	}
-
-//	float RoundTo025(float Num){
-//	  int tmp= (int)Num;
-//	  return tmp+int((Num-tmp)*1000/225)*0.25;
-//	}
+	int getOutPerc();
+	void setOutPerc(double val);
 
 	void setTemperature(double value){
 //		value = RoundTo025(value);
@@ -167,32 +150,6 @@ public:
 		return currentMenu;
 	}
 
-	void StartTimer(){
-		timerState = 1;
-		timerStartMillis = millis();
-		if(timerElapsedSecs<0){
-			timerElapsedSecs = 0;
-		}
-		savetoEEprom();
-	}
-
-	void PauseTimer(){
-		timerState = 2;
-		savetoEEprom();
-	}
-
-	void StopTimer(){
-		timerState = 0;
-		timerElapsedSecs = 0;
-		savetoEEprom();
-	}
-
-	void TimerDone(){
-		timerState = 3;
-		timerElapsedSecs = 0;
-		savetoEEprom();
-	}
-
 	void update(double temp,int encoderPos, boolean encoderPress);
 	void SetFsmState(FsmState value);
 	void updatePidStatus();
@@ -203,7 +160,6 @@ public:
 	void savetoEEprom();
 	void sendStatus();
 
-	void savetoTimerElapsedSecsEEprom();
 	void saveSetPointTotoEEprom();
 	void saveServoDirToEEprom();
 };

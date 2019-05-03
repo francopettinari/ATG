@@ -36,20 +36,12 @@ MenuItem* PidState::decodeCurrentMenu(){
 	case svUndefiend:
 		case svMain :
 			return pmm;
-		case svRun:
-			return pmm->runMenu;
 		case svRunAuto :
-			return pmm->runMenu->runAutoMenu;
-		case svRunAutoTimer :
-			return pmm->runMenu->runAutoMenu->timerMenu;
-		case svRunAutoTimerMinutes :
-			return pmm->runMenu->runAutoMenu->timerMenu->timerValueMenu;
+			return pmm->runMenu;
 		case svRunAutoSetpoint :
-			return pmm->runMenu->runAutoMenu->setpointMenu;
+			return pmm->runMenu->setpointMenu;
 		case svRunAutoRamp :
-			return pmm->runMenu->runAutoMenu->rampMenu;
-		case svRunManual :
-			return pmm->runMenu->runManualMenu;
+			return pmm->runMenu->rampMenu;
 		case svConfig:
 			return pmm->configMenu;
 		case svServo_Config:
@@ -396,8 +388,8 @@ void PidState::updateRamp(){
 //	}
 }
 
-bool isAutoState(int state){
-	return state==svRunAuto || state==svRunAutoTimer || state==svRunAutoSetpoint || state==svRunAutoRamp;
+bool PidState::isAutoState(int state){
+	return state==svRunAuto || state==svRunAutoSetpoint || state==svRunAutoRamp;
 }
 
 void PidState::sendStatus(){
@@ -408,6 +400,7 @@ void PidState::sendStatus(){
 	float now = millis();
 	UdpTracer->print(F("LOG:")      );UdpTracer->print(now,4);
 	UdpTracer->print(F(";EXPRQID:") );UdpTracer->print((float)expectedReqId,0);
+	UdpTracer->print(F(";STATE:")    );UdpTracer->print((float)autoModeOn,0);
 	UdpTracer->print(F(";SETP:")    );UdpTracer->print(Setpoint,4);
 	UdpTracer->print(F(";RAMP:")    );UdpTracer->print(Ramp,4);
 	UdpTracer->print(F(";DSETP:")   );UdpTracer->print(DynamicSetpoint,4);
@@ -420,6 +413,31 @@ void PidState::sendStatus(){
 	UdpTracer->print(F(";DGAIN:")   );UdpTracer->print(myDTerm,4);
 	UdpTracer->print(F(";OUTSUM:")  );UdpTracer->print(myOutputSum,4);
 	UdpTracer->print(F(";PIDDTEMP:"));UdpTracer->println(myDInput,4);
+}
+
+int PidState::getOutPerc(){
+	int o = 0;
+	double outRange = servoMaxValue-servoMinValue;
+	if(servoDirection==ServoDirectionCW){
+		if(Output<servoMinValue) o = 0;
+		else o = 100.0*(Output-servoMinValue)/outRange;
+	}else{
+		if(Output>servoMaxValue) o = 0;
+		else o = 100.0*(servoMaxValue - Output)/outRange;
+	}
+	return o;
+}
+
+void PidState::setOutPerc(double val){
+	Serial.print(F(">>>>>> OutputP: "));Serial.println(val);
+	double outRange = servoMaxValue-servoMinValue;
+	if(servoDirection==ServoDirectionCW){
+		Output = servoMinValue + (val/100.0*outRange);
+	}else{
+		Output = servoMaxValue - (val/100.0*outRange);
+	}
+	Serial.print(F(">>>>>> Output: "));Serial.println(Output);
+	writeServoPosition(Output,true,true);
 }
 
 void PidState::update(double temp,int encoderPos, boolean encoderPress){
@@ -435,9 +453,10 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 		pid.Initialize();
 
 	}
-//		Serial.print(F("State: "));Serial.println(state);
-//		Serial.print(F("isAutoState(state): "));Serial.println(isAutoState(state));
-//		Serial.print(F("xxxxxx: "));Serial.println(state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax);
+
+	if(autoModeOn==0){
+		pid.SetMode(MANUAL);
+	}
 
 	if(!isAutoState(state) &&
 		state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
@@ -492,42 +511,30 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 	float now = millis();
 	ESP.wdtFeed();
 
-	if (timerState==1){
-		float elapsedMillis = now-timerStartMillis;
-		if(elapsedMillis>1000){
-			int secs = elapsedMillis/1000;
-			int remMillis = elapsedMillis-secs*1000;
-			timerElapsedSecs+=secs;
-			if(timerElapsedSecs>=timerValueMins*60){
-				timerStartMillis=now;
-				TimerDone();
-			}
-			timerStartMillis = now-remMillis;
-			savetoTimerElapsedSecsEEprom();
-		}
-	}
-	if (timerState==3){
-		float elapsedMillis = now-timerStartMillis;
-		int intervalMS = 250;
-		if(elapsedMillis>intervalMS){
-			int steps = elapsedMillis/intervalMS;
-			timerElapsedSecs+=steps;
-			timerStartMillis = now;
-		}
-	}
-
-	if(!isAutoState(state)){
+	if(autoModeOn==0 || !isAutoState(state)){
 		fsmState = psIdle;
 	}
-
 
 	switch(state){
 		case svRunAuto :
 		case svRunAutoSetpoint :
-		case svRunAutoRamp :
-		case svRunAutoTimer : {
+		case svRunAutoRamp : {
+
+			if(autoModeOn==0){
+				sendStatus();
+				break;
+			}
+
 			if(temp<=-100){
 				return;
+			}
+
+			if(autoModeOn==0){
+				if(forcedOutput>0){
+					pid.SetMode(MANUAL);
+					setOutPerc(forcedOutput);
+					return;
+				}
 			}
 
 			if(pid.GetMode()!=AUTOMATIC){
@@ -540,6 +547,11 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 
 			if(Ramp<=0 && fsmState!=psKeepTemp){
 				SetFsmState(psKeepTemp);
+			}
+
+			if(Ramp<=0){
+				//no ramp is done, bit some logic is based on DynSetpoint, so set it to Setpoint
+				DynamicSetpoint = Setpoint;
 			}
 
 //			Serial.print(F("Current state:"));Serial.println(fsmState);
@@ -575,7 +587,6 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				}
 				break;
 			case psKeepTemp:
-				// a change in state only allowed if more than 30 seconds have passed
 				if(Ramp>0 && temp<=Setpoint-1){
 					SetFsmState(psIdle);
 				}
@@ -589,6 +600,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				writeServoPosition(Output,fsmState!=psRampimg);
 			}else{
 				//max fire applied
+				setOutPerc(100);
 				writeServoPosition(servoMaxValue,false);
 			}
 			if(computed || (now-lastUdpDataSent>1000)){
@@ -598,21 +610,6 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			break;
 		}
 		break;
-		case svRunManual:
-			if(temp<=-100){
-				return;
-			}
-			writeServoPosition(Output,true);
-			if(now-lastManualLog>1000){
-				Serial.print(Setpoint,4);Serial.print(F(" "));Serial.print(temp,4);Serial.print(F(" "));Serial.println(Output);
-				UdpTracer->print(F("LOG:")      );UdpTracer->print(now,4);
-				UdpTracer->print(F(";SETP:")    );UdpTracer->print(Setpoint,4);
-				UdpTracer->print(F(";TEMP:")    );UdpTracer->print(temp,4);
-				UdpTracer->print(F(";OUT:")     );UdpTracer->print(Output,4);
-				UdpTracer->print(F(";SERVOPOS:"));UdpTracer->print((float)servoPosition,0);
-				lastManualLog = now;
-			}
-			break;
 	}
 }
 
@@ -690,26 +687,35 @@ void PidState::loadFromEEProm(){
 	Serial.print(F("Readed Sample time secs: "));Serial.println(pidSampleTimeSecs);
 	if(pidSampleTimeSecs==NAN)pidSampleTimeSecs=5;
 
-	if(temp>=4){
-		timerValueMins = EEPROM.get(addr, timerValueMins);
-		addr+=sizeof(timerValueMins);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed Timer secs: "));Serial.println(timerValueMins);
-		if(timerValueMins>60*24)timerValueMins=0;
-		Serial.print(F("Calculated Timer mins: "));Serial.println(timerValueMins);
+	if(temp==4){
+		int dummy = 0;
+		dummy = EEPROM.get(addr, dummy);
+		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
+		Serial.print(F("Readed Timer secs: "));Serial.println(dummy);
+		if(dummy>60*24)dummy=0;
+		Serial.print(F("Calculated Timer mins: "));Serial.println(dummy);
 
-		timerState = EEPROM.get(addr, timerState);
-		addr+=sizeof(timerState);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed Timer state: "));Serial.println(timerState);
-		if(timerState<0||timerState>2)timerState=0;
-		Serial.print(F("Calculated Timer state: "));Serial.println(timerState);
+		dummy = EEPROM.get(addr, dummy);
+		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
+		Serial.print(F("Readed Timer state: "));Serial.println(dummy);
+		if(dummy<0||dummy>2)dummy=0;
+		Serial.print(F("Calculated Timer state: "));Serial.println(dummy);
 
-		timerElapsedSecs = EEPROM.get(addr, timerElapsedSecs);
-		addr+=sizeof(timerElapsedSecs);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed Timer elapsed secs: "));Serial.println(timerElapsedSecs);
-		if(timerElapsedSecs>60*60*24)timerElapsedSecs=0;
-		if(timerElapsedSecs<0)timerElapsedSecs=0;
+		dummy = EEPROM.get(addr, dummy);
+		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
+		Serial.print(F("Readed Timer elapsed secs: "));Serial.println(dummy);
+		if(dummy>60*60*24)dummy=0;
+		if(dummy<0)dummy=0;
 	}
+	if(temp>=5){
+		autoModeOn = EEPROM.get(addr, autoModeOn);
+		addr+=sizeof(autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
+		Serial.print(F("Readed autoModeOn: "));Serial.println(autoModeOn);
 
+		forcedOutput = EEPROM.get(addr, forcedOutput);
+		addr+=sizeof(forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
+		Serial.print(F("Readed forcedOutput: "));Serial.println(forcedOutput);
+	}
 	EEPROM.commit();
 	EEPROM.end();
 }
@@ -762,50 +768,19 @@ void PidState::savetoEEprom(){
 	EEPROM.put(addr, pidSampleTimeSecs);
 	addr+=sizeof(pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. timer mins: "));Serial.println(timerValueMins);
-	EEPROM.put(addr, timerValueMins);
-	addr+=sizeof(timerValueMins);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. autoModeOn: "));Serial.println(autoModeOn);
+	EEPROM.put(addr, autoModeOn);
+	addr+=sizeof(autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. timer state: "));Serial.println(timerState);
-	EEPROM.put(addr, timerState);
-	addr+=sizeof(timerState);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. timerElapsedSecs: "));Serial.println(timerElapsedSecs);
-	EEPROM.put(addr, timerElapsedSecs);
-	addr+=sizeof(timerElapsedSecs);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. forcedOutput: "));Serial.println(forcedOutput);
+	EEPROM.put(addr, forcedOutput);
+	addr+=sizeof(forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
 
 	EEPROM.commit();
 	EEPROM.end();
 
 	ESP.wdtFeed();
 
-}
-
-void PidState::savetoTimerElapsedSecsEEprom(){
-	ESP.wdtFeed();
-	EEPROM.begin(512);
-
-	int addr = 0;
-	addr+=1;Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(PidStateValue);Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(int);Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(Setpoint);Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(kp);Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(ki);Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(kd);Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(timerValueMins);Serial.print(F("Size: "));Serial.println(addr);
-	addr+=sizeof(timerState);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("EEPROMWriteSettings. timerElapsedSecs: "));Serial.println(timerElapsedSecs);
-	EEPROM.put(addr, timerElapsedSecs);
-	addr+=sizeof(timerElapsedSecs);Serial.print(F("Size: "));Serial.println(addr);
-
-	EEPROM.commit();
-	EEPROM.end();
-
-	ESP.wdtFeed();
 }
 
 void PidState::saveServoDirToEEprom(){

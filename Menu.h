@@ -167,22 +167,12 @@ public:
 	void OnSelectedInMenu();
 };
 
-class RunAutoTimerMinutesMenu : public MenuItem {
+class RunAutoSwitch : public MenuItem {
 public:
-	RunAutoTimerMinutesMenu();
-	void OnSelectedInMenu();
-	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderPushButtonState pst);
-};
 
-class RunAutoTimerMenu : public MenuItem {
-public:
-	RunAutoTimerMenu();
+	RunAutoSwitch();
 	void OnSelectedInMenu();
-    void SetVisibilities();
-	RunAutoTimerMinutesMenu* timerValueMenu;
 };
-
 
 class RunAutoMenu : public MenuItem {
 public:
@@ -191,29 +181,10 @@ public:
 
 	RunAutoSetpointMenu* setpointMenu;
 	RunAutoRampMenu* rampMenu;
-	RunAutoTimerMenu* timerMenu;
+	RunAutoSwitch* switchMenu;
 
 	void HandleEncoderPush(EncoderPushButtonState pst);
 	void HandleEncoderMovement(EncoderMovement mvmnt);
-};
-
-class RunManualMenu : public MenuItem {
-public:
-	RunManualMenu();
-	void OnSelectedInMenu();
-
-	void HandleEncoderPush(EncoderPushButtonState pst);
-	void HandleEncoderMovement(EncoderMovement mvmnt);
-};
-
-
-class RunMenu : public MenuItem {
-public:
-	RunMenu();
-	void OnSelectedInMenu();
-
-	RunAutoMenu* runAutoMenu;
-	RunManualMenu* runManualMenu;
 };
 
 class MainMenu : public MenuItem {
@@ -222,7 +193,7 @@ public:
 	void OnSelectedInMenu();
 
 	ConfigMenu* configMenu;
-	RunMenu* runMenu;
+	RunAutoMenu* runMenu;
 };
 
 

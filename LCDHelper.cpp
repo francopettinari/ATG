@@ -135,14 +135,7 @@ void LCDHelper::display(PidState pstate){
 	switch(pstate.getState()) {
 		case svRunAuto:
 		case svRunAutoSetpoint:
-		case svRunAutoTimer:
 			displayRun(pstate);
-			break;
-		case svRunAutoTimerMinutes:
-			displayTimerValue(pstate);
-			break;
-		case svRunManual:
-			displayManual(pstate);
 			break;
 		case svPidConfig:
 		case svPidKpiConfig:
@@ -189,32 +182,6 @@ void LCDHelper::displayRun(PidState pstate){
 	int o = pstate.getOutPerc();
 	/*lcd.PrintChar(13, 1,(char)HEAT_CHAR);*/ lcd.PrintDoubleD(15, 1,o,0); 	lcd.PrintF(19, 1,F("%"));
 	/*lcd.PrintF(13, 2,F("/"));*/ lcd.PrintDoubleD(15, 2,pstate.Ramp,0);lcd.PrintChar(19, 2,(char)DEGMIN_CHAR);
-	if(pstate.timerState==0||pstate.timerState==1||pstate.timerState==2){
-		int secs = (pstate.timerValueMins*60)-pstate.timerElapsedSecs;
-		int remainingMins = secs/60;
-		int remainingSecs = secs-remainingMins*60;
-		lcd.PrintChar(13, 3,(char)TIMER_CHAR ); lcd.PrintDoubleFD(15, 3,remainingMins,2,0);lcd.PrintChar(17, 3,':');lcd.PrintDoubleFD(18, 3,remainingSecs,2,0);
-	}else if(pstate.timerState==3){
-		switch(pstate.timerElapsedSecs%2){
-		case 0:
-			lcd.PrintChar(13, 3,(char)TIMER_CHAR ); lcd.PrintF(15, 3,F(">> <<"));
-			break;
-		case 1:
-			lcd.PrintChar(13, 3,(char)TIMER_CHAR ); lcd.PrintF(15, 3,F("<< >>"));
-			break;
-		}
-	}
-}
-
-void LCDHelper::displayManual(PidState pstate){
-	lcd.PrintChar(12, 0,(char)TEMPERATURE_CHAR); lcd.PrintDoubleFD(13, 0,pstate.getTemperature(),2,2);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-
-	int o = pstate.getOutPerc();
-	lcd.PrintChar(12, 2,(char)HEAT_CHAR); lcd.PrintDoubleFD(13, 2,o,2,2); 	lcd.PrintF(19, 2,F("%"));
-}
-
-void LCDHelper::displayTimerValue(PidState pstate){
-	lcd.PrintString(12, 1,F("Min "));lcd.PrintDoubleFD(16, 1,pstate.timerValueMins,2,0);
 }
 
 void LCDHelper::displayConfigServo(PidState pstate){

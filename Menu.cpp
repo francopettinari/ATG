@@ -384,80 +384,60 @@ void RunAutoRampMenu::OnSelectedInMenu(){
 	if(Selected)pidState.savetoEEprom();
 	Selected = !Selected;
 }
-RunAutoTimerMinutesMenu::RunAutoTimerMinutesMenu():MenuItem(svRunAutoTimerMinutes){
-	Caption=F("Minutes");
+
+RunAutoSwitch::RunAutoSwitch():MenuItem(svRunAuto){
+	if(pidState.autoModeOn>0){
+		Caption=F("Auto");
+	}else{
+		Caption=F("Manual");
+	}
 }
-void RunAutoTimerMinutesMenu::OnSelectedInMenu(){
-	if(pidState.timerState==3){
-		pidState.timerState=0;
+
+float lastSwitchPress = 0;
+void RunAutoSwitch::OnSelectedInMenu(){
+	float now = millis();
+    bool dblClick = now-lastSwitchPress<500;
+
+    Serial.print(F(">>>>>> Push Run Switch <<<<<<  "));Serial.print(pidState.autoModeOn);Serial.print(F(" DBLCLICK: "));Serial.print(dblClick);
+
+	if(pidState.autoModeOn==1 && !dblClick){
+		lastSwitchPress = now;
 		return;
 	}
-	pidState.SetState(svRunAutoTimerMinutes,false);
-}
-void RunAutoTimerMinutesMenu::HandleEncoderMovement(EncoderMovement mvmnt) {
-	if(mvmnt==EncMoveCCW){
-		pidState.timerValueMins -= 1;
-		if(pidState.timerValueMins<0)pidState.timerValueMins=0;
-	}else if(mvmnt==EncMoveCW){
-		pidState.timerValueMins+=1;
+	lastSwitchPress = now;
+	//double pressed or single press in manual & selected
+	if(dblClick){
+		Selected = false;
+		if(pidState.autoModeOn==1){
+			pidState.autoModeOn = 0;
+		}else{
+			pidState.autoModeOn = 1;
+			pidState.forcedOutput=0;
+		}
+		pidState.savetoEEprom();
+	}else{
+		if(pidState.autoModeOn==0){
+			Selected = !Selected;
+		}
 	}
-}
 
-void RunAutoTimerMinutesMenu::HandleEncoderPush(EncoderPushButtonState pst){
-	pidState.SetState(svRunAutoTimer);
-	pidState.savetoEEprom();
-	if(pidState.timerState==3){
-		pidState.timerState=0;
-		return;
+	if(pidState.autoModeOn>0){
+		Caption=F("Auto");
+	}else{
+		Caption=F("Manual");
 	}
-}
 
-RunAutoTimerMenu::RunAutoTimerMenu():MenuItem(svRunAutoTimer){
-	Caption=F("Timer");
-	subMenuItems.resize(5);
-	subMenuItems[0] = new UpMenu(svRunAuto);
-	subMenuItems[1] = timerValueMenu = new RunAutoTimerMinutesMenu();
-	subMenuItems[2] = new CallbackMenuItem(svRunAutoTimer,F("Start"),[](){
-		pidState.StartTimer();
-		pidState.SetState(svRunAutoTimer);
-		((MainMenu*)pidState.topMenu)->runMenu->runAutoMenu->timerMenu->SetVisibilities();
-	});
-	subMenuItems[3] = new CallbackMenuItem(svRunAutoTimer,F("Pause"),[](){
-		pidState.PauseTimer();
-		pidState.SetState(svRunAutoTimer);
-		((MainMenu*)pidState.topMenu)->runMenu->runAutoMenu->timerMenu->SetVisibilities();
-	});
-	subMenuItems[4] = new CallbackMenuItem(svRunAutoTimer,F("Stop"),[](){
-		pidState.StopTimer();
-		pidState.SetState(svRunAutoTimer);
-		((MainMenu*)pidState.topMenu)->runMenu->runAutoMenu->timerMenu->SetVisibilities();
-	});
-
-	SetVisibilities();
-}
-
-void RunAutoTimerMenu::SetVisibilities(){
-	subMenuItems[2]->Visible = pidState.timerState!=1 && pidState.timerValueMins>0;
-	subMenuItems[3]->Visible = pidState.timerState==1;
-	subMenuItems[4]->Visible = pidState.timerState==1;
-}
-
-void RunAutoTimerMenu::OnSelectedInMenu(){
-//	if(pidState.getState() == svRunAuto){
-		pidState.SetState(svRunAutoTimer,false);
-//	}else{
-//		pidState.SetState(svRunAuto);
-//	}
 }
 
 RunAutoMenu::RunAutoMenu():MenuItem(svRunAuto){
 	Caption=F("Auto");
 	subMenuItems.resize(4);
 	
-	subMenuItems[0] = new UpMenu(svRun);
-	subMenuItems[1] = setpointMenu = new RunAutoSetpointMenu();
-	subMenuItems[2] = rampMenu = new RunAutoRampMenu();
-	subMenuItems[3] = timerMenu = new RunAutoTimerMenu();
+	subMenuItems[0] = new UpMenu(svMain);
+	subMenuItems[1] = switchMenu = new RunAutoSwitch();
+	subMenuItems[2] = setpointMenu = new RunAutoSetpointMenu();
+	subMenuItems[3] = rampMenu = new RunAutoRampMenu();
+
 }
 
 void RunAutoMenu::OnSelectedInMenu(){
@@ -465,17 +445,11 @@ void RunAutoMenu::OnSelectedInMenu(){
 }
 
 void RunAutoMenu::HandleEncoderPush(EncoderPushButtonState pst){
-//	MenuItem* selMI = pidState.currentMenu->subMenuItems[pidState.stateSelection];
-//	if(selMI==subMenuItems[0]){
-//		pidState.Output=0;
-//		pidState.writeServoPosition(pidState.Output,true);
-//	}
 	MenuItem::HandleEncoderPush(pst);
-//	pidState.SetState(svRun);
 }
 
 void RunAutoMenu::HandleEncoderMovement(EncoderMovement mvmnt){
-	if(!rampMenu->Selected&&!setpointMenu->Selected){
+	if(!rampMenu->Selected&&!setpointMenu->Selected && !(pidState.autoModeOn==0 &&switchMenu->Selected)){
 		MenuItem::HandleEncoderMovement(mvmnt);
 	}
 	if(rampMenu->Selected){
@@ -493,54 +467,30 @@ void RunAutoMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 			pidState.Setpoint+=1;
 			if(pidState.Setpoint>=120)pidState.Setpoint=120;
 		}
-	}
-}
+	} else if(pidState.autoModeOn==0 && switchMenu->Selected){
+		//manual mode. handle output percentage
 
-RunManualMenu::RunManualMenu():MenuItem(svRunManual){
-	Caption=F("Manual");
-	subMenuItems.resize(1);
-    subMenuItems[0] = new UpMenu(svRun);
-}
-void RunManualMenu::OnSelectedInMenu(){
-	pidState.SetState(svRunManual);
-	pidState.Output=pidState.servoMinValue-1;
-}
-void RunManualMenu::HandleEncoderPush(EncoderPushButtonState pst){
-	MenuItem::HandleEncoderPush(pst);
-}
-
-void RunManualMenu::HandleEncoderMovement(EncoderMovement mvmnt){
-	if(mvmnt==EncMoveCCW){
-		pidState.Output -= 1;
-//		if(pidState.Output<0)pidState.Output=0;
-		if(pidState.Output<pidState.servoMinValue-1){
-			pidState.Output=pidState.servoMinValue-1;
+		if(mvmnt==EncMoveCCW){
+			Serial.print(F(">>>>>> Change forced output to"));Serial.println(pidState.forcedOutput+1);
+			pidState.forcedOutput++;
+			if(pidState.forcedOutput>100){
+				pidState.forcedOutput=100;
+			}
+		}else if(mvmnt==EncMoveCW){
+			Serial.print(F(">>>>>> Change forced output to"));Serial.println(pidState.forcedOutput-1);
+			pidState.forcedOutput--;
+			if(pidState.forcedOutput<0){
+				pidState.forcedOutput=0;
+			}
 		}
-	}else if(mvmnt==EncMoveCW){
-
-		pidState.Output+=1;
-
-		if(pidState.Output>=180)pidState.Output=180;
+		pidState.setOutPerc(pidState.forcedOutput);
 	}
-}
-
-RunMenu::RunMenu():MenuItem(svRun){
-	Caption = F("Run");
-	subMenuItems.resize(3);
-
-	subMenuItems[0] = new UpMenu(svMain);
-	subMenuItems[1] = runAutoMenu = new RunAutoMenu();
-	subMenuItems[2] = runManualMenu = new RunManualMenu();
-}
-
-void RunMenu::OnSelectedInMenu(){
-	pidState.SetState(svRun);
 }
 
 MainMenu::MainMenu():MenuItem(-1){
 	Caption = F("Main");
 	subMenuItems.resize(2);
-	subMenuItems[0] = runMenu = new RunMenu();
+	subMenuItems[0] = runMenu = new RunAutoMenu();
 	subMenuItems[1] = configMenu = new ConfigMenu();
 }
 
