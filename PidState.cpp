@@ -7,7 +7,8 @@
 
 #include "PidState.h"
 #include <EEPROM.h>
-#include "UDPTacer.h"
+
+#include "TCPComm.h"
 
 PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P_ON_E, DIRECT){
 	pid.SetSampleTime(pidSampleTimeSecs*1000);
@@ -101,9 +102,9 @@ boolean PidState::IsEncoderPressed(boolean encoderPress){
 EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
 	prevEncoderPos = currEncoderPos;
 	currEncoderPos = encoderPos/4;
-	if(currEncoderPos<prevEncoderPos){
+	if(currEncoderPos>prevEncoderPos){
 		return EncMoveCCW;
-	}else if(currEncoderPos>prevEncoderPos){
+	}else if(currEncoderPos<prevEncoderPos){
 		return EncMoveCW;
 	}
 	return EncMoveNone;
@@ -159,7 +160,7 @@ void PidState::writeServoPositionCW(int degree, bool minValueSwitchOff,bool log)
 				}else{
 					//skip and wait
 					Serial.println(F("Switch on: wait 10 seconds..."));
-					UdpTracer->println(F("Switch on: wait 5 seconds..."));
+					TcpComm->println(F("Switch on: wait 5 seconds..."));
 					return;
 				}
 			}
@@ -180,7 +181,7 @@ void PidState::writeServoPositionCW(int degree, bool minValueSwitchOff,bool log)
 				}else{
 					//skip and wait
 					Serial.println(F("Switch off: wait 10 seconds..."));
-					UdpTracer->println(F("Switch off: wait 10 seconds..."));
+					TcpComm->println(F("Switch off: wait 10 seconds..."));
 					return;
 				}
 			}
@@ -251,7 +252,7 @@ void PidState::writeServoPositionCCW(int degree, bool minValueSwitchOff){
 				}else{
 					//skip and wait
 					Serial.println(F("Switch on: wait 10 seconds..."));
-					UdpTracer->println(F("Switch on: wait 5 seconds..."));
+					TcpComm->println(F("Switch on: wait 5 seconds..."));
 					return;
 				}
 			}
@@ -272,7 +273,7 @@ void PidState::writeServoPositionCCW(int degree, bool minValueSwitchOff){
 				}else{
 					//skip and wait
 					Serial.println(F("Switch off: wait 10 seconds..."));
-					UdpTracer->println(F("Switch off: wait 10 seconds..."));
+					TcpComm->println(F("Switch off: wait 10 seconds..."));
 					return;
 				}
 			}
@@ -320,7 +321,7 @@ void PidState::SetFsmState(FsmState value){
 
 void PidState::updatePidStatus(){
 	Serial.print(F("State:"));Serial.println(fsmState);
-	UdpTracer->print(F("State:"));UdpTracer->println(fsmState);
+	TcpComm->print(F("State:"));TcpComm->println(fsmState);
 	//looks not useful anymore. replace with fixed values when
 	switch(fsmState){
 	case psIdle:
@@ -393,26 +394,26 @@ bool PidState::isAutoState(int state){
 }
 
 void PidState::sendStatus(){
-	//Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
+//	Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
 	//Serial.print(Setpoint,4);Serial.print(F(" "));
-	//Serial.print(temp,4);Serial.print(F(" "));
+	Serial.println(temperature,4);Serial.print(F(" "));
 	//Serial.println(Output);
 	float now = millis();
-	UdpTracer->print(F("LOG:")      );UdpTracer->print(now,4);
-	UdpTracer->print(F(";EXPRQID:") );UdpTracer->print((float)expectedReqId,0);
-	UdpTracer->print(F(";STATE:")    );UdpTracer->print((float)autoModeOn,0);
-	UdpTracer->print(F(";SETP:")    );UdpTracer->print(Setpoint,4);
-	UdpTracer->print(F(";RAMP:")    );UdpTracer->print(Ramp,4);
-	UdpTracer->print(F(";DSETP:")   );UdpTracer->print(DynamicSetpoint,4);
-	UdpTracer->print(F(";TEMP:")    );UdpTracer->print(temperature,4);
-	UdpTracer->print(F(";OUT:")     );UdpTracer->print(Output,4);
-	UdpTracer->print(F(";OUTPERC:") );UdpTracer->print((float)getOutPerc(),0);
-	UdpTracer->print(F(";SERVOPOS:"));UdpTracer->print((float)servoPosition,0);
-	UdpTracer->print(F(";PGAIN:")   );UdpTracer->print(myPTerm,4);
-	UdpTracer->print(F(";IGAIN:")   );UdpTracer->print(myITerm,4);
-	UdpTracer->print(F(";DGAIN:")   );UdpTracer->print(myDTerm,4);
-	UdpTracer->print(F(";OUTSUM:")  );UdpTracer->print(myOutputSum,4);
-	UdpTracer->print(F(";PIDDTEMP:"));UdpTracer->println(myDInput,4);
+	TcpComm->print(F("LOG:")      );TcpComm->print(now,4);
+	TcpComm->print(F(";EXPRQID:") );TcpComm->print((float)expectedReqId,0);
+	TcpComm->print(F(";STATE:")   );TcpComm->print((float)autoModeOn,0);
+	TcpComm->print(F(";SETP:")    );TcpComm->print(Setpoint,4);
+	TcpComm->print(F(";RAMP:")    );TcpComm->print(Ramp,4);
+	TcpComm->print(F(";DSETP:")   );TcpComm->print(DynamicSetpoint,4);
+	TcpComm->print(F(";TEMP:")    );TcpComm->print(temperature,4);
+	TcpComm->print(F(";OUT:")     );TcpComm->print(Output,4);
+	TcpComm->print(F(";OUTPERC:") );TcpComm->print((float)getOutPerc(),0);
+	TcpComm->print(F(";SERVOPOS:"));TcpComm->print((float)servoPosition,0);
+	TcpComm->print(F(";PGAIN:")   );TcpComm->print(myPTerm,4);
+	TcpComm->print(F(";IGAIN:")   );TcpComm->print(myITerm,4);
+	TcpComm->print(F(";DGAIN:")   );TcpComm->print(myDTerm,4);
+	TcpComm->print(F(";OUTSUM:")  );TcpComm->print(myOutputSum,4);
+	TcpComm->print(F(";PIDDTEMP:"));TcpComm->println(myDInput,4);
 }
 
 int PidState::getOutPerc(){
@@ -520,21 +521,27 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 		case svRunAutoSetpoint :
 		case svRunAutoRamp : {
 
-			if(autoModeOn==0){
-				sendStatus();
-				break;
-			}
+//			if(autoModeOn==0 ){
+//				sendStatus();
+//				break;
+//			}
 
-			if(temp<=-100){
-				return;
-			}
+
 
 			if(autoModeOn==0){
 				if(forcedOutput>0){
 					pid.SetMode(MANUAL);
 					setOutPerc(forcedOutput);
-					return;
+					if(now-lastUdpDataSent>1000){
+						sendStatus();
+						lastUdpDataSent = now;
+					}
 				}
+				return;
+			}
+
+			if(temp<=-100){
+				return;
 			}
 
 			if(pid.GetMode()!=AUTOMATIC){
@@ -570,7 +577,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 //					pid.Initialize();
 //				}
 				Serial.print(F("NEW State:"));Serial.println(fsmState);
-				UdpTracer->print(F("NEW State:"));UdpTracer->println(fsmState);
+				TcpComm->print(F("NEW State:"));TcpComm->println(fsmState);
 				break;
 			case psWaitDelay:
 			case psRampimg:

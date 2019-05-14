@@ -1,12 +1,12 @@
 /*
- * UDPTacer.h
+ * TCPComm.h
  *
  *  Created on: 13 dic 2018
  *      Author: franc
  */
 
-#ifndef UDPTACER_H_
-#define UDPTACER_H_
+#ifndef TCPCOMM_H_
+#define TCPCOMM_H_
 
 #include <WString.h>
 #include "Arduino.h"
@@ -14,13 +14,11 @@
 #include <WiFiClient.h>
 
 
-class UDPTracer {
+class TCPComm {
 public:
 
-	WiFiUDP Udp;
-
-	UDPTracer();
-	virtual ~UDPTracer();
+	TCPComm();
+	virtual ~TCPComm();
 
 	void LogChar(char s) ;
 	void Log(__FlashStringHelper *ifsh);
@@ -39,8 +37,8 @@ public:
 	void println(void);
 };
 
-extern UDPTracer*  UdpTracer;
+extern TCPComm*  TcpComm;
 
 
 
-#endif /* UDPTACER_H_ */
+#endif /* TCPCOMM_H_ */

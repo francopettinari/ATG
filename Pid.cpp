@@ -9,10 +9,10 @@
 #include <Encoder.h>
 #include "PidState.h"
 #include "OneWire.h"
-#include "UDPTacer.h"
 #include <WiFiUdp.h>
 
 #include <DallasTemperature.h>
+#include "TCPComm.h"
 
 OneWire onewire(D3);
 //probe probe(&onewire);
@@ -46,6 +46,9 @@ void readGasAlarm() {
 	Serial.println(" V");                       // Print the Message
 }
 
+#define MAX_SRV_CLIENTS 3
+WiFiServer server(8266);
+WiFiClient serverClients[MAX_SRV_CLIENTS];
 
 void setup() {
 	Serial.begin(115200);
@@ -57,6 +60,8 @@ void setup() {
 	Serial.print(F("IP ADDRESS: "));Serial.println(WiFi.localIP());
 	Serial.println(F("Initialized"));
 
+	server.begin();
+    server.setNoDelay(true);
 
 	sensors.setWaitForConversion(false);
 	sensors.begin();
@@ -75,76 +80,115 @@ void setup() {
 
 	Serial.println(F("Initialized from EEProm"));
 
-	Udp = UdpTracer->Udp;
-	Udp.begin(8266);
+//	Udp = UdpTracer->Udp;
+//	Udp.begin(8266);
 }
-
 
 char parOpenChar = '(';
 char separator = ':';
 char parClosedChar = ')';
+void parseString(String s){
+	Serial.println(s);
+	if(s.startsWith(F("SET("), 0)){
+		int parOpenIdx = s.indexOf(parOpenChar);
+		int semicolIdx1 = s.indexOf(separator);
+		int semicolIdx2 = s.indexOf(separator,semicolIdx1+1);
+		int parClosedIdx = s.indexOf(parClosedChar);
+		String property = s.substring(parOpenIdx+1,semicolIdx1);
+		String cReqId   = s.substring(semicolIdx1+1,semicolIdx2);
+		String value    = s.substring(semicolIdx2+1,parClosedIdx);
+		int iReqId = cReqId.toInt();
+		if(iReqId<pidState.expectedReqId){
+			Serial.print(F("Received reqId: "));Serial.print(cReqId);Serial.print(F(". Expected: "));Serial.print(pidState.expectedReqId);
+			return;
+		}
+		if(iReqId>pidState.expectedReqId){
+			Serial.print(F("Received reqId: "));Serial.print(cReqId);Serial.print(F(". Expected: "));Serial.print(pidState.expectedReqId);
+			pidState.expectedReqId=iReqId;
+		}
+		if(property==F("SP")){
+			pidState.Setpoint = value.toFloat();
+			pidState.savetoEEprom();
+			pidState.sendStatus();
+		} else if(property==F("RP")){
+			pidState.Ramp = value.toFloat();
+			pidState.savetoEEprom();
+			pidState.sendStatus();
+		} else if(property==F("ST")){
+			pidState.autoModeOn = value.toInt();
+			pidState.savetoEEprom();
+			pidState.sendStatus();
+			MainMenu* pmm = (MainMenu*) pidState.topMenu;
+			if(pidState.autoModeOn){
+				pmm->runMenu->switchMenu->Caption=F("Auto");
+			}else{
+				pmm->runMenu->switchMenu->Caption=F("Manual");
+			}
+			pidState.sendStatus();
+		} else if(property==F("OUT")){
+			pidState.forcedOutput = value.toInt();
+			pidState.savetoEEprom();
+			pidState.sendStatus();
+		}
+
+		TcpComm->Log(F("RESP:"));
+		TcpComm->Log(cReqId);
+		TcpComm->Log(F("\n"));
+
+	}
+
+}
+
+void handleClients(){
+	uint8_t i;
+	if (server.hasClient()){
+		for(i = 0; i < MAX_SRV_CLIENTS; i++){
+		  if (!serverClients[i] || !serverClients[i].connected()){
+			if(serverClients[i]) serverClients[i].stop();
+			serverClients[i] = server.available();
+			continue;
+		  }
+		}
+		//no free spot
+		WiFiClient serverClient = server.available();
+		serverClient.stop();
+	}
+	for(i = 0; i < MAX_SRV_CLIENTS; i++){
+		if (serverClients[i] && serverClients[i].connected()){
+		  if(serverClients[i].available()){
+			while(serverClients[i].available()) {
+				String msg = serverClients[i].readStringUntil('\0');
+				Serial.println(serverClients[i].read());
+				parseString(msg);
+			}
+		  }
+		}
+	}
+}
+
+void sendClients(String s){
+	for(int i = 0; i < MAX_SRV_CLIENTS; i++){
+		if (serverClients[i] && serverClients[i].connected()){
+		  serverClients[i].print(s);
+		  serverClients[i].flush();
+		}
+	}
+}
+
 //expected format: SET(<property>:<reqId>:<val>)
 void parseIncomingUdp(){
 	char incomingPacket[255];  // buffer for incoming packets
 	int packetSize = Udp.parsePacket();
-	  if (packetSize) {
-	    // receive incoming UDP packets
-	    //Serial.printf(F(">>>>>>>>>>>>> Received %d bytes from %s, port %d\n"), packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
-	    int len = Udp.read(incomingPacket, 255);
-	    if (len > 0) {
-	      incomingPacket[len] = 0;
-	    }
-	    String s = String(incomingPacket);
-	    Serial.println(incomingPacket);
-	    if(s.startsWith(F("SET("), 0)){
-	    	int parOpenIdx = s.indexOf(parOpenChar);
-	    	int semicolIdx1 = s.indexOf(separator);
-	    	int semicolIdx2 = s.indexOf(separator,semicolIdx1+1);
-	    	int parClosedIdx = s.indexOf(parClosedChar);
-	    	String property = s.substring(parOpenIdx+1,semicolIdx1);
-	    	String cReqId   = s.substring(semicolIdx1+1,semicolIdx2);
-	    	String value    = s.substring(semicolIdx2+1,parClosedIdx);
-	    	int iReqId = cReqId.toInt();
-	    	if(iReqId<pidState.expectedReqId){
-	    		Serial.print(F("Received reqId: "));Serial.print(cReqId);Serial.print(F(". Expected: "));Serial.print(pidState.expectedReqId);
-	    		return;
-	    	}
-	    	if(iReqId>pidState.expectedReqId){
-				Serial.print(F("Received reqId: "));Serial.print(cReqId);Serial.print(F(". Expected: "));Serial.print(pidState.expectedReqId);
-				pidState.expectedReqId=iReqId;
-			}
-	    	if(property==F("SP")){
-	    		pidState.Setpoint = value.toFloat();
-				pidState.savetoEEprom();
-				pidState.sendStatus();
-	    	} else if(property==F("RP")){
-	    		pidState.Ramp = value.toFloat();
-				pidState.savetoEEprom();
-				pidState.sendStatus();
-	    	} else if(property==F("ST")){
-	    		pidState.autoModeOn = value.toInt();
-				pidState.savetoEEprom();
-				pidState.sendStatus();
-				MainMenu* pmm = (MainMenu*) pidState.topMenu;
-				if(pidState.autoModeOn){
-					pmm->runMenu->switchMenu->Caption=F("Auto");
-				}else{
-					pmm->runMenu->switchMenu->Caption=F("Manual");
-				}
-				pidState.sendStatus();
-	    	} else if(property==F("OUT")){
-	    		pidState.forcedOutput = value.toInt();
-				pidState.savetoEEprom();
-				pidState.sendStatus();
-	    	}
-
-	    	UdpTracer->Log(F("RESP:"));
-	    	UdpTracer->Log(cReqId);
-	    	UdpTracer->Log(F("\n"));
-
-	    }
-
-	  }
+	if (packetSize) {
+		// receive incoming UDP packets
+		//Serial.printf(F(">>>>>>>>>>>>> Received %d bytes from %s, port %d\n"), packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+		int len = Udp.read(incomingPacket, 255);
+		if (len > 0) {
+		  incomingPacket[len] = 0;
+		}
+		String s = String(incomingPacket);
+		parseString(s);
+	}
 }
 
 bool tempReadRequested = false;
@@ -169,5 +213,6 @@ void loop() {
 	ESP.wdtFeed();
 	lcdHelper.display(pidState);
 
-	parseIncomingUdp();
+//	parseIncomingUdp();
+	handleClients();
 }

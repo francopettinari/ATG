@@ -452,6 +452,10 @@ void RunAutoMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(!rampMenu->Selected&&!setpointMenu->Selected && !(pidState.autoModeOn==0 &&switchMenu->Selected)){
 		MenuItem::HandleEncoderMovement(mvmnt);
 	}
+
+	//last resort status fix
+	if(pidState.autoModeOn==1) switchMenu->Selected = false;
+
 	if(rampMenu->Selected){
 		if(mvmnt==EncMoveCCW){
 			pidState.Ramp -= 1;
