@@ -108,29 +108,22 @@ void parseString(String s){
 		}
 		if(property==F("SP")){
 			pidState.Setpoint = value.toFloat();
-			pidState.savetoEEprom();
-			pidState.sendStatus();
 		} else if(property==F("RP")){
 			pidState.Ramp = value.toFloat();
-			pidState.savetoEEprom();
-			pidState.sendStatus();
 		} else if(property==F("ST")){
 			pidState.autoModeOn = value.toInt();
-			pidState.savetoEEprom();
-			pidState.sendStatus();
 			MainMenu* pmm = (MainMenu*) pidState.topMenu;
 			if(pidState.autoModeOn){
 				pmm->runMenu->switchMenu->Caption=F("Auto");
 			}else{
 				pmm->runMenu->switchMenu->Caption=F("Manual");
 			}
-			pidState.sendStatus();
 		} else if(property==F("OUT")){
 			pidState.forcedOutput = value.toInt();
-			pidState.savetoEEprom();
-			pidState.sendStatus();
-		}
 
+		}
+		pidState.savetoEEprom();
+		pidState.sendStatus();
 		TcpComm->Log(F("RESP:"));
 		TcpComm->Log(cReqId);
 		TcpComm->Log(F("\n"));

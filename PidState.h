@@ -70,7 +70,7 @@ public:
 	float pidSampleTimeSecs = 5;
 	float lastManualLog = 0;
 	float lastUdpDataSent = 0;
-	double Setpoint = 25,DynamicSetpoint=25,pDynamicSetpoint=0,Ramp=1;
+	double Setpoint = 25,DynamicSetpoint=25,Ramp=1;
 	float approacingStartMillis,lastDynSetpointCalcMillis = 0;
 	float approacingStartTemp = 0;
 	double Output;

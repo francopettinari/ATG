@@ -115,6 +115,8 @@ void PidState::_writeServo(int degree){
 	servo.write(degree);
 	delay(15);
 	servoPosition = degree;
+	Serial.print(F("Servopos: "));Serial.println(servoPosition);
+	//sendStatus();
 }
 
 /**
@@ -343,11 +345,11 @@ void PidState::updatePidStatus(){
 void PidState::startRamp(){
 	approacingStartMillis = millis();
 	approacingStartTemp = temperature;
-	DynamicSetpoint=temperature;
+	DynamicSetpoint=temperature; //gives an impulse so that it must start to move up
 	if(DynamicSetpoint>Setpoint){
 		DynamicSetpoint=Setpoint;
 	}
-	pDynamicSetpoint = temperature;
+	lastDynSetpointCalcMillis=0;
 }
 bool PidState::waitRampStart(){
 	return temperature<approacingStartTemp+0.1;
@@ -357,36 +359,22 @@ void PidState::updateRamp(){
 //	Serial.print(F("Update ramp: "));Serial.print(lastDynSetpointCalcMillis);
 
 	if (lastDynSetpointCalcMillis==0)lastDynSetpointCalcMillis=now;
-	float deltaSecs = (now-lastDynSetpointCalcMillis)/(float)1000.0;
+	float deltaSecs   = (now-lastDynSetpointCalcMillis)/(float)1000.0;
+	float elapsedSecs = (now-approacingStartMillis)/(float)1000.0;
 //	Serial.print(F(" "));Serial.println(deltaSecs);
 	if(deltaSecs>5){
 		//		Serial.print(DynamicSetpoint);Serial.print(F(" "));Serial.print(pDynamicSetpoint);
-		float deltaTemp = Ramp/(float)60.0*deltaSecs;
+		float elapsedDeltaTemp = Ramp/(float)60.0*elapsedSecs;
 
-		if(fsmState==psWaitDelay|| abs(pDynamicSetpoint-Setpoint) <= deltaTemp){ //if the rate of change is going to drive past the setpoint, just make it equal the setpoint otherwise it'll oscillate
+		DynamicSetpoint = approacingStartTemp + elapsedDeltaTemp; //calc setpoint
+		if(fsmState==psWaitDelay|| DynamicSetpoint>Setpoint){ //limit if limit passed
 			DynamicSetpoint = Setpoint;
-		} else{ //If more ramping is required, calculate the change required for the time period passed to keep the rate of change constant, and add it to the drive.
-		  if(Setpoint>pDynamicSetpoint){  //positive direction
-			  DynamicSetpoint = pDynamicSetpoint+deltaTemp;
-		  }
-		  else{   //negative direction
-			  DynamicSetpoint = pDynamicSetpoint-deltaTemp;
-		  }
 		}
-		//if(temperature>=DynamicSetpoint){
-			//DynamicSetpoint=temperature;
-//			pid.Reset();
-		//}
-		lastDynSetpointCalcMillis = now;
-		pDynamicSetpoint = DynamicSetpoint;
 
 		lastDynSetpointCalcMillis = now;
 		Serial.print(F("New dyn setpoint:"));Serial.println(DynamicSetpoint,4);
 		//UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
 	}
-//	else{
-//		Serial.println();
-//	}
 }
 
 bool PidState::isAutoState(int state){
@@ -414,6 +402,8 @@ void PidState::sendStatus(){
 	TcpComm->print(F(";DGAIN:")   );TcpComm->print(myDTerm,4);
 	TcpComm->print(F(";OUTSUM:")  );TcpComm->print(myOutputSum,4);
 	TcpComm->print(F(";PIDDTEMP:"));TcpComm->println(myDInput,4);
+
+	lastUdpDataSent = now;
 }
 
 int PidState::getOutPerc(){
@@ -462,7 +452,6 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 	if(!isAutoState(state) &&
 		state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
 	{
-//		Serial.println(F("xxx"));
 		Output=0;
 		writeServoPosition(Output,true,false);
 	}
@@ -475,7 +464,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 	//encoder push button
 	EncoderPushButtonState encoderPushButtonState = decodeEncoderPushBtnState(encoderPress);
 
-//	Serial.print(F("State selection: "));Serial.println(stateSelection);
+    //Serial.print(F("State selection: "));Serial.println(stateSelection);
 	//Serial.print(F("Encoder push: "));Serial.println(encoderPushButtonState);
 	ESP.wdtFeed();
 	setCurrentMenu(decodeCurrentMenu());
@@ -520,28 +509,18 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 		case svRunAuto :
 		case svRunAutoSetpoint :
 		case svRunAutoRamp : {
-
-//			if(autoModeOn==0 ){
-//				sendStatus();
-//				break;
-//			}
-
-
-
 			if(autoModeOn==0){
 				if(forcedOutput>0){
 					pid.SetMode(MANUAL);
 					setOutPerc(forcedOutput);
-					if(now-lastUdpDataSent>1000){
-						sendStatus();
-						lastUdpDataSent = now;
-					}
 				}
-				return;
+				break;
 			}
 
 			if(temp<=-100){
-				return;
+				if(now-lastUdpDataSent>1000){
+					sendStatus();
+				}
 			}
 
 			if(pid.GetMode()!=AUTOMATIC){
@@ -571,11 +550,6 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				} else if(temp>Setpoint-1 /*&& temp<Setpoint*/){
 					SetFsmState(psKeepTemp);
 				}
-//				else if(temp>=Setpoint){
-//  				SetFsmState(psKeepTemp);
-//					Output=0;
-//					pid.Initialize();
-//				}
 				Serial.print(F("NEW State:"));Serial.println(fsmState);
 				TcpComm->print(F("NEW State:"));TcpComm->println(fsmState);
 				break;
@@ -588,7 +562,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				}
 				if(temp<=Setpoint-1){
 					updateRamp();
-				} else if(temp>Setpoint-1 /*&& temp<Setpoint*/){
+				} else if(temp>Setpoint-1){
 					SetFsmState(psKeepTemp);
 					pid.Reset();
 				}
@@ -612,11 +586,13 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 			}
 			if(computed || (now-lastUdpDataSent>1000)){
 				sendStatus();
-				lastUdpDataSent = now;
 			}
 			break;
 		}
 		break;
+	}
+	if(now-lastUdpDataSent>1000){
+		sendStatus();
 	}
 }
 
