@@ -431,10 +431,10 @@ void PidState::setOutPerc(double val){
 	writeServoPosition(Output,true,true);
 }
 
-void PidState::update(double temp,int encoderPos, boolean encoderPress){
+void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 
-	if(temp>-100){
-		setTemperature(temp);
+	if(tempp>-100){
+		setTemperature(tempp);
 	}
 
 	if(pid.GetMode()!=MANUAL && !isAutoState(state) &&
@@ -502,6 +502,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 	ESP.wdtFeed();
 
 	if(autoModeOn==0 || !isAutoState(state)){
+		TcpComm->print(F("2 :"));TcpComm->println(fsmState);
 		fsmState = psIdle;
 	}
 
@@ -517,7 +518,7 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 				break;
 			}
 
-			if(temp<=-100){
+			if(tempp<=-100){
 				if(now-lastUdpDataSent>1000){
 					sendStatus();
 				}
@@ -544,10 +545,10 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 //			UdpTracer->print(F("Current state:"));UdpTracer->println(fsmState);
 			switch(fsmState){
 			case psIdle:
-				if(temp<=Setpoint-1){
+				if(temperature<=Setpoint-1){
 					SetFsmState(psWaitDelay);
 					startRamp();
-				} else if(temp>Setpoint-1 /*&& temp<Setpoint*/){
+				} else if(temperature>Setpoint-1 /*&& temp<Setpoint*/){
 					SetFsmState(psKeepTemp);
 				}
 				Serial.print(F("NEW State:"));Serial.println(fsmState);
@@ -560,15 +561,16 @@ void PidState::update(double temp,int encoderPos, boolean encoderPress){
 					pid.Reset();
 					startRamp();
 				}
-				if(temp<=Setpoint-1){
+				if(temperature<=Setpoint-1){
 					updateRamp();
-				} else if(temp>Setpoint-1){
+				} else if(temperature>Setpoint-1){
 					SetFsmState(psKeepTemp);
 					pid.Reset();
 				}
 				break;
 			case psKeepTemp:
-				if(Ramp>0 && temp<=Setpoint-1){
+				if(Ramp>0 && temperature<=Setpoint-1){
+					TcpComm->print(F("1 :"));TcpComm->print(temperature,2);TcpComm->println(fsmState);
 					SetFsmState(psIdle);
 				}
 				break;
