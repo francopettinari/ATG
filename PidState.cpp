@@ -111,6 +111,11 @@ EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
 }
 
 void PidState::_writeServo(int degree){
+	if(servoDirection==ServoDirectionCCW){
+		degree = servoMaxValue-degree;
+	}
+
+
 	//Serial.print(F("WriteDegree:"));Serial.println(degree);
 	servo.write(degree);
 	delay(15);
@@ -123,7 +128,7 @@ void PidState::_writeServo(int degree){
  * here only the temperature flow is handled and the state transition should not depend
  * on other statuses. a burner switch off/on should always avoid flame bumps!!
  */
-void PidState::writeServoPositionCW(int degree, bool minValueSwitchOff,bool log){
+void PidState::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
 	float now = millis();
 	if(log){
 		Serial.print(F("Current temp state: "));Serial.println(TempState);
@@ -213,106 +218,6 @@ void PidState::writeServoPositionCW(int degree, bool minValueSwitchOff,bool log)
 			}
 			_writeServo(degree);
 			break;
-	}
-}
-
-void PidState::writeServoPositionCCW(int degree, bool minValueSwitchOff){
-	float now = millis();
-//	Serial.print(F("Current temp state: "));Serial.println(TempState);
-//	Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
-//	Serial.print(F(" Degree:"));Serial.print(degree);
-//	Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
-//	Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
-
-	if(degree<servoMinValue || (minValueSwitchOff && degree==servoMinValue)) degree=0; //switch off on minVal
-	switch(TempState){
-		case TempStateUndefined:
-			PrevSwitchOnOffMillis=0;//this will force next on/off transition to happen immediately without waits
-			if(degree<=servoMaxValue){
-				Serial.println(F("Forward to TempStateSwitchingOn"));
-				TempState = TempStateSwitchingOn;
-				writeServoPosition(degree,minValueSwitchOff);
-				return;
-			}
-			if(degree>servoMinValue){
-				Serial.println(F("Forward to TempStateSwitchingOff"));
-				TempState = TempStateSwitchingOff;
-				writeServoPosition(degree,minValueSwitchOff);
-				return;
-			}
-			break;
-		case TempStateSwitchingOn:
-			if (degree<=servoMinValue){
-				//now switchin on
-				if(now-PrevSwitchOnOffMillis>10000){
-					_writeServo(servoMaxValue);
-					delay(1000);
-					_writeServo(degree);
-					PrevSwitchOnOffMillis = now;
-					TempState = TempStateOn;
-					return;
-				}else{
-					//skip and wait
-					Serial.println(F("Switch on: wait 10 seconds..."));
-					TcpComm->println(F("Switch on: wait 5 seconds..."));
-					return;
-				}
-			}
-			Serial.println(F("Forward to TempStateSwitchingOff"));
-			TempState = TempStateSwitchingOff;
-			writeServoPosition(degree,minValueSwitchOff);
-			break;
-		case TempStateSwitchingOff:
-			if (degree>servoMinValue){
-				//now swtiching off
-				if(now-PrevSwitchOnOffMillis>10000){
-					_writeServo(servoMaxValue);
-					delay(1000);
-					_writeServo(0);
-					PrevSwitchOnOffMillis = now;
-					TempState = TempStateOff;
-					return;
-				}else{
-					//skip and wait
-					Serial.println(F("Switch off: wait 10 seconds..."));
-					TcpComm->println(F("Switch off: wait 10 seconds..."));
-					return;
-				}
-			}
-			//here temperature is greater that min meaning that before switch off is complete the temp has raised over min again
-			//so abort and change state to on
-			Serial.println(F("Forward to TempStateSwitchingOn"));
-			TempState = TempStateSwitchingOn;
-			writeServoPosition(degree,minValueSwitchOff);
-			break;
-		case TempStateOn:
-			if (degree>servoMinValue){
-				//now swtiching off
-				Serial.println(F("Forward to TempStateSwitchingOff"));
-				TempState = TempStateSwitchingOff;
-				writeServoPosition(degree,minValueSwitchOff);
-				return;
-			}
-			_writeServo(degree);
-			break;
-		case TempStateOff:
-			if (degree<=servoMinValue ){
-				//now swtiching off
-				Serial.println(F("Forward to TempStateSwitchingOn"));
-				TempState = TempStateSwitchingOn;
-				writeServoPosition(degree,minValueSwitchOff);
-				return;
-			}
-			_writeServo(degree);
-			break;
-	}
-}
-
-void PidState::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
-	if(servoDirection==ServoDirectionCW){
-		writeServoPositionCW(degree, minValueSwitchOff,log);
-	}else{
-		writeServoPositionCCW(degree, minValueSwitchOff);
 	}
 }
 
@@ -409,24 +314,15 @@ void PidState::sendStatus(){
 int PidState::getOutPerc(){
 	int o = 0;
 	double outRange = servoMaxValue-servoMinValue;
-	if(servoDirection==ServoDirectionCW){
-		if(Output<servoMinValue) o = 0;
-		else o = 100.0*(Output-servoMinValue)/outRange;
-	}else{
-		if(Output>servoMaxValue) o = 0;
-		else o = 100.0*(servoMaxValue - Output)/outRange;
-	}
+	if(Output<servoMinValue) o = 0;
+	else o = 100.0*(Output-servoMinValue)/outRange;
 	return o;
 }
 
 void PidState::setOutPerc(double val){
 	Serial.print(F(">>>>>> OutputP: "));Serial.println(val);
 	double outRange = servoMaxValue-servoMinValue;
-	if(servoDirection==ServoDirectionCW){
-		Output = servoMinValue + (val/100.0*outRange);
-	}else{
-		Output = servoMaxValue - (val/100.0*outRange);
-	}
+	Output = servoMinValue + (val/100.0*outRange);
 	Serial.print(F(">>>>>> Output: "));Serial.println(Output);
 	writeServoPosition(Output,true,true);
 }
@@ -527,7 +423,7 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 			if(pid.GetMode()!=AUTOMATIC){
 				Serial.println(F("PID switched to AUTOMATIC"));
 				pid.SetTunings(kp,ki,kd,P_ON_E);
-				pid.SetControllerDirection(servoDirection==ServoDirectionCW?DIRECT:REVERSE);
+				pid.SetControllerDirection(DIRECT);
 				pid.SetOutputLimits(servoMinValue,servoMaxValue);
 				pid.SetMode(AUTOMATIC);
 			}
@@ -580,7 +476,7 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 			if((DynamicSetpoint - temperature)<3.5){
 				//activate pid modulation
 				computed = pid.Compute();
-				writeServoPosition(Output,fsmState!=psRampimg);
+				writeServoPosition(Output,true);
 			}else{
 				//max fire applied
 				setOutPerc(100);

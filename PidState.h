@@ -78,8 +78,6 @@ public:
 	int servoPosition=0;
 	void _writeServo(int degree);
 	void writeServoPosition(int degree, bool minValueSwitchOff,bool log=true);
-	void writeServoPositionCW(int degree, bool minValueSwitchOff,bool log=true);
-	void writeServoPositionCCW(int degree, bool minValueSwitchOff);
 	double kp=2,ki=0.5,kd=2;
 
 	int expectedReqId = 1; //expected request id
