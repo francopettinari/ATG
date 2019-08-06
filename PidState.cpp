@@ -110,16 +110,16 @@ EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
 	return EncMoveNone;
 }
 
-void PidState::_writeServo(int degree){
+void PidState::_writeServo(int value){
+	int degree = value;
 	if(servoDirection==ServoDirectionCCW){
 		degree = servoMaxValue-degree;
 	}
 
-
 	//Serial.print(F("WriteDegree:"));Serial.println(degree);
 	servo.write(degree);
 	delay(15);
-	servoPosition = degree;
+	servoPosition = value;
 	Serial.print(F("Servopos: "));Serial.println(servoPosition);
 	//sendStatus();
 }
@@ -210,13 +210,13 @@ void PidState::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
 			break;
 		case TempStateOff:
 			if (degree>=servoMinValue ){
-				//now swtiching off
+				//now swtiching on
 				Serial.println(F("Forward to TempStateSwitchingOn"));
 				TempState = TempStateSwitchingOn;
 				writeServoPosition(degree,minValueSwitchOff);
 				return;
 			}
-			_writeServo(degree);
+			_writeServo(0);
 			break;
 	}
 }
@@ -459,7 +459,7 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 				}
 				if(temperature<=Setpoint-1){
 					updateRamp();
-				} else if(temperature>Setpoint-1){
+				} else if(temperature>Setpoint){
 					SetFsmState(psKeepTemp);
 					pid.Reset();
 				}
@@ -480,7 +480,7 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 			}else{
 				//max fire applied
 				setOutPerc(100);
-				writeServoPosition(servoMaxValue,false);
+				writeServoPosition(servoMaxValue,true);
 			}
 			if(computed || (now-lastUdpDataSent>1000)){
 				sendStatus();
