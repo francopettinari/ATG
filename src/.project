@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Pid</name>
+	<name>ATG</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -37,72 +37,72 @@
 			<location>C:/Users/franc/Documents/Arduino/libraries/LiquidCrystalI2C</location>
 		</link>
 		<link>
-			<name>core/core</name>
+			<name>src/core/core</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/cores/esp8266</locationURI>
 		</link>
 		<link>
-			<name>core/variant</name>
+			<name>src/core/variant</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/variants/nodemcu</locationURI>
 		</link>
 		<link>
-			<name>libraries/DallasTemperature</name>
+			<name>src/libraries/DallasTemperature</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/DallasTemperature/3.8.0</locationURI>
 		</link>
 		<link>
-			<name>libraries/EEPROM</name>
+			<name>src/libraries/EEPROM</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/EEPROM</locationURI>
 		</link>
 		<link>
-			<name>libraries/ESP8266WiFi</name>
+			<name>src/libraries/ESP8266WiFi</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/ESP8266WiFi</locationURI>
 		</link>
 		<link>
-			<name>libraries/ESP8266mDNS</name>
+			<name>src/libraries/ESP8266mDNS</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/ESP8266mDNS</locationURI>
 		</link>
 		<link>
-			<name>libraries/Encoder</name>
+			<name>src/libraries/Encoder</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/Encoder/1.4.1</locationURI>
 		</link>
 		<link>
-			<name>libraries/LiquidCrystal</name>
+			<name>src/libraries/LiquidCrystal</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/LiquidCrystal/1.0.7</locationURI>
 		</link>
 		<link>
-			<name>libraries/OneWire</name>
+			<name>src/libraries/OneWire</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/OneWire/2.3.0</locationURI>
 		</link>
 		<link>
-			<name>libraries/PID</name>
+			<name>src/libraries/PID</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/PID/1.2.0</locationURI>
 		</link>
 		<link>
-			<name>libraries/Servo</name>
+			<name>src/libraries/Servo</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/Servo</locationURI>
 		</link>
 		<link>
-			<name>libraries/WiFi</name>
+			<name>src/libraries/WiFi</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/WiFi/1.2.7</locationURI>
 		</link>
 		<link>
-			<name>libraries/Wire</name>
+			<name>src/libraries/Wire</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/Wire</locationURI>
 		</link>
 		<link>
-			<name>libraries/gdb</name>
+			<name>src/libraries/gdb</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/Jantje/hardware/esp8266/1.0.0/libraries/gdb</locationURI>
 		</link>
