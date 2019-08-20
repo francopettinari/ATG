@@ -32,13 +32,15 @@ enum PidStateValue {
 	svPidKiiConfig=25, svPidKidConfig=26,svPidKicConfig=27,
 	svPidKdiConfig=28,svPidKddConfig=29,
 	svPidSampleTimeConfig=30,
-	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43};
+	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43,
+	svConfig_Probe=50};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
 enum FsmState {psIdle=0,psWaitDelay=5,psRampimg=10,psKeepTemp=30};
 enum TemperatureTransitionState {TempStateUndefined=0,TempStateOff=10,TempStateOn=20,TempStateSwitchingOn=30,TempStateSwitchingOff=40};
 
 class PidState {
+
 	float lastPressMillis=0;
     float lastPressState = EncoderPushButtonNone;
 	void updateLcd();
@@ -48,10 +50,10 @@ private:
 	EncoderPushButtonState decodeEncoderPushBtnState (boolean encoderPress);
 	boolean IsEncoderPressed(boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
-	bool isAutoState(int state);
-	byte eepromVer = 05;  // eeprom data tracking
+	void _writeServo(int degree);
 
-protected:
+	bool isAutoState(int state);
+	byte eepromVer = 06;  // eeprom data tracking
 	PID pid;
 
 public:
@@ -76,77 +78,36 @@ public:
 	double Output;
 	float PrevSwitchOnOffMillis = 0;
 	int servoPosition=0;
-	void _writeServo(int degree);
+
 	void writeServoPosition(int degree, bool minValueSwitchOff,bool log=true);
-	double kp=2,ki=0.5,kd=2;
+	double kp=50,ki=0.5,kd=0;
 
 	int expectedReqId = 1; //expected request id
-
-	double myPTerm;
-	double myITerm;
-	double myDTerm;
-	double myDTimeMillis;
-	double myDInput;
-	double myError;
-	double myOutputSum;
-
-	void SetState(PidStateValue value, boolean save=true){
-		state = value;
-		if(save)savetoEEprom();
-//		currentMenu = decodeCurrentMenu();
-		stateSelection=0;
-		setCurrentMenu(decodeCurrentMenu());
-	}
 
 	ServoDirection servoDirection = ServoDirectionCW;
 	int servoMinValue = 0; //degrees
 	int servoMaxValue = 180; //degrees
+	int temperatureCorrection = 0;//0.1 deg steps: 5=+0.5, -8=-0.8
 
 	PidState();
 
-	MenuItem* decodeCurrentMenu();
-
-	PidStateValue getState(){
-		return state;
-	}
-
-	void setCurrentMenu(MenuItem *m){
-		if(currentMenu == m) return;
-		currentMenu = m;
+	PidStateValue getState(){ return state; }
+	void SetState(PidStateValue value, boolean save=true){
+		state = value;
+		if(save)savetoEEprom();
 		stateSelection=0;
-		currMenuStart = 0;
-	}
-
-	float getTemperature(){
-		return temperature;
+		setCurrentMenu(decodeCurrentMenu());
 	}
 
 	int getOutPerc();
 	void setOutPerc(double val);
 
-	void setTemperature(double value){
-//		value = RoundTo025(value);
-		float now = millis();
-//		if(lastTemperatureMillis==0){
-//			lastTemperatureMillis=now;
-//			lastTemperature = temperature;
-//			dTemperature=0;
-//		}else{
-//
-//			if(now-lastTemperatureMillis>=pidSampleTimeSecs*1000){
-//				dTemperature = (value-lastTemperature)*1000.0/(now-lastTemperatureMillis);
-//				dTemperature = dTemperature * 60.0;//degrees per minute
-//				lastTemperatureMillis=now;
-//				lastTemperature = value;
-//			}
-//		}
-		if(temperature==value)return;
-		temperature = value;
-	}
+	float getTemperature(){ return temperature; }
+	void setTemperature(double value){ temperature = value; }
 
-	MenuItem  *getCurrentMenu(){
-		return currentMenu;
-	}
+	MenuItem* decodeCurrentMenu();
+	void setCurrentMenu(MenuItem *m);
+	MenuItem  *getCurrentMenu(){ return currentMenu; }
 
 	void update(double temp,int encoderPos, boolean encoderPress);
 	void SetFsmState(FsmState value);
@@ -154,12 +115,13 @@ public:
 	void startRamp();
 	bool waitRampStart();
 	void updateRamp();
-	void loadFromEEProm();
-	void savetoEEprom();
 	void sendStatus();
 
+	void loadFromEEProm();
+	void savetoEEprom();
 	void saveSetPointTotoEEprom();
 	void saveServoDirToEEprom();
+
 };
 
 

@@ -144,6 +144,14 @@ public:
 	SampleTimePidConfigMenu* sampleTimeMenu;
 };
 
+class ConfigProbeMenu : public MenuItem {
+public:
+	ConfigProbeMenu();
+	void OnSelectedInMenu();
+	void HandleEncoderMovement(EncoderMovement mvmnt);
+	void HandleEncoderPush(EncoderPushButtonState pst);
+};
+
 class ConfigMenu : public MenuItem{
 public:
 	ConfigMenu();
@@ -152,6 +160,7 @@ public:
 	MenuItem* upMenu;
 	ServoConfigMenu* servoMenu;
 	PidConfigMenu* pidMenu;
+	ConfigProbeMenu* probeMenu;
 };
 
 class RunAutoSetpointMenu : public MenuItem {

@@ -21,6 +21,7 @@ class LCDHelper {
 	void displayTimerValue(PidState pstate);
 	void displayConfigServo(PidState pstate);
 	void displayConfigPid(PidState pstate);
+	void displayConfigProbe(PidState pstate);
 	void displayDefault(PidState pstate);
 
 //	int lastDisplayCount = 0;

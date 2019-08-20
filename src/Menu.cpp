@@ -352,13 +352,36 @@ void PidConfigMenu::OnSelectedInMenu(){
 	pidState.SetState(svPidConfig);
 }
 
+
+
+ConfigProbeMenu::ConfigProbeMenu():MenuItem(svConfig_Probe){
+	Caption = F("Temp correction");
+}
+void ConfigProbeMenu::OnSelectedInMenu(){
+	pidState.SetState(svConfig_Probe);
+}
+void ConfigProbeMenu::HandleEncoderMovement(EncoderMovement mvmnt){
+	if(mvmnt==EncMoveCCW){
+		pidState.temperatureCorrection--;
+	}else if(mvmnt==EncMoveCW){
+		pidState.temperatureCorrection++;
+	}
+}
+void ConfigProbeMenu::HandleEncoderPush(EncoderPushButtonState pst){
+	pidState.state = svConfig;
+	pidState.savetoEEprom();
+}
+
+
+
 ConfigMenu::ConfigMenu():MenuItem(svConfig){
 	Caption = F("Config");
 
-	subMenuItems.resize(3);
+	subMenuItems.resize(4);
 	subMenuItems[0] = upMenu = new UpMenu(svMain);
 	subMenuItems[1] = servoMenu = new ServoConfigMenu();
 	subMenuItems[2] = pidMenu = new PidConfigMenu();
+	subMenuItems[3] = probeMenu = new ConfigProbeMenu();
 }
 
 void ConfigMenu::OnSelectedInMenu(){
@@ -437,7 +460,6 @@ RunAutoMenu::RunAutoMenu():MenuItem(svRunAuto){
 	subMenuItems[1] = switchMenu = new RunAutoSwitch();
 	subMenuItems[2] = setpointMenu = new RunAutoSetpointMenu();
 	subMenuItems[3] = rampMenu = new RunAutoRampMenu();
-
 }
 
 void RunAutoMenu::OnSelectedInMenu(){

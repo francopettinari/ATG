@@ -154,6 +154,9 @@ void LCDHelper::display(PidState pstate){
 		case svConfig_ServoMax:
 			displayConfigServo(pstate);
 			break;
+		case svConfig_Probe:
+			displayConfigProbe(pstate);
+			break;
 		default:
 			displayDefault(pstate);
 			break;
@@ -192,6 +195,11 @@ void LCDHelper::displayConfigServo(PidState pstate){
 	}
 	lcd.PrintF(11, 1,F("Min "));lcd.PrintDoubleFD(15, 1,pstate.servoMinValue,3,0);
 	lcd.PrintF(11, 2,F("Max "));lcd.PrintDoubleFD(15, 2,pstate.servoMaxValue,3,0);
+}
+
+void LCDHelper::displayConfigProbe(PidState pstate){
+	lcd.PrintF(5, 0,F("Temp correction"));
+	lcd.PrintDoubleFD(15, 2,pstate.temperatureCorrection,3,0);
 }
 
 void LCDHelper::print(byte col, byte row,  __FlashStringHelper *ifsh){

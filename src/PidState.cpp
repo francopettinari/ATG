@@ -18,15 +18,6 @@ PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P
 	currentMenu = new MainMenu();
 	approacingStartMillis=0;
 
-//	dTemperature=0;
-
-	pid.myPTerm = &myPTerm;
-	pid.myITerm = &myITerm;
-	pid.myDTerm = &myDTerm;
-	pid.myDInput= &myDInput;
-	pid.myDTimeMillis= &myDTimeMillis;
-	pid.myError = &myError;
-	pid.myOutputSum = &myOutputSum;
 	PrevSwitchOnOffMillis = 0;
 }
 
@@ -67,8 +58,17 @@ MenuItem* PidState::decodeCurrentMenu(){
 			return pmm->configMenu->pidMenu->kdMenu;
 		case svPidSampleTimeConfig:
 			return pmm->configMenu->pidMenu->sampleTimeMenu;
+		case svConfig_Probe:
+			return pmm->configMenu->probeMenu;
 	}
 	return pmm;
+}
+
+void PidState::setCurrentMenu(MenuItem *m){
+	if(currentMenu == m) return;
+	currentMenu = m;
+	stateSelection=0;
+	currMenuStart = 0;
 }
 
 long lastLog=0;
@@ -117,9 +117,11 @@ void PidState::_writeServo(int value){
 	}
 
 	//Serial.print(F("WriteDegree:"));Serial.println(degree);
-	servo.write(degree);
-	delay(15);
-	servoPosition = value;
+	if(servoPosition!=value){
+		servo.write(degree);
+		delay(15);
+		servoPosition = value;
+	}
 	Serial.print(F("Servopos: "));Serial.println(servoPosition);
 	//sendStatus();
 }
@@ -302,11 +304,11 @@ void PidState::sendStatus(){
 	TcpComm->print(F(";OUT:")     );TcpComm->print(Output,4);
 	TcpComm->print(F(";OUTPERC:") );TcpComm->print((float)getOutPerc(),0);
 	TcpComm->print(F(";SERVOPOS:"));TcpComm->print((float)servoPosition,0);
-	TcpComm->print(F(";PGAIN:")   );TcpComm->print(myPTerm,4);
-	TcpComm->print(F(";IGAIN:")   );TcpComm->print(myITerm,4);
-	TcpComm->print(F(";DGAIN:")   );TcpComm->print(myDTerm,4);
-	TcpComm->print(F(";OUTSUM:")  );TcpComm->print(myOutputSum,4);
-	TcpComm->print(F(";PIDDTEMP:"));TcpComm->println(myDInput,4);
+//	TcpComm->print(F(";PGAIN:")   );TcpComm->print(myPTerm,4);
+//	TcpComm->print(F(";IGAIN:")   );TcpComm->print(myITerm,4);
+//	TcpComm->print(F(";DGAIN:")   );TcpComm->print(myDTerm,4);
+//	TcpComm->print(F(";OUTSUM:")  );TcpComm->print(myOutputSum,4);
+//	TcpComm->print(F(";PIDDTEMP:"));TcpComm->println(myDInput,4);
 
 	lastUdpDataSent = now;
 }
@@ -403,6 +405,9 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 	}
 
 	switch(state){
+		case svMain:
+			writeServoPosition(0,true);
+		break;
 		case svRunAuto :
 		case svRunAutoSetpoint :
 		case svRunAutoRamp : {
@@ -521,10 +526,10 @@ void PidState::loadFromEEProm(){
 	temp = EEPROM.get(addr, temp);
 	addr+=1;Serial.print(F("Size: "));Serial.println(addr);
 
-	if(temp!=eepromVer && temp!=eepromVer-1){
-		Serial.print(F(">>>>>>>> WRONG EPROM VERSION expected "));Serial.print(eepromVer);Serial.print(F("FOUND "));Serial.println(temp);
-		return;
-	}
+//	if(temp!=eepromVer && temp!=eepromVer-1){
+//		Serial.print(F(">>>>>>>> WRONG EPROM VERSION expected "));Serial.print(eepromVer);Serial.print(F("FOUND "));Serial.println(temp);
+//		return;
+//	}
 
 	state=EEPROM.get(addr, state);
 	addr+=sizeof(PidStateValue);Serial.print(F("Size: "));Serial.println(addr);
@@ -597,6 +602,11 @@ void PidState::loadFromEEProm(){
 		addr+=sizeof(forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
 		Serial.print(F("Readed forcedOutput: "));Serial.println(forcedOutput);
 	}
+	if(temp>=6){
+		temperatureCorrection = EEPROM.get(addr, temperatureCorrection);
+		addr+=sizeof(temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+		Serial.print(F("Readed temperatureCorrection: "));Serial.println(temperatureCorrection*0.1);
+	}
 	EEPROM.commit();
 	EEPROM.end();
 }
@@ -656,6 +666,10 @@ void PidState::savetoEEprom(){
 	Serial.print(F("EEPROMWriteSettings. forcedOutput: "));Serial.println(forcedOutput);
 	EEPROM.put(addr, forcedOutput);
 	addr+=sizeof(forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
+
+	Serial.print(F("EEPROMWriteSettings. temperatureCorrection: "));Serial.println(temperatureCorrection*0.1);
+	EEPROM.put(addr, temperatureCorrection);
+	addr+=sizeof(temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
 
 	EEPROM.commit();
 	EEPROM.end();
