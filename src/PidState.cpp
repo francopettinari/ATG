@@ -18,6 +18,15 @@ PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P
 	currentMenu = new MainMenu();
 	approacingStartMillis=0;
 
+//	dTemperature=0;
+
+	pid.myPTerm = &myPTerm;
+	pid.myITerm = &myITerm;
+	pid.myDTerm = &myDTerm;
+	pid.myDInput= &myDInput;
+	pid.myDTimeMillis= &myDTimeMillis;
+	pid.myError = &myError;
+	pid.myOutputSum = &myOutputSum;
 	PrevSwitchOnOffMillis = 0;
 }
 
@@ -304,11 +313,11 @@ void PidState::sendStatus(){
 	TcpComm->print(F(";OUT:")     );TcpComm->print(Output,4);
 	TcpComm->print(F(";OUTPERC:") );TcpComm->print((float)getOutPerc(),0);
 	TcpComm->print(F(";SERVOPOS:"));TcpComm->print((float)servoPosition,0);
-//	TcpComm->print(F(";PGAIN:")   );TcpComm->print(myPTerm,4);
-//	TcpComm->print(F(";IGAIN:")   );TcpComm->print(myITerm,4);
-//	TcpComm->print(F(";DGAIN:")   );TcpComm->print(myDTerm,4);
-//	TcpComm->print(F(";OUTSUM:")  );TcpComm->print(myOutputSum,4);
-//	TcpComm->print(F(";PIDDTEMP:"));TcpComm->println(myDInput,4);
+	TcpComm->print(F(";PGAIN:")   );TcpComm->print(myPTerm,4);
+	TcpComm->print(F(";IGAIN:")   );TcpComm->print(myITerm,4);
+	TcpComm->print(F(";DGAIN:")   );TcpComm->print(myDTerm,4);
+	TcpComm->print(F(";OUTSUM:")  );TcpComm->print(myOutputSum,4);
+	TcpComm->print(F(";PIDDTEMP:"));TcpComm->println(myDInput,4);
 
 	lastUdpDataSent = now;
 }
@@ -463,6 +472,7 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 					startRamp();
 				}
 				if(temperature<=Setpoint-1){
+
 					updateRamp();
 				} else if(temperature>Setpoint){
 					SetFsmState(psKeepTemp);
@@ -476,7 +486,7 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 				}
 				break;
 			}
-
+			Serial.println(F("10"));
 			bool computed = false;
 			if((DynamicSetpoint - temperature)<3.5){
 				//activate pid modulation

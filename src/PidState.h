@@ -84,6 +84,14 @@ public:
 
 	int expectedReqId = 1; //expected request id
 
+	double myPTerm;
+	double myITerm;
+	double myDTerm;
+	double myDTimeMillis;
+	double myDInput;
+	double myError;
+	double myOutputSum;
+
 	ServoDirection servoDirection = ServoDirectionCW;
 	int servoMinValue = 0; //degrees
 	int servoMaxValue = 180; //degrees
