@@ -19,70 +19,55 @@
 							<builder buildPath="${workspace_loc:/Pid}/Release" id="io.sloeber.sketch.builder.1780753369" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Generatore di sketch Arduino" superClass="io.sloeber.sketch.builder"/>
 							<tool id="io.sloeber.tool.sketch.compiler.cpp.1125830546" name="Compilatore Arduino C++" superClass="io.sloeber.tool.sketch.compiler.cpp">
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="io.sloeber.compiler.cpp.sketch.option.incpath.1860195527" name="Cartelle incluse (-I)" superClass="io.sloeber.compiler.cpp.sketch.option.incpath" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Wire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder/utility}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/DallasTemperature}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266mDNS}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266WiFi/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/core/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ArduinoOTA}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266WebServer/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Wire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Servo/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Encoder/utility}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Encoder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266WiFi/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266mDNS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/DallasTemperature}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.cpp.sketch.input.1809655131" name="Sorgente CPP" superClass="io.sloeber.compiler.cpp.sketch.input"/>
 							</tool>
 							<tool id="io.sloeber.tool.compiler.c.473217869" name="Compilatore Arduino C" superClass="io.sloeber.tool.compiler.c">
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="io.sloeber.compiler.c.sketch.option.incpath.1804751397" name="Cartelle incluse (-I)" superClass="io.sloeber.compiler.c.sketch.option.incpath" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Wire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder/utility}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/DallasTemperature}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266mDNS}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266WiFi/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/core/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ArduinoOTA}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266WebServer/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Wire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Servo/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Encoder/utility}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Encoder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266WiFi/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266mDNS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/DallasTemperature}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.c.sketch.input.1377943925" name="Sorgente C" superClass="io.sloeber.compiler.c.sketch.input"/>
 							</tool>
 							<tool id="io.sloeber.tool.sketch.compiler.s.1289345058" name="Compilatore codice macchina Arduino" superClass="io.sloeber.tool.sketch.compiler.s">
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="io.sloeber.compiler.asm.sketch.option.incpath.1754771125" name="Cartelle incluse (-I)" superClass="io.sloeber.compiler.asm.sketch.option.incpath" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Wire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder/utility}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/DallasTemperature}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266mDNS}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/ESP8266WiFi/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/core/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ArduinoOTA}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266WebServer/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Wire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/PID}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Servo/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Encoder/utility}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Encoder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266WiFi/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266mDNS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/OneWire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/DallasTemperature}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.S.sketch.input.157865573" name="Sorgente Assembly" superClass="io.sloeber.compiler.S.sketch.input"/>
 							</tool>
@@ -117,52 +102,19 @@
 							<builder buildPath="${workspace_loc:/Pid}/Release" id="io.sloeber.sketch.builder.1866719530" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Generatore di sketch Arduino" superClass="io.sloeber.sketch.builder"/>
 							<tool id="io.sloeber.tool.sketch.compiler.cpp.929856851" name="Compilatore Arduino C++" superClass="io.sloeber.tool.sketch.compiler.cpp">
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="io.sloeber.compiler.cpp.sketch.option.incpath.792587967" name="Cartelle incluse (-I)" superClass="io.sloeber.compiler.cpp.sketch.option.incpath" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Wire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder/utility}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/gdb}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266WebServer/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.cpp.sketch.input.960932329" name="Sorgente CPP" superClass="io.sloeber.compiler.cpp.sketch.input"/>
 							</tool>
 							<tool id="io.sloeber.tool.compiler.c.1430687892" name="Compilatore Arduino C" superClass="io.sloeber.tool.compiler.c">
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="io.sloeber.compiler.c.sketch.option.incpath.244315425" name="Cartelle incluse (-I)" superClass="io.sloeber.compiler.c.sketch.option.incpath" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Wire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder/utility}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/gdb}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266WebServer/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.c.sketch.input.841222717" name="Sorgente C" superClass="io.sloeber.compiler.c.sketch.input"/>
 							</tool>
 							<tool id="io.sloeber.tool.sketch.compiler.s.36284078" name="Compilatore codice macchina Arduino" superClass="io.sloeber.tool.sketch.compiler.s">
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="io.sloeber.compiler.asm.sketch.option.incpath.1444238122" name="Cartelle incluse (-I)" superClass="io.sloeber.compiler.asm.sketch.option.incpath" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/core}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/core/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Wire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder/utility}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Encoder}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/LiquidCrystalI2C}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/LiquidCrystal/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/OneWire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/PID}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/EEPROM}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/Servo/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Pid/libraries/gdb}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP8266WebServer/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.S.sketch.input.1161617675" name="Sorgente Assembly" superClass="io.sloeber.compiler.S.sketch.input"/>
 							</tool>

@@ -126,11 +126,11 @@ void PidState::_writeServo(int value){
 	}
 
 	//Serial.print(F("WriteDegree:"));Serial.println(degree);
-	if(servoPosition!=value){
+//	if(servoPosition!=value){
 		servo.write(degree);
 		delay(15);
 		servoPosition = value;
-	}
+//	}
 	Serial.print(F("Servopos: "));Serial.println(servoPosition);
 	//sendStatus();
 }

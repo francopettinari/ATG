@@ -7,8 +7,7 @@
 
 #ifndef LCDBUFFER_H_
 #define LCDBUFFER_H_
-
-#include "LiquidCrystal_I2C.h"
+#include "LiquidCrystalI2C/LiquidCrystal_I2C.h"
 
 class LCDBuffer {
 public:
