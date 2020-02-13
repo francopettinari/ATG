@@ -143,7 +143,7 @@ void PidState::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
 	float now = millis();
 	if(log){
 		Serial.print(F("Current temp state: "));Serial.println(TempState);
-		Serial.print("TimeToLastSwitch:");Serial.print(now-PrevSwitchOnOffMillis);
+		Serial.print(F("TimeToLastSwitch:"));Serial.print(now-PrevSwitchOnOffMillis);
 		Serial.print(F(" Degree:"));Serial.print(degree);
 		Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
 		Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
@@ -280,10 +280,10 @@ void PidState::updateRamp(){
 //	Serial.print(F(" "));Serial.println(deltaSecs);
 	if(deltaSecs>5){
 		//		Serial.print(DynamicSetpoint);Serial.print(F(" "));Serial.print(pDynamicSetpoint);
-		float elapsedDeltaTemp = Ramp/(float)60.0*elapsedSecs;
+		float elapsedDeltaTemp = Ramp/(float)60.0*elapsedSecs; //delta temp after elapsedSecs from start
 
-		DynamicSetpoint = approacingStartTemp + elapsedDeltaTemp; //calc setpoint
-		if(fsmState==psWaitDelay|| DynamicSetpoint>Setpoint){ //limit if limit passed
+		DynamicSetpoint = approacingStartTemp + elapsedDeltaTemp; //calc new setpoint according to ramp
+		if(fsmState==psWaitDelay || DynamicSetpoint>Setpoint){ //target is Setpoit: do not exeed it!
 			DynamicSetpoint = Setpoint;
 		}
 
@@ -344,6 +344,9 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 		setTemperature(tempp);
 	}
 
+	//force to manual when:
+	//- not in auto
+	//- not configuring
 	if(pid.GetMode()!=MANUAL && !isAutoState(state) &&
 	   state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
 	{
@@ -352,10 +355,14 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 
 	}
 
+	//in each case, also if in auto, but automode is disabled, then force pid in manual
 	if(autoModeOn==0){
 		pid.SetMode(MANUAL);
 	}
 
+
+	//this is not clear!
+	//when in Auto, but automode==0, then it shuts down.... ???
 	if(!isAutoState(state) &&
 		state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
 	{
@@ -408,6 +415,7 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 	float now = millis();
 	ESP.wdtFeed();
 
+	//fsm idle in case not automatic
 	if(autoModeOn==0 || !isAutoState(state)){
 		TcpComm->print(F("2 :"));TcpComm->println(fsmState);
 		fsmState = psIdle;
@@ -420,6 +428,8 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 		case svRunAuto :
 		case svRunAutoSetpoint :
 		case svRunAutoRamp : {
+
+			//if autoModeOn is disabled, then force the manual output and return
 			if(autoModeOn==0){
 				if(forcedOutput>0){
 					pid.SetMode(MANUAL);
@@ -427,13 +437,14 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 				}
 				break;
 			}
-
+			
 			if(tempp<=-100){
 				if(now-lastUdpDataSent>1000){
 					sendStatus();
 				}
 			}
 
+			//if here, pid should be in auto. if not, then let's force it!
 			if(pid.GetMode()!=AUTOMATIC){
 				Serial.println(F("PID switched to AUTOMATIC"));
 				pid.SetTunings(kp,ki,kd,P_ON_E);
@@ -476,17 +487,16 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 					updateRamp();
 				} else if(temperature>Setpoint){
 					SetFsmState(psKeepTemp);
-					pid.Reset();
+					pid.Reset();//avoid delay in switching off
 				}
 				break;
 			case psKeepTemp:
 				if(Ramp>0 && temperature<=Setpoint-1){
 					TcpComm->print(F("1 :"));TcpComm->print(temperature,2);TcpComm->println(fsmState);
-					SetFsmState(psIdle);
+					SetFsmState(psIdle);//it's a way to restart
 				}
 				break;
 			}
-			Serial.println(F("10"));
 			bool computed = false;
 			if((DynamicSetpoint - temperature)<3.5){
 				//activate pid modulation

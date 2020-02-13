@@ -1376,7 +1376,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.UPL
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.UPLOAD.RESETMETHOD/value=nodemcu
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.UPLOAD.SPEED/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.UPLOAD.SPEED/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.UPLOAD.SPEED/value=115200
+environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.UPLOAD.SPEED/value=921600
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.UPLOAD.TOOL/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.UPLOAD.TOOL/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.UPLOAD.TOOL/value=esptool
@@ -1403,7 +1403,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJ
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.BOARD_NAME/value=NodeMCU 1.0 (ESP-12E Module)
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.COM_PORT/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.COM_PORT/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.COM_PORT/value=COM4
+environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.COM_PORT/value=COM3
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.ECLIPSE_LOCATION/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.ECLIPSE_LOCATION/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.ECLIPSE_LOCATION/value=E\:\\ProgramFiles\\sloeber\\
@@ -1433,7 +1433,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJ
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.MAKE_LOCATION/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\tools\\make\\
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.MENU/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.MENU/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.MENU/value=CpuFrequency\=80\nCrystalFreq\=26\nDebug\=Serial\nDebugLevel\=None____\nFlashErase\=none\nFlashSize\=4M1M\nled\=11\nLwIPVariant\=v2mss536\nResetMethod\=nodemcu\nUploadSpeed\=115200\nVTable\=flash
+environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.MENU/value=CpuFrequency\=80\nCrystalFreq\=26\nDebug\=Serial\nDebugLevel\=None____\nFlashErase\=none\nFlashSize\=4M1M\nled\=11\nLwIPVariant\=v2mss536\nResetMethod\=nodemcu\nUploadSpeed\=921600\nVTable\=flash
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.OBJCOPY/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.OBJCOPY/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.OBJCOPY/value=${A.RECIPE.OBJCOPY.HEX.PATTERN}
@@ -1445,7 +1445,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJ
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.PACKAGE_ID/value=Jantje
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.PROJECT_NAME/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.PROJECT_NAME/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.PROJECT_NAME/value=Pid
+environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.PROJECT_NAME/value=ATG
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.SELECTED.PLATFORM/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.SELECTED.PLATFORM/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.SELECTED.PLATFORM/value=${eclipse_home}/arduinoPlugin/packages/Jantje/hardware/esp8266/1.0.0
@@ -5457,7 +5457,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARD_NAM
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARD_NAME/value=NodeMCU 1.0 (ESP-12E Module)
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/value=COM4
+environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/value=COM3
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ECLIPSE_LOCATION/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ECLIPSE_LOCATION/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ECLIPSE_LOCATION/value=E\:\\ProgramFiles\\sloeber\\

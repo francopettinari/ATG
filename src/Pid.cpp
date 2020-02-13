@@ -13,6 +13,7 @@
 
 #include <DallasTemperature.h>
 #include "TCPComm.h"
+#include <gdb.h>
 
 OneWire onewire(D3);
 //probe probe(&onewire);
@@ -50,8 +51,17 @@ void readGasAlarm() {
 WiFiServer server(8266);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
 
+
+
 void setup() {
+#ifdef DEBUG
+	uart_div_modify(0,UART_CLK_FREQ / 115200);
 	Serial.begin(115200);
+	gdbstub_init();
+#else if
+	Serial.begin(115200);
+#endif
+
 	//Serial.begin(9600);  //due to serial XY graph
 
 	WiFi.disconnect(true);

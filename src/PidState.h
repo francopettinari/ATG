@@ -13,7 +13,6 @@
 enum EncoderMovement {EncMoveNone=-1,EncMoveCW=0,EncMoveCCW=1};
 enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1};
 
-
 #include "Menu.h"
 #include "PID_v1.h"
 #include <Servo.h>
