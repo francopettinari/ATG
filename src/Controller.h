@@ -5,8 +5,8 @@
  *      Author: franc
  */
 
-#ifndef PIDSTATE_H_
-#define PIDSTATE_H_
+#ifndef CONTROLLER_H_
+#define CONTROLLER_H_
 
 #include <WString.h>
 
@@ -132,5 +132,5 @@ public:
 };
 
 
-#endif /* PIDSTATE_H_ */
+#endif /* CONTROLLER_H_ */
 

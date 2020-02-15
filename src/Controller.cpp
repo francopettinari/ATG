@@ -5,7 +5,8 @@
  *      Author: franc
  */
 
-#include "PidState.h"
+#include "Controller.h"
+
 #include <EEPROM.h>
 #include <gdb.h>
 #include "TCPComm.h"

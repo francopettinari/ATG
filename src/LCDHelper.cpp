@@ -8,7 +8,8 @@
 //LCD 20x4
 
 #include "LCDHelper.h"
-#include "PidState.h"
+
+#include "Controller.h"
 
 byte tempCustomChar[] = {
   B00100,

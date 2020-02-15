@@ -1,8 +1,9 @@
 #include "Menu.h"
-#include "Pid.h"
 #include "LCDHelper.h"
 #include <Encoder.h>
-#include "PidState.h"
+
+#include "ATG.h"
+#include "Controller.h"
 
 
 MenuItem::MenuItem(int state, String s){

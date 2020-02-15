@@ -7,7 +7,7 @@
 #ifndef _Pid_H_
 #define _Pid_H_
 
-#include "PidState.h"
+#include "Controller.h"
 #include "LCDHelper.h"
 
 //add your function definitions for the project Pid here

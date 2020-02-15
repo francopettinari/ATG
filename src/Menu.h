@@ -11,7 +11,7 @@
 class ConfigMenu;
 #include <WString.h>
 #include <vector>
-#include "PidState.h"
+#include "Controller.h"
 
 typedef  void (*SelectedInMenuCallback)();
 typedef  void (*EncoderMovementCallback)(EncoderMovement mvmnt);

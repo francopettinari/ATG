@@ -1,4 +1,3 @@
-// Do not remove the include below
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
@@ -7,20 +6,15 @@
 #include "PID_v1.h"
 #include "LCDHelper.h"
 #include <Encoder.h>
-#include "PidState.h"
-#include "OneWire.h"
 #include <WiFiUdp.h>
 
 #include <DallasTemperature.h>
 #include "TCPComm.h"
 #include <gdb.h>
+#include "Controller.h"
+#include "tempProbe.h"
 
-OneWire onewire(D3);
-//probe probe(&onewire);
-// Declare a DS18B20 Instance and assing the OneWire reference to it.
-DallasTemperature sensors(&onewire);
-int sensorsDelms = 50000; //fake default val
-
+TemperatureProbe probe(5,5);
 PidState pidState;
 LCDHelper lcdHelper;
 
@@ -33,7 +27,6 @@ Encoder enc(encoderCk, encoderDt);
 
 const char *ssid = "ATG";
 const char *password = "log4fape@ATG";
-WiFiUDP Udp;
 
 void ICACHE_RAM_ATTR  handleEncPush() {
 	isEncoderPressed = digitalRead(pushButtonPin) == 0;
@@ -58,25 +51,18 @@ void setup() {
 	uart_div_modify(0,UART_CLK_FREQ / 115200);
 	Serial.begin(115200);
 	gdbstub_init();
-#else if
+#else
 	Serial.begin(115200);
 #endif
-
-	//Serial.begin(9600);  //due to serial XY graph
-
 	WiFi.disconnect(true);
 	WiFi.mode(WIFI_AP);
 	WiFi.softAP(ssid, password);
+
 	Serial.print(F("IP ADDRESS: "));Serial.println(WiFi.localIP());
 	Serial.println(F("Initialized"));
 
 	server.begin();
     server.setNoDelay(true);
-
-	sensors.setWaitForConversion(false);
-	sensors.begin();
-	sensors.setResolution(12);
-	sensorsDelms = sensors.millisToWaitForConversion(12);
 
 	pinMode(pushButtonPin, INPUT_PULLUP);
 	attachInterrupt(pushButtonPin, handleEncPush, CHANGE);
@@ -90,8 +76,6 @@ void setup() {
 
 	Serial.println(F("Initialized from EEProm"));
 
-//	Udp = UdpTracer->Udp;
-//	Udp.begin(8266);
 }
 
 char parOpenChar = '(';
@@ -178,62 +162,11 @@ void sendClients(String s){
 	}
 }
 
-//expected format: SET(<property>:<reqId>:<val>)
-void parseIncomingUdp(){
-	char incomingPacket[255];  // buffer for incoming packets
-	int packetSize = Udp.parsePacket();
-	if (packetSize) {
-		// receive incoming UDP packets
-		//Serial.printf(F(">>>>>>>>>>>>> Received %d bytes from %s, port %d\n"), packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
-		int len = Udp.read(incomingPacket, 255);
-		if (len > 0) {
-		  incomingPacket[len] = 0;
-		}
-		String s = String(incomingPacket);
-		parseString(s);
-	}
-}
-
-#define firWindowSecs 5
-#define firSize 5
-#define readIntervalMs 1000*firWindowSecs/firSize
-const int firIdxMax = (firSize * 10);
-
-bool tempReadRequested = false;
-float lastTempReadMillis = 0;
-float fir[firSize]; //one reading each second
-float firVal = 0;
-int firIdx = 0;
-float readTemperature(){
-	unsigned long now = millis();
-	if( (!tempReadRequested && now-lastTempReadMillis<readIntervalMs)) return firVal;
-
-	if(!tempReadRequested){ //request temperature reading
-		sensors.requestTemperatures(); // Tell the DS18B20 to get make a measurement
-		tempReadRequested = true;
-		lastTempReadMillis = now;
-	}else if(sensors.isConversionComplete()){
-		float temp = sensors.getTempCByIndex(0);
-		tempReadRequested = false;
-		fir[firIdx%firSize] = temp;
-		firIdx++;
-		if(firIdx>firIdxMax)
-			firIdx=firSize;
-		float sum = 0;
-		for(int i=0;i<firSize;i++)sum = sum+fir[i];
-		firVal = sum / firSize;
-	}
-
-	return firVal;
-}
-
 void RAMFUNC loop() {
-	unsigned long now = millis();
-	pidState.update(readTemperature(),enc.read(),isEncoderPressed);
+	pidState.update(probe.readTemperature(),enc.read(),isEncoderPressed);
 
 	ESP.wdtFeed();
 	lcdHelper.display(pidState);
 
-//	parseIncomingUdp();
 	handleClients();
 }
