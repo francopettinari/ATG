@@ -180,8 +180,8 @@ void LCDHelper::displayConfigPid(PidState pstate){
 
 void LCDHelper::displayRun(PidState pstate){
 	int spPos = pstate.Setpoint<100?17:16;
-	int tPos = pstate.getTemperature()<100?spPos-6:spPos-7;
-	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,pstate.getTemperature(),2,2);lcd.PrintChar(spPos-1, 0,'/'); lcd.PrintDoubleFD(spPos, 0,pstate.Setpoint,2,0);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+	int tPos = pstate.getTemperature()<100?spPos-5:spPos-6;
+	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,pstate.getTemperature(),2,1);lcd.PrintChar(spPos-1, 0,'/'); lcd.PrintDoubleFD(spPos, 0,pstate.Setpoint,2,0);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
 	int o = pstate.getOutPerc();
 	/*lcd.PrintChar(13, 1,(char)HEAT_CHAR);*/ lcd.PrintDoubleD(15, 1,o,0); 	lcd.PrintF(19, 1,F("%"));
 	/*lcd.PrintF(13, 2,F("/"));*/ lcd.PrintDoubleD(15, 2,pstate.Ramp,0);lcd.PrintChar(19, 2,(char)DEGMIN_CHAR);

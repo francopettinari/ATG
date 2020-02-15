@@ -7,7 +7,7 @@
 
 #include "PidState.h"
 #include <EEPROM.h>
-
+#include <gdb.h>
 #include "TCPComm.h"
 
 PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P_ON_E, DIRECT){
@@ -119,20 +119,19 @@ EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
 	return EncMoveNone;
 }
 
-void PidState::_writeServo(int value){
+
+
+void RAMFUNC PidState::_writeServo(int value){
 	int degree = value;
 	if(servoDirection==ServoDirectionCCW){
 		degree = servoMaxValue-degree;
 	}
 
-	//Serial.print(F("WriteDegree:"));Serial.println(degree);
-//	if(servoPosition!=value){
+	if(servoPosition!=degree){
 		servo.write(degree);
 		delay(15);
-		servoPosition = value;
-//	}
-	Serial.print(F("Servopos: "));Serial.println(servoPosition);
-	//sendStatus();
+		servoPosition = degree;
+	}
 }
 
 /**

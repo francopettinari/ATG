@@ -35,7 +35,7 @@ const char *ssid = "ATG";
 const char *password = "log4fape@ATG";
 WiFiUDP Udp;
 
-void handleEncPush() {
+void ICACHE_RAM_ATTR  handleEncPush() {
 	isEncoderPressed = digitalRead(pushButtonPin) == 0;
 }
 
@@ -194,25 +194,43 @@ void parseIncomingUdp(){
 	}
 }
 
+#define firWindowSecs 5
+#define firSize 5
+#define readIntervalMs 1000*firWindowSecs/firSize
+const int firIdxMax = (firSize * 10);
+
 bool tempReadRequested = false;
 float lastTempReadMillis = 0;
-
-void loop() {
+float fir[firSize]; //one reading each second
+float firVal = 0;
+int firIdx = 0;
+float readTemperature(){
 	unsigned long now = millis();
-	if(!tempReadRequested || now-lastTempReadMillis>5000){
+	if( (!tempReadRequested && now-lastTempReadMillis<readIntervalMs)) return firVal;
+
+	if(!tempReadRequested){ //request temperature reading
 		sensors.requestTemperatures(); // Tell the DS18B20 to get make a measurement
 		tempReadRequested = true;
 		lastTempReadMillis = now;
-		pidState.update(-200,enc.read(),isEncoderPressed);
-	}else{
-		if(sensors.isConversionComplete() && now-lastTempReadMillis>sensorsDelms){
-			float temp = sensors.getTempCByIndex(0);
-			pidState.update(temp,enc.read(),isEncoderPressed);
-			tempReadRequested = false;
-		}else{
-			pidState.update(-200,enc.read(),isEncoderPressed);
-		}
+	}else if(sensors.isConversionComplete()){
+		float temp = sensors.getTempCByIndex(0);
+		tempReadRequested = false;
+		fir[firIdx%firSize] = temp;
+		firIdx++;
+		if(firIdx>firIdxMax)
+			firIdx=firSize;
+		float sum = 0;
+		for(int i=0;i<firSize;i++)sum = sum+fir[i];
+		firVal = sum / firSize;
 	}
+
+	return firVal;
+}
+
+void RAMFUNC loop() {
+	unsigned long now = millis();
+	pidState.update(readTemperature(),enc.read(),isEncoderPressed);
+
 	ESP.wdtFeed();
 	lcdHelper.display(pidState);
 

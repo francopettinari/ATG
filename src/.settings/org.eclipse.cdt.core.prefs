@@ -5028,7 +5028,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.BOARD/op
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.BOARD/value=ESP8266_NODEMCU
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.CORE.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.CORE.PATH/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.CORE.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\cores\\esp8266
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.CORE.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.6.3\\cores\\esp8266
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.CORE/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.CORE/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.CORE/value=esp8266
@@ -5038,9 +5038,15 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.DEBUG_LE
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.DEBUG_PORT/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.DEBUG_PORT/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.DEBUG_PORT/value=
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.EXCEPTION_FLAGS/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.EXCEPTION_FLAGS/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.EXCEPTION_FLAGS/value=-fno-exceptions
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.EXTRA_FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.EXTRA_FLAGS/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.EXTRA_FLAGS/value=-DESP8266
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_FLAGS/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_FLAGS/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_FLAGS/value=-DFLASHMODE_DIO
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_FREQ/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_FREQ/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.FLASH_FREQ/value=40
@@ -5064,22 +5070,19 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.F_CPU/op
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.F_CPU/value=80000000L
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LED/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LED/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LED/value=
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LED/value=-DLED_BUILTIN\=2
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_FLAGS/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_FLAGS/value=-DLWIP_OPEN_SRC -DTCP_MSS\=536
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_FLAGS/value=-DLWIP_OPEN_SRC -DTCP_MSS\=536 -DLWIP_FEATURES\=0 -DLWIP_IPV6\=0
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_INCLUDE/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_INCLUDE/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_INCLUDE/value=lwip2/include
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_LIB/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_LIB/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_LIB/value=-llwip2
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_LIB/value=-llwip2-536
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.MCU/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.MCU/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.MCU/value=esp8266
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.NOEXTRA4KHEAP/delimiter=;
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.NOEXTRA4KHEAP/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.NOEXTRA4KHEAP/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.PATH/value=${ProjDirPath}/${ConfigName}
@@ -5089,30 +5092,33 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.PROJECT_
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.RFCAL_ADDR/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.RFCAL_ADDR/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.RFCAL_ADDR/value=0x3FC000
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_BLOCKSIZE/delimiter=;
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_BLOCKSIZE/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_BLOCKSIZE/value=8192
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_END/delimiter=;
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_END/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_END/value=0x3FB000
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SDK/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SDK/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SDK/value=NONOSDK22x_190703
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_PAGESIZE/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_PAGESIZE/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_PAGESIZE/value=256
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_START/delimiter=;
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_START/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SPIFFS_START/value=0x100000
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SSLFLAGS/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SSLFLAGS/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SSLFLAGS/value=
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.STDCPP_LEVEL/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.STDCPP_LEVEL/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.STDCPP_LEVEL/value=-std\=gnu++11
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.STDCPP_LIB/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.STDCPP_LIB/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.STDCPP_LIB/value=-lstdc++
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SYSTEM.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SYSTEM.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.SYSTEM.PATH/value=${A.RUNTIME.PLATFORM.PATH}/system
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VARIANT.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VARIANT.PATH/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VARIANT.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\variants\\nodemcu
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VARIANT.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.6.3\\variants\\nodemcu
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VARIANT/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VARIANT/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VARIANT/value=nodemcu
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VTABLE_FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VTABLE_FLAGS/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VTABLE_FLAGS/value=-DVTABLES_IN_FLASH
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.VTABLE_FLAGS/value=-DVTABLES_IN_IRAM
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.AR.CMD/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.AR.CMD/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.AR.CMD/value=xtensa-lx106-elf-ar
@@ -5136,16 +5142,16 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.ELF
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.ELF.EXTRA_FLAGS/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.ELF.FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.ELF.FLAGS/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.ELF.FLAGS/value=-g ${A.COMPILER.WARNING_FLAGS} -Os -nostdlib -Wl,--no-check-sections -u app_entry ${A.BUILD.FLOAT} -Wl,-static "-L${A.COMPILER.SDK.PATH}/lib" "-L${A.COMPILER.SDK.PATH}/ld" "-L${A.COMPILER.LIBC.PATH}/lib" "-T${A.BUILD.FLASH_LD}" -Wl,--gc-sections -Wl,-wrap,system_restart_local -Wl,-wrap,spi_flash_read
+environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.ELF.FLAGS/value=-g ${A.COMPILER.WARNING_FLAGS} -Os -nostdlib -Wl,--no-check-sections -u app_entry ${A.BUILD.FLOAT} -Wl,-static "-L${A.COMPILER.SDK.PATH}/lib" "-L${A.COMPILER.SDK.PATH}/lib/${A.BUILD.SDK}" "-L${A.COMPILER.SDK.PATH}/ld" "-L${A.COMPILER.LIBC.PATH}/lib" "-T${A.BUILD.FLASH_LD}" -Wl,--gc-sections -Wl,-wrap,system_restart_local -Wl,-wrap,spi_flash_read
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.ELF.LIBS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.ELF.LIBS/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.ELF.LIBS/value=-lhal -lphy -lpp -lnet80211 ${A.BUILD.LWIP_LIB} -lwpa -lcrypto -lmain -lwps -lbearssl -laxtls -lespnow -lsmartconfig -lairkiss -lwpa2 -lstdc++ -lm -lc -lgcc
+environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.ELF.LIBS/value=-lhal -lphy -lpp -lnet80211 ${A.BUILD.LWIP_LIB} -lwpa -lcrypto -lmain -lwps -lbearssl -laxtls -lespnow -lsmartconfig -lairkiss -lwpa2 ${A.BUILD.STDCPP_LIB} -lm -lc -lgcc
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.EXTRA_FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.EXTRA_FLAGS/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.EXTRA_FLAGS/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.FLAGS/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.FLAGS/value=-c ${A.COMPILER.WARNING_FLAGS} ${A.BUILD.NOEXTRA4KHEAP} -Os -g -Wpointer-arith -Wno-implicit-function-declaration -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -falign-functions\=4 -MMD -std\=gnu99 -ffunction-sections -fdata-sections
+environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.C.FLAGS/value=-c ${A.COMPILER.WARNING_FLAGS} -Os -g -Wpointer-arith -Wno-implicit-function-declaration -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -falign-functions\=4 -MMD -std\=gnu99 -ffunction-sections -fdata-sections ${A.BUILD.EXCEPTION_FLAGS} ${A.BUILD.SSLFLAGS}
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPP.CMD/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPP.CMD/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPP.CMD/value=xtensa-lx106-elf-g++
@@ -5154,7 +5160,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPP.E
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPP.EXTRA_FLAGS/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPP.FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPP.FLAGS/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPP.FLAGS/value=-c ${A.COMPILER.WARNING_FLAGS} ${A.BUILD.NOEXTRA4KHEAP} -Os -g -mlongcalls -mtext-section-literals -fno-exceptions -fno-rtti -falign-functions\=4 -std\=c++11 -MMD -ffunction-sections -fdata-sections
+environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPP.FLAGS/value=-c ${A.COMPILER.WARNING_FLAGS} -Os -g -mlongcalls -mtext-section-literals -fno-rtti -falign-functions\=4 ${A.BUILD.STDCPP_LEVEL} -MMD -ffunction-sections -fdata-sections ${A.BUILD.EXCEPTION_FLAGS} ${A.BUILD.SSLFLAGS}
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPREPROCESSOR.FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPREPROCESSOR.FLAGS/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPREPROCESSOR.FLAGS/value=-D__ets__ -DICACHE_FLASH -U__STRICT_ANSI__ "-I${A.COMPILER.SDK.PATH}/include" "-I${A.COMPILER.SDK.PATH}/${A.BUILD.LWIP_INCLUDE}" "-I${A.COMPILER.LIBC.PATH}/include" "-I${A.BUILD.PATH}/core"
@@ -5167,9 +5173,6 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.ELF2H
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.ELF2HEX.FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.ELF2HEX.FLAGS/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.ELF2HEX.FLAGS/value=
-environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.ESPTOOL.CMD/delimiter=;
-environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.ESPTOOL.CMD/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.ESPTOOL.CMD/value=esptool.exe
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.LIBC.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.LIBC.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.LIBC.PATH/value=${A.RUNTIME.PLATFORM.PATH}/tools/sdk/libc/xtensa-lx106-elf
@@ -5223,25 +5226,31 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.PACKAGES/opera
 environment/project/io.sloeber.core.toolChain.release.708503083/A.PACKAGES/value=${eclipse_home}/arduinoPlugin/packages
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.1/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.1/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.AR.CMD}" ${A.COMPILER.AR.FLAGS} ${A.COMPILER.AR.EXTRA_FLAGS} "${A.BUILD.PATH}/arduino.ar" 
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.AR.CMD}" ${A.COMPILER.AR.FLAGS} ${A.COMPILER.AR.EXTRA_FLAGS} 
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.2/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.2/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.2/value=
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.2/value=\ 
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.3/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.3/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN.3/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.AR.CMD}" ${A.COMPILER.AR.FLAGS} ${A.COMPILER.AR.EXTRA_FLAGS} "${A.BUILD.PATH}/arduino.ar" "${A.OBJECT_FILE}"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.AR.CMD}" ${A.COMPILER.AR.FLAGS} ${A.COMPILER.AR.EXTRA_FLAGS} "${A.ARCHIVE_FILE_PATH}" "${A.OBJECT_FILE}"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.1/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.1/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.C.ELF.CMD}" -Wl,-Map "-Wl,${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.map" ${A.COMPILER.C.ELF.FLAGS} ${A.COMPILER.C.ELF.EXTRA_FLAGS} -o "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf" -Wl,--start-group 
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.C.ELF.CMD}" ${A.BUILD.EXCEPTION_FLAGS} -Wl,-Map "-Wl,${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.map" ${A.COMPILER.C.ELF.FLAGS} ${A.COMPILER.C.ELF.EXTRA_FLAGS} -o "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf" -Wl,--start-group 
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.2/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.2/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.2/value=\ "${A.BUILD.PATH}/arduino.ar" ${A.COMPILER.C.ELF.LIBS} -Wl,--end-group  "-L${A.BUILD.PATH}"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.2/value=\ 
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.3/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.3/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.3/value=\ ${A.COMPILER.C.ELF.LIBS} -Wl,--end-group  "-L${A.BUILD.PATH}"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.C.ELF.CMD}" -Wl,-Map "-Wl,${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.map" ${A.COMPILER.C.ELF.FLAGS} ${A.COMPILER.C.ELF.EXTRA_FLAGS} -o "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf" -Wl,--start-group ${A.OBJECT_FILES} "${A.BUILD.PATH}/arduino.ar" ${A.COMPILER.C.ELF.LIBS} -Wl,--end-group  "-L${A.BUILD.PATH}"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.C.ELF.CMD}" ${A.BUILD.EXCEPTION_FLAGS} -Wl,-Map "-Wl,${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.map" ${A.COMPILER.C.ELF.FLAGS} ${A.COMPILER.C.ELF.EXTRA_FLAGS} -o "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf" -Wl,--start-group ${A.OBJECT_FILES} "${A.ARCHIVE_FILE_PATH}" ${A.COMPILER.C.ELF.LIBS} -Wl,--end-group  "-L${A.BUILD.PATH}"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.1/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.1/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.C.FLAGS} -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.COMPILER.C.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} 
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.C.FLAGS} -D${A.BUILD.SDK}\=1 -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.BUILD.FLASH_FLAGS} ${A.COMPILER.C.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} 
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.2/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.2/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.2/value=\ -o 
@@ -5250,10 +5259,10 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PAT
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.3/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.C.FLAGS} -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.COMPILER.C.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} "${A.SOURCE_FILE}" -o "${A.OBJECT_FILE}"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.C.FLAGS} -D${A.BUILD.SDK}\=1 -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.BUILD.FLASH_FLAGS} ${A.COMPILER.C.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} "${A.SOURCE_FILE}" -o "${A.OBJECT_FILE}"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN.1/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN.1/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.CPP.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.CPP.FLAGS} -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.COMPILER.CPP.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} 
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.CPP.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.CPP.FLAGS} -D${A.BUILD.SDK}\=1 -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.BUILD.FLASH_FLAGS} ${A.COMPILER.CPP.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} 
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN.2/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN.2/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN.2/value=\ -o 
@@ -5262,22 +5271,34 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.P
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN.3/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.CPP.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.CPP.FLAGS} -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.COMPILER.CPP.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} "${A.SOURCE_FILE}" -o "${A.OBJECT_FILE}"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.CPP.O.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.CPP.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.CPP.FLAGS} -D${A.BUILD.SDK}\=1 -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.BUILD.FLASH_FLAGS} ${A.COMPILER.CPP.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} "${A.SOURCE_FILE}" -o "${A.OBJECT_FILE}"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.HOOKS.LINKING.PRELINK.1.PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.HOOKS.LINKING.PRELINK.1.PATTERN/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.HOOKS.LINKING.PRELINK.1.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" -CC -E -P ${A.BUILD.VTABLE_FLAGS} "${A.RUNTIME.PLATFORM.PATH}/tools/sdk/ld/eagle.app.v6.common.ld.h" -o "${A.RUNTIME.PLATFORM.PATH}/tools/sdk/ld/eagle.app.v6.common.ld"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.HOOKS.LINKING.PRELINK.1.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" -CC -E -P ${A.BUILD.VTABLE_FLAGS} "${A.RUNTIME.PLATFORM.PATH}/tools/sdk/ld/eagle.app.v6.common.ld.h" -o "${A.BUILD.PATH}/local.eagle.app.v6.common.ld"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.HOOKS.SKETCH.PREBUILD.PATTERN/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.HOOKS.SKETCH.PREBUILD.PATTERN/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.HOOKS.SKETCH.PREBUILD.PATTERN/value="${A.RUNTIME.TOOLS.PYTHON3.PATH}/python3" "${A.RUNTIME.TOOLS.SIGNING}" --mode header --publickey "${A.BUILD.SOURCE.PATH}/public.key" --out "${A.BUILD.PATH}/core/Updater_Signing.h"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.EEP.PATTERN.1/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.EEP.PATTERN.1/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.EEP.PATTERN.1/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.EEP.PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.EEP.PATTERN/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.EEP.PATTERN/value=
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.1.PATTERN/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.1.PATTERN/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.1.PATTERN/value="${A.RUNTIME.TOOLS.PYTHON3.PATH}/python3" "${A.RUNTIME.TOOLS.ELF2BIN}" --eboot "${A.RUNTIME.TOOLS.EBOOT}" --app "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf" --flash_mode ${A.BUILD.FLASH_MODE} --flash_freq ${A.BUILD.FLASH_FREQ} --flash_size ${A.BUILD.FLASH_SIZE} --path "${A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC.PATH}/bin" --out "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.bin"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.2.PATTERN/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.2.PATTERN/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.2.PATTERN/value="${A.RUNTIME.TOOLS.PYTHON3.PATH}/python3" "${A.RUNTIME.TOOLS.SIGNING}" --mode sign --privatekey "${A.BUILD.SOURCE.PATH}/private.key" --bin "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.bin" --out "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.bin.signed" --legacy "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.bin.legacy_sig"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.3.PATTERN/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.3.PATTERN/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.3.PATTERN/value="${A.RUNTIME.TOOLS.PYTHON3.PATH}/python3" "${A.RUNTIME.TOOLS.SIZES}" --elf "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf" --path "${A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC.PATH}/bin"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.PATTERN.1/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.PATTERN.1/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.PATTERN.1/value="${A.RUNTIME.TOOLS.ESPTOOL.PATH}/${A.COMPILER.ESPTOOL.CMD}" -eo "${A.RUNTIME.PLATFORM.PATH}/bootloaders/eboot/eboot.elf" -bo "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.bin" -bm ${A.BUILD.FLASH_MODE} -bf ${A.BUILD.FLASH_FREQ} -bz ${A.BUILD.FLASH_SIZE} -bs .text -bp 4096 -ec -eo "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf" -bs .irom0.text -bs .text -bs .data -bs .rodata -bc -ec
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.PATTERN.1/value=${A.RECIPE.OBJCOPY.BIN.PATTERN}
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.PATTERN/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.PATTERN/value="${A.RUNTIME.TOOLS.ESPTOOL.PATH}/${A.COMPILER.ESPTOOL.CMD}" -eo "${A.RUNTIME.PLATFORM.PATH}/bootloaders/eboot/eboot.elf" -bo "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.bin" -bm ${A.BUILD.FLASH_MODE} -bf ${A.BUILD.FLASH_FREQ} -bz ${A.BUILD.FLASH_SIZE} -bs .text -bp 4096 -ec -eo "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf" -bs .irom0.text -bs .text -bs .data -bs .rodata -bc -ec
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OBJCOPY.HEX.PATTERN/value=${A.RECIPE.OBJCOPY.BIN.PATTERN}
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OUTPUT.SAVE_FILE/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OUTPUT.SAVE_FILE/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OUTPUT.SAVE_FILE/value=${A.BUILD.PROJECT_NAME}.${A.BUILD.VARIANT}.bin
@@ -5286,7 +5307,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OUTPUT.
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.OUTPUT.TMP_FILE/value=${A.BUILD.PROJECT_NAME}.bin
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN.1/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN.1/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.S.FLAGS} -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.COMPILER.C.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} 
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.S.FLAGS} -D${A.BUILD.SDK}\=1 -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.BUILD.FLASH_FLAGS} ${A.COMPILER.C.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} 
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN.2/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN.2/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN.2/value=\ -o 
@@ -5295,7 +5316,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PAT
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN.3/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.S.FLAGS} -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.COMPILER.C.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} "${A.SOURCE_FILE}" -o "${A.OBJECT_FILE}"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.S.O.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.S.FLAGS} -D${A.BUILD.SDK}\=1 -DF_CPU\=${A.BUILD.F_CPU} ${A.BUILD.LWIP_FLAGS} ${A.BUILD.DEBUG_PORT} ${A.BUILD.DEBUG_LEVEL} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="\\"${A.BUILD.BOARD}\\"" ${A.BUILD.LED} ${A.BUILD.FLASH_FLAGS} ${A.COMPILER.C.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} "${A.SOURCE_FILE}" -o "${A.OBJECT_FILE}"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.SIZE.PATTERN.1/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.SIZE.PATTERN.1/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.SIZE.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.SIZE.CMD}" -A "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf"
@@ -5307,16 +5328,16 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.SIZE.RE
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.SIZE.REGEX.DATA/value=^(?\:\\.data|\\.rodata|\\.bss)\\s+([0-9]+).*
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.SIZE.REGEX/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.SIZE.REGEX/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.SIZE.REGEX/value=^(?\:\\.irom0\\.text|\\.text|\\.data|\\.rodata|)\\s+([0-9]+).*
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.SIZE.REGEX/value=^(?\:\\.irom0\\.text|\\.text|\\.text1|\\.data|\\.rodata|)\\s+([0-9]+).*
 environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.CORE.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.CORE.PATH/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.CORE.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.4.2
+environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.CORE.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.6.3
 environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.UPLOAD.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.UPLOAD.PATH/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.UPLOAD.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.4.2
+environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.UPLOAD.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.6.3
 environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.VARIANT.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.VARIANT.PATH/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.VARIANT.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.4.2
+environment/project/io.sloeber.core.toolChain.release.708503083/A.REFERENCED.VARIANT.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.6.3
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.HARDWARE.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.HARDWARE.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.HARDWARE.PATH/value=${eclipse_home}/arduinoPlugin/packages/esp8266/hardware/esp8266
@@ -5325,7 +5346,13 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.IDE.VE
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.IDE.VERSION/value=10802
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.PLATFORM.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.PLATFORM.PATH/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.PLATFORM.PATH/value=${eclipse_home}/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.PLATFORM.PATH/value=${eclipse_home}/arduinoPlugin/packages/esp8266/hardware/esp8266/2.6.3
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.EBOOT/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.EBOOT/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.EBOOT/value=${A.RUNTIME.PLATFORM.PATH}/bootloaders/eboot/eboot.elf
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.ELF2BIN/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.ELF2BIN/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.ELF2BIN/value=${A.RUNTIME.PLATFORM.PATH}/tools/elf2bin.py
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.ESPTOOL-0.4.13.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.ESPTOOL-0.4.13.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.ESPTOOL-0.4.13.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\esptool\\0.4.13
@@ -5335,24 +5362,63 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.ESPTOOL0.4.13.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.ESPTOOL0.4.13.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.ESPTOOL0.4.13.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\esptool\\0.4.13
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MAKECOREVER/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MAKECOREVER/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MAKECOREVER/value=${A.RUNTIME.PLATFORM.PATH}/tools/makecorever.py
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKLITTLEFS-2.5.0-4-69BD9E6.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKLITTLEFS-2.5.0-4-69BD9E6.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKLITTLEFS-2.5.0-4-69BD9E6.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\mklittlefs\\2.5.0-4-69bd9e6
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKLITTLEFS.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKLITTLEFS.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKLITTLEFS.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\mklittlefs\\2.5.0-4-69bd9e6
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKLITTLEFS2.5.0-4-69BD9E6.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKLITTLEFS2.5.0-4-69BD9E6.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKLITTLEFS2.5.0-4-69BD9E6.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\mklittlefs\\2.5.0-4-69bd9e6
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS-0.2.0.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS-0.2.0.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS-0.2.0.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\mkspiffs\\0.2.0
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS-2.5.0-4-B40A506.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS-2.5.0-4-B40A506.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS-2.5.0-4-B40A506.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\mkspiffs\\2.5.0-4-b40a506
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS.PATH/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\mkspiffs\\0.2.0
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\mkspiffs\\2.5.0-4-b40a506
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS0.2.0.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS0.2.0.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS0.2.0.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\mkspiffs\\0.2.0
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS2.5.0-4-B40A506.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS2.5.0-4-B40A506.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.MKSPIFFS2.5.0-4-B40A506.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\mkspiffs\\2.5.0-4-b40a506
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.PYTHON3-3.7.2-POST1.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.PYTHON3-3.7.2-POST1.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.PYTHON3-3.7.2-POST1.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\python3\\3.7.2-post1
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.PYTHON3.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.PYTHON3.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.PYTHON3.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\python3\\3.7.2-post1
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.PYTHON33.7.2-POST1.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.PYTHON33.7.2-POST1.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.PYTHON33.7.2-POST1.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\python3\\3.7.2-post1
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.SIGNING/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.SIGNING/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.SIGNING/value=${A.RUNTIME.PLATFORM.PATH}/tools/signing.py
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.SIZES/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.SIZES/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.SIZES/value=${A.RUNTIME.PLATFORM.PATH}/tools/sizes.py
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC-1.20.0-26-GB404FB9-2.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC-1.20.0-26-GB404FB9-2.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC-1.20.0-26-GB404FB9-2.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\xtensa-lx106-elf-gcc\\1.20.0-26-gb404fb9-2
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC-2.5.0-4-B40A506.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC-2.5.0-4-B40A506.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC-2.5.0-4-B40A506.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\xtensa-lx106-elf-gcc\\2.5.0-4-b40a506
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC.PATH/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\xtensa-lx106-elf-gcc\\1.20.0-26-gb404fb9-2
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\xtensa-lx106-elf-gcc\\2.5.0-4-b40a506
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC1.20.0-26-GB404FB9-2.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC1.20.0-26-GB404FB9-2.PATH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC1.20.0-26-GB404FB9-2.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\xtensa-lx106-elf-gcc\\1.20.0-26-gb404fb9-2
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC2.5.0-4-B40A506.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC2.5.0-4-B40A506.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RUNTIME.TOOLS.XTENSA-LX106-ELF-GCC2.5.0-4-B40A506.PATH/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\tools\\xtensa-lx106-elf-gcc\\2.5.0-4-b40a506
 environment/project/io.sloeber.core.toolChain.release.708503083/A.SERIAL.DISABLEDTR/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.SERIAL.DISABLEDTR/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.SERIAL.DISABLEDTR/value=true
@@ -5379,16 +5445,16 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESP8266O
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESP8266OTA/value=${A.TOOLS.ESPTOOL.NETWORK_CMD}
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.CMD/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.CMD/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.CMD/value=esptool.exe
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.CMD/value=${A.RUNTIME.TOOLS.PYTHON3.PATH}/python3
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.NETWORK.PASSWORD/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.NETWORK.PASSWORD/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.NETWORK.PASSWORD/value=${A.TOOLS.ESPTOOL.NETWORK.AUTH}
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.NETWORK_CMD/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.NETWORK_CMD/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.NETWORK_CMD/value=python.exe
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.NETWORK_CMD/value=${A.RUNTIME.TOOLS.PYTHON3.PATH}/python3
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.PATH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.PATH/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.PATH/value=${A.RUNTIME.TOOLS.ESPTOOL.PATH}
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.PATH/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.NETWORK_PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.NETWORK_PATTERN/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.NETWORK_PATTERN/value="${A.TOOLS.ESPTOOL.NETWORK_CMD}" "${A.RUNTIME.PLATFORM.PATH}/tools/espota.py" -i "${A.SERIAL.PORT}" -p "${A.NETWORK.PORT}" "--auth\=${A.NETWORK.PASSWORD}" -f "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.bin"
@@ -5397,13 +5463,19 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PARAMS.QUIET/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PARAMS.VERBOSE/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PARAMS.VERBOSE/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PARAMS.VERBOSE/value=-vv
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PARAMS.VERBOSE/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PATTERN/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PATTERN/value="${A.TOOLS.ESPTOOL.PATH}/${A.TOOLS.ESPTOOL.CMD}" ${A.TOOLS.ESPTOOL.UPLOAD.VERBOSE} -cd ${A.UPLOAD.RESETMETHOD} -cb ${A.UPLOAD.SPEED} -cp "${A.SERIAL.PORT}" ${A.UPLOAD.ERASE_CMD} -ca 0x00000 -cf "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.bin"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PATTERN/value="${A.TOOLS.ESPTOOL.CMD}" "${A.RUNTIME.PLATFORM.PATH}/tools/upload.py" --chip esp8266 --port "${A.SERIAL.PORT}" --baud "${A.UPLOAD.SPEED}" "${A.TOOLS.ESPTOOL.UPLOAD.VERBOSE}" ${A.UPLOAD.ERASE_CMD} ${A.UPLOAD.RESETMETHOD} write_flash 0x0 "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.bin"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PROTOCOL/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PROTOCOL/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.ESPTOOL.UPLOAD.PROTOCOL/value=esp
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.MKLITTLEFS.CMD/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.MKLITTLEFS.CMD/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.MKLITTLEFS.CMD/value=mklittlefs.exe
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.MKLITTLEFS.PATH/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.MKLITTLEFS.PATH/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.MKLITTLEFS.PATH/value=${A.RUNTIME.PLATFORM.PATH}/tools/mklittlefs
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.MKSPIFFS.CMD/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.MKSPIFFS.CMD/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.TOOLS.MKSPIFFS.CMD/value=mkspiffs.exe
@@ -5427,7 +5499,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.PROTOCO
 environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.PROTOCOL/value=stk500v1
 environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.RESETMETHOD/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.RESETMETHOD/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.RESETMETHOD/value=nodemcu
+environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.RESETMETHOD/value=--before default_reset --after hard_reset
 environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.SPEED/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.SPEED/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.SPEED/value=921600
@@ -5442,13 +5514,13 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.WAIT_FO
 environment/project/io.sloeber.core.toolChain.release.708503083/A.UPLOAD.WAIT_FOR_UPLOAD_PORT/value=true
 environment/project/io.sloeber.core.toolChain.release.708503083/A.VERSION/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.VERSION/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.VERSION/value=2.4.2
+environment/project/io.sloeber.core.toolChain.release.708503083/A.VERSION/value=2.6.3
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ARCHITECTURE_ID/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ARCHITECTURE_ID/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ARCHITECTURE_ID/value=esp8266
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARDS_FILE/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARDS_FILE/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARDS_FILE/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.4.2\\boards.txt
+environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARDS_FILE/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\packages\\esp8266\\hardware\\esp8266\\2.6.3\\boards.txt
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARD_ID/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARD_ID/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARD_ID/value=nodemcuv2
@@ -5487,10 +5559,10 @@ environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MAKE_LOCA
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MAKE_LOCATION/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\tools\\make\\
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/value=CpuFrequency\=80\nCrystalFreq\=26\nDebug\=Disabled\nDebugLevel\=None____\nFlashErase\=none\nFlashSize\=4M3M\nled\=11\nLwIPVariant\=v2mss536\nResetMethod\=nodemcu\nUploadSpeed\=921600\nVTable\=flash
+environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/value=baud\=921600\nCpuFrequency\=80\nCrystalFreq\=26\ndbg\=Disabled\nDebug\=Disabled\nDebugLevel\=None____\neesz\=4M\nexception\=legacy\nFlashErase\=none\nFlashSize\=4M3M\nip\=lm2n\nled\=2\nlvl\=None____\nLwIPVariant\=v2mss536\nResetMethod\=nodemcu\nssl\=all\nUploadSpeed\=921600\nvt\=iram\nVTable\=flash\nwipe\=none\nxtal\=80
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OBJCOPY/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OBJCOPY/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OBJCOPY/value=${A.RECIPE.OBJCOPY.HEX.PATTERN}
+environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OBJCOPY/value=${A.RECIPE.OBJCOPY.HEX.1.PATTERN}\n\t${A.RECIPE.OBJCOPY.HEX.2.PATTERN}\n\t${A.RECIPE.OBJCOPY.HEX.3.PATTERN}\n\t${A.RECIPE.OBJCOPY.HEX.PATTERN}
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OS_NAME/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OS_NAME/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OS_NAME/value=win32
@@ -5502,7 +5574,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.PROJECT_N
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.PROJECT_NAME/value=ATG
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.SELECTED.PLATFORM/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.SELECTED.PLATFORM/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.SELECTED.PLATFORM/value=${eclipse_home}/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2
+environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.SELECTED.PLATFORM/value=${eclipse_home}/arduinoPlugin/packages/esp8266/hardware/esp8266/2.6.3
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.SIZE.SWITCH/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.SIZE.SWITCH/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.SIZE.SWITCH/value=${A.RECIPE.SIZE.PATTERN}
