@@ -9,16 +9,9 @@
 
 #include <Arduino.h>
 #include <DallasTemperature.h>
+#include <gdb.h>
 
-TemperatureProbe::TemperatureProbe(int secs, int nOfSamples) {
-	windowSecs = secs;
-	firNOfSamples = nOfSamples;
-
-	firIdxMax = (firNOfSamples * 10);
-	readIntervalMs = 1000*windowSecs/firNOfSamples;
-
-	firArray = new float[firNOfSamples];
-
+RAMFUNC TemperatureProbe::TemperatureProbe() {
 	onewire = new OneWire(D3);
 	sensors = new DallasTemperature(onewire);
 
@@ -26,11 +19,22 @@ TemperatureProbe::TemperatureProbe(int secs, int nOfSamples) {
 	sensors->begin();
 	sensors->setResolution(12);
 	sensorsDelms = sensors->millisToWaitForConversion(12);
+
+	firIdx = 0;
+	filteredValue = 0;
 }
 
-float TemperatureProbe::readTemperature(){
+bool tempReadRequested = false;
+float RAMFUNC TemperatureProbe::readTemperature(){
 	unsigned long now = millis();
+
+	//too early
 	if( (!tempReadRequested && now-lastTempReadMillis<readIntervalMs)) return filteredValue;
+
+	//too late...
+	if( (tempReadRequested && now-lastTempReadMillis>5000)) {
+		tempReadRequested = false;
+	}
 
 	if(!tempReadRequested){ //request temperature reading
 		sensors->requestTemperatures(); // Tell the DS18B20 to get make a measurement
@@ -40,9 +44,10 @@ float TemperatureProbe::readTemperature(){
 		float temp = sensors->getTempCByIndex(0);
 		tempReadRequested = false;
 		firArray[firIdx%firNOfSamples] = temp;
-		firIdx++;
+		firIdx=firIdx+1;
 		if(firIdx>firIdxMax)
 			firIdx=firNOfSamples;
+		if(firIdx<firNOfSamples) return 0;
 		float sum = 0;
 		for(int i=0;i<firNOfSamples;i++)sum = sum+firArray[i];
 		filteredValue = sum / firNOfSamples;

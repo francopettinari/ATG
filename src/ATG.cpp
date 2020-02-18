@@ -3,7 +3,7 @@
 #include <WiFiUdp.h>
 #include <WString.h>
 #include "Arduino.h"
-#include "PID_v1.h"
+#include "pid/PID_v1.h"
 #include "LCDHelper.h"
 #include <Encoder.h>
 #include <WiFiUdp.h>
@@ -14,7 +14,7 @@
 #include "Controller.h"
 #include "tempProbe.h"
 
-TemperatureProbe probe(5,5);
+TemperatureProbe probe;
 PidState pidState;
 LCDHelper lcdHelper;
 
