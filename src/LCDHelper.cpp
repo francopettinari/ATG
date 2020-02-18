@@ -106,7 +106,7 @@ LCDHelper::LCDHelper():lcd(20,4) {
 	lcd.getLcd()->createChar(TIMER_CHAR, timerChar);
 }
 
-void LCDHelper::display(PidState pstate){
+void LCDHelper::display(Controller pstate){
 	lcd.clear();
 	lcd.PrintString(0,0,pstate.getCurrentMenu()->Caption.c_str());
 	std::vector<MenuItem *> subMenuItems = pstate.getCurrentMenu()->subMenuItems;
@@ -168,27 +168,27 @@ void LCDHelper::display(PidState pstate){
 //	Serial.println(F(" "));
 }
 
-void LCDHelper::displayDefault(PidState pstate){
+void LCDHelper::displayDefault(Controller pstate){
 	lcd.PrintChar(13, 0,(char)TEMPERATURE_CHAR); lcd.PrintDoubleFD(14, 0,pstate.getTemperature(),2,1);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
 }
 
-void LCDHelper::displayConfigPid(PidState pstate){
+void LCDHelper::displayConfigPid(Controller pstate){
 	lcd.PrintF(10, 0,F("Kp"));lcd.PrintDoubleFD(13, 0,pstate.kp,2,3);
 	lcd.PrintF(10, 1,F("Ki"));lcd.PrintDoubleFD(13, 1,pstate.ki,2,3);
 	lcd.PrintF(10, 2,F("Kd"));lcd.PrintDoubleFD(13, 2,pstate.kd,2,3);
 	lcd.PrintF(10, 3,F("St"));lcd.PrintDoubleFD(16, 3,pstate.pidSampleTimeSecs,2,0);
 }
 
-void LCDHelper::displayRun(PidState pstate){
-	int spPos = pstate.Setpoint<100?17:16;
+void LCDHelper::displayRun(Controller pstate){
+	int spPos = pstate.setpoint()<100?17:16;
 	int tPos = pstate.getTemperature()<100?spPos-5:spPos-6;
-	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,pstate.getTemperature(),2,1);lcd.PrintChar(spPos-1, 0,'/'); lcd.PrintDoubleFD(spPos, 0,pstate.Setpoint,2,0);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,pstate.getTemperature(),2,1);lcd.PrintChar(spPos-1, 0,'/'); lcd.PrintDoubleFD(spPos, 0,pstate.setpoint(),2,0);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
 	int o = pstate.getOutPerc();
 	/*lcd.PrintChar(13, 1,(char)HEAT_CHAR);*/ lcd.PrintDoubleD(15, 1,o,0); 	lcd.PrintF(19, 1,F("%"));
-	/*lcd.PrintF(13, 2,F("/"));*/ lcd.PrintDoubleD(15, 2,pstate.Ramp,0);lcd.PrintChar(19, 2,(char)DEGMIN_CHAR);
+	/*lcd.PrintF(13, 2,F("/"));*/ lcd.PrintDoubleD(15, 2,pstate.ramp(),0);lcd.PrintChar(19, 2,(char)DEGMIN_CHAR);
 }
 
-void LCDHelper::displayConfigServo(PidState pstate){
+void LCDHelper::displayConfigServo(Controller pstate){
 	if(pstate.servoDirection==ServoDirectionCW){
 		lcd.PrintF(11, 0,F("Dir CW"));
 	}else if(pstate.servoDirection==ServoDirectionCCW){
@@ -198,7 +198,7 @@ void LCDHelper::displayConfigServo(PidState pstate){
 	lcd.PrintF(11, 2,F("Max "));lcd.PrintDoubleFD(15, 2,pstate.servoMaxValue,3,0);
 }
 
-void LCDHelper::displayConfigProbe(PidState pstate){
+void LCDHelper::displayConfigProbe(Controller pstate){
 	lcd.PrintF(5, 0,F("Temp correction"));
 	lcd.PrintDoubleFD(15, 2,pstate.temperatureCorrection,3,0);
 }

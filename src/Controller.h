@@ -21,6 +21,7 @@ class LCDHelper;
 class MenuItem;
 
 #include "LCDHelper.h"
+#include "tempProbe.h"
 
 enum PidStateValue {
 	svUndefiend=-1,svMain=0,
@@ -38,11 +39,10 @@ enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 enum FsmState {psIdle=0,psWaitDelay=5,psRampimg=10,psKeepTemp=30};
 enum TemperatureTransitionState {TempStateUndefined=0,TempStateOff=10,TempStateOn=20,TempStateSwitchingOn=30,TempStateSwitchingOff=40};
 
-class PidState {
+class Controller {
 
 	float lastPressMillis=0;
     float lastPressState = EncoderPushButtonNone;
-	void updateLcd();
 private:
 	FsmState fsmState=psIdle;
 	TemperatureTransitionState TempState = TempStateUndefined;
@@ -54,9 +54,24 @@ private:
 	bool isAutoState(int state);
 	byte eepromVer = 06;  // eeprom data tracking
 	PID pid;
-
-public:
+	TemperatureProbe probe;
 	Servo servo;
+	double _setpoint = 25,_dynamicSetpoint=25,_ramp=1;
+public:
+
+	double setpoint(){ return _setpoint; }
+	void setSetpoint(double value){ _setpoint=value; }
+	void incSetpoint(){ _setpoint++; if(_setpoint>=120)_setpoint=120; }
+	void decSetpoint(){ _setpoint--; if(_setpoint<0)_setpoint=0;}
+
+	double dynamicSetpoint(){ return _dynamicSetpoint; }
+	void setDynamicSetpoint(double value){ _dynamicSetpoint=value; }
+
+	double ramp(){ return _ramp; }
+	void setRamp(double value){ _ramp=value; }
+	void incRamp(){ _ramp++; }
+	void decRamp(){ _ramp--; if(_ramp<0)_ramp=0; }
+
 	MenuItem         *currentMenu=NULL;
 
 	PidStateValue state = svMain;
@@ -71,7 +86,7 @@ public:
 	float pidSampleTimeSecs = 5;
 	float lastManualLog = 0;
 	float lastUdpDataSent = 0;
-	double Setpoint = 25,DynamicSetpoint=25,Ramp=1;
+
 	float approacingStartMillis,lastDynSetpointCalcMillis = 0;
 	float approacingStartTemp = 0;
 	double Output;
@@ -96,7 +111,7 @@ public:
 	int servoMaxValue = 180; //degrees
 	int temperatureCorrection = 0;//0.1 deg steps: 5=+0.5, -8=-0.8
 
-	PidState();
+	Controller();
 
 	PidStateValue getState(){ return state; }
 	void SetState(PidStateValue value, boolean save=true){
@@ -116,7 +131,7 @@ public:
 	void setCurrentMenu(MenuItem *m);
 	MenuItem  *getCurrentMenu(){ return currentMenu; }
 
-	void update(double temp,int encoderPos, boolean encoderPress);
+	void update(int encoderPos, boolean encoderPress);
 	void SetFsmState(FsmState value);
 	void updatePidStatus();
 	void startRamp();

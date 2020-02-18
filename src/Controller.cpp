@@ -11,7 +11,7 @@
 #include <gdb.h>
 #include "TCPComm.h"
 
-PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P_ON_E, DIRECT){
+Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, kp, ki, kd,P_ON_E, DIRECT){
 	pid.SetSampleTime(pidSampleTimeSecs*1000);
 	pid.SetMode(MANUAL);
 	servo.attach(D8);  // attaches the servo on pin 9 to the servo object
@@ -31,7 +31,7 @@ PidState::PidState() : pid(&temperature, &Output, &DynamicSetpoint, kp, ki, kd,P
 	PrevSwitchOnOffMillis = 0;
 }
 
-MenuItem* PidState::decodeCurrentMenu(){
+MenuItem* Controller::decodeCurrentMenu(){
 	MainMenu* pmm = (MainMenu*) topMenu;
 
 	switch(state){
@@ -74,7 +74,7 @@ MenuItem* PidState::decodeCurrentMenu(){
 	return pmm;
 }
 
-void PidState::setCurrentMenu(MenuItem *m){
+void Controller::setCurrentMenu(MenuItem *m){
 	if(currentMenu == m) return;
 	currentMenu = m;
 	stateSelection=0;
@@ -85,7 +85,7 @@ long lastLog=0;
 
 
 
-EncoderPushButtonState PidState::decodeEncoderPushBtnState (boolean encoderPress){
+EncoderPushButtonState Controller::decodeEncoderPushBtnState (boolean encoderPress){
 	if(encoderPress){
 		lastPressMillis = millis();
 		if(lastPressState == EncoderPushButtonNone){
@@ -105,11 +105,11 @@ EncoderPushButtonState PidState::decodeEncoderPushBtnState (boolean encoderPress
 	}
 }
 
-boolean PidState::IsEncoderPressed(boolean encoderPress){
+boolean Controller::IsEncoderPressed(boolean encoderPress){
 	return encoderPress && lastPressState == EncoderPushButtonPressed;
 }
 
-EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
+EncoderMovement Controller::decodeEncoderMoveDirection(int encoderPos){
 	prevEncoderPos = currEncoderPos;
 	currEncoderPos = encoderPos/4;
 	if(currEncoderPos>prevEncoderPos){
@@ -122,7 +122,7 @@ EncoderMovement PidState::decodeEncoderMoveDirection(int encoderPos){
 
 
 
-void RAMFUNC PidState::_writeServo(int value){
+void RAMFUNC Controller::_writeServo(int value){
 	int degree = value;
 	if(servoDirection==ServoDirectionCCW){
 		degree = servoMaxValue-degree;
@@ -139,7 +139,7 @@ void RAMFUNC PidState::_writeServo(int value){
  * here only the temperature flow is handled and the state transition should not depend
  * on other statuses. a burner switch off/on should always avoid flame bumps!!
  */
-void PidState::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
+void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
 	float now = millis();
 	if(log){
 		Serial.print(F("Current temp state: "));Serial.println(TempState);
@@ -232,45 +232,45 @@ void PidState::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
 	}
 }
 
-void PidState::SetFsmState(FsmState value){
+void Controller::SetFsmState(FsmState value){
 	fsmState = value;
 	updatePidStatus();
 }
 
-void PidState::updatePidStatus(){
+void Controller::updatePidStatus(){
 	Serial.print(F("State:"));Serial.println(fsmState);
 	TcpComm->print(F("State:"));TcpComm->println(fsmState);
 	//looks not useful anymore. replace with fixed values when
 	switch(fsmState){
 	case psIdle:
 			pid.SetTunings(kp,ki,kd);
-			DynamicSetpoint=Setpoint;
+			_dynamicSetpoint=_setpoint;
 		break;
 	case psWaitDelay:
 	case psRampimg:
-			DynamicSetpoint=Setpoint; //this has to be recalculated time by time
+			_dynamicSetpoint=_setpoint; //this has to be recalculated time by time
 			pid.SetTunings(kp,ki,kd);
 		break;
 	case psKeepTemp:
-			DynamicSetpoint=Setpoint;
+			_dynamicSetpoint=_setpoint;
 			pid.SetTunings(kp,ki,kd);
 		break;
 	}
 }
 
-void PidState::startRamp(){
+void Controller::startRamp(){
 	approacingStartMillis = millis();
 	approacingStartTemp = temperature;
-	DynamicSetpoint=temperature; //gives an impulse so that it must start to move up
-	if(DynamicSetpoint>Setpoint){
-		DynamicSetpoint=Setpoint;
+	_dynamicSetpoint=temperature; //gives an impulse so that it must start to move up
+	if(_dynamicSetpoint>_setpoint){
+		_dynamicSetpoint=_setpoint;
 	}
 	lastDynSetpointCalcMillis=0;
 }
-bool PidState::waitRampStart(){
+bool Controller::waitRampStart(){
 	return temperature<approacingStartTemp+0.1;
 }
-void PidState::updateRamp(){
+void Controller::updateRamp(){
 	float now = millis();
 //	Serial.print(F("Update ramp: "));Serial.print(lastDynSetpointCalcMillis);
 
@@ -280,24 +280,24 @@ void PidState::updateRamp(){
 //	Serial.print(F(" "));Serial.println(deltaSecs);
 	if(deltaSecs>5){
 		//		Serial.print(DynamicSetpoint);Serial.print(F(" "));Serial.print(pDynamicSetpoint);
-		float elapsedDeltaTemp = Ramp/(float)60.0*elapsedSecs; //delta temp after elapsedSecs from start
+		float elapsedDeltaTemp = _ramp/(float)60.0*elapsedSecs; //delta temp after elapsedSecs from start
 
-		DynamicSetpoint = approacingStartTemp + elapsedDeltaTemp; //calc new setpoint according to ramp
-		if(fsmState==psWaitDelay || DynamicSetpoint>Setpoint){ //target is Setpoit: do not exeed it!
-			DynamicSetpoint = Setpoint;
+		_dynamicSetpoint = approacingStartTemp + elapsedDeltaTemp; //calc new setpoint according to ramp
+		if(fsmState==psWaitDelay || _dynamicSetpoint>_setpoint){ //target is Setpoit: do not exeed it!
+			_dynamicSetpoint = _setpoint;
 		}
 
 		lastDynSetpointCalcMillis = now;
-		Serial.print(F("New dyn setpoint:"));Serial.println(DynamicSetpoint,4);
+		Serial.print(F("New dyn setpoint:"));Serial.println(_dynamicSetpoint,4);
 		//UdpTracer->print(F("New dyn setpoint:"));UdpTracer->printFloat(DynamicSetpoint,4);UdpTracer->println();
 	}
 }
 
-bool PidState::isAutoState(int state){
+bool Controller::isAutoState(int state){
 	return state==svRunAuto || state==svRunAutoSetpoint || state==svRunAutoRamp;
 }
 
-void PidState::sendStatus(){
+void Controller::sendStatus(){
 //	Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
 	//Serial.print(Setpoint,4);Serial.print(F(" "));
 	Serial.println(temperature,4);Serial.print(F(" "));
@@ -306,9 +306,10 @@ void PidState::sendStatus(){
 	TcpComm->print(F("LOG:")      );TcpComm->print(now,4);
 	TcpComm->print(F(";EXPRQID:") );TcpComm->print((float)expectedReqId,0);
 	TcpComm->print(F(";STATE:")   );TcpComm->print((float)autoModeOn,0);
-	TcpComm->print(F(";SETP:")    );TcpComm->print(Setpoint,4);
-	TcpComm->print(F(";RAMP:")    );TcpComm->print(Ramp,4);
-	TcpComm->print(F(";DSETP:")   );TcpComm->print(DynamicSetpoint,4);
+	TcpComm->print(F(";FSM_STATE:")   );TcpComm->print(fsmState);
+	TcpComm->print(F(";SETP:")    );TcpComm->print(_setpoint,4);
+	TcpComm->print(F(";RAMP:")    );TcpComm->print(_ramp,4);
+	TcpComm->print(F(";DSETP:")   );TcpComm->print(_dynamicSetpoint,4);
 	TcpComm->print(F(";TEMP:")    );TcpComm->print(temperature,4);
 	TcpComm->print(F(";OUT:")     );TcpComm->print(Output,4);
 	TcpComm->print(F(";OUTPERC:") );TcpComm->print((float)getOutPerc(),0);
@@ -322,7 +323,7 @@ void PidState::sendStatus(){
 	lastUdpDataSent = now;
 }
 
-int PidState::getOutPerc(){
+int Controller::getOutPerc(){
 	int o = 0;
 	double outRange = servoMaxValue-servoMinValue;
 	if(Output<servoMinValue) o = 0;
@@ -330,7 +331,7 @@ int PidState::getOutPerc(){
 	return o;
 }
 
-void PidState::setOutPerc(double val){
+void Controller::setOutPerc(double val){
 	Serial.print(F(">>>>>> OutputP: "));Serial.println(val);
 	double outRange = servoMaxValue-servoMinValue;
 	Output = servoMinValue + (val/100.0*outRange);
@@ -338,11 +339,9 @@ void PidState::setOutPerc(double val){
 	writeServoPosition(Output,true,true);
 }
 
-void PidState::update(double tempp,int encoderPos, boolean encoderPress){
-
-	if(tempp>-100){
-		setTemperature(tempp);
-	}
+void Controller::update(int encoderPos, boolean encoderPress){
+    double tempp = probe.readTemperature();
+	setTemperature(tempp);
 
 	//force to manual when:
 	//- not in auto
@@ -438,12 +437,6 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 				break;
 			}
 			
-			if(tempp<=-100){
-				if(now-lastUdpDataSent>1000){
-					sendStatus();
-				}
-			}
-
 			//if here, pid should be in auto. if not, then let's force it!
 			if(pid.GetMode()!=AUTOMATIC){
 				Serial.println(F("PID switched to AUTOMATIC"));
@@ -453,23 +446,24 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 				pid.SetMode(AUTOMATIC);
 			}
 
-			if(Ramp<=0 && fsmState!=psKeepTemp){
+			if(_ramp<=0 && fsmState!=psKeepTemp){
 				SetFsmState(psKeepTemp);
 			}
 
-			if(Ramp<=0){
+			if(_ramp<=0){
 				//no ramp is done, bit some logic is based on DynSetpoint, so set it to Setpoint
-				DynamicSetpoint = Setpoint;
+				_dynamicSetpoint = _setpoint;
 			}
 
 //			Serial.print(F("Current state:"));Serial.println(fsmState);
 //			UdpTracer->print(F("Current state:"));UdpTracer->println(fsmState);
 			switch(fsmState){
 			case psIdle:
-				if(temperature<=Setpoint-1){
+				if(!probe.isReady()) break; //temperature reading not yet ready, then a false reading is executed
+				if(temperature<=_setpoint-1){
 					SetFsmState(psWaitDelay);
 					startRamp();
-				} else if(temperature>Setpoint-1 /*&& temp<Setpoint*/){
+				} else if(temperature>_setpoint-1 /*&& temp<Setpoint*/){
 					SetFsmState(psKeepTemp);
 				}
 				Serial.print(F("NEW State:"));Serial.println(fsmState);
@@ -482,23 +476,23 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 					pid.Reset();
 					startRamp();
 				}
-				if(temperature<=Setpoint-1){
+				if(temperature<=_setpoint-1){
 
 					updateRamp();
-				} else if(temperature>Setpoint){
+				} else if(temperature>_setpoint){
 					SetFsmState(psKeepTemp);
 					pid.Reset();//avoid delay in switching off
 				}
 				break;
 			case psKeepTemp:
-				if(Ramp>0 && temperature<=Setpoint-1){
+				if(_ramp>0 && temperature<=_setpoint-1){
 					TcpComm->print(F("1 :"));TcpComm->print(temperature,2);TcpComm->println(fsmState);
 					SetFsmState(psIdle);//it's a way to restart
 				}
 				break;
 			}
 			bool computed = false;
-			if((DynamicSetpoint - temperature)<3.5){
+			if((_dynamicSetpoint - temperature)<3.5){
 				//activate pid modulation
 				computed = pid.Compute();
 				writeServoPosition(Output,true);
@@ -519,7 +513,7 @@ void PidState::update(double tempp,int encoderPos, boolean encoderPress){
 	}
 }
 
-void PidState::saveSetPointTotoEEprom(){
+void Controller::saveSetPointTotoEEprom(){
 	EEPROM.begin(512);
 
 	int addr = 0;
@@ -528,8 +522,8 @@ void PidState::saveSetPointTotoEEprom(){
 	addr+=sizeof(ServoDirection);
 	addr+=sizeof(int);
 	addr+=sizeof(int);
-	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(Setpoint);
-	EEPROM.put(addr, Setpoint);
+	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(_setpoint);
+	EEPROM.put(addr, _setpoint);
 	addr+=sizeof(double);
 
 	EEPROM.commit();
@@ -537,7 +531,7 @@ void PidState::saveSetPointTotoEEprom(){
 
 }
 
-void PidState::loadFromEEProm(){
+void Controller::loadFromEEProm(){
 	Serial.print(F("EEPROMReadSettings: Expected EEPROM_VER:"));Serial.println(eepromVer);
 
 	EEPROM.begin(512);
@@ -572,9 +566,9 @@ void PidState::loadFromEEProm(){
 	addr+=sizeof(servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
 	Serial.print(F("Readed servo max: "));Serial.println(servoMaxValue);
 
-	Setpoint = EEPROM.get(addr, Setpoint);
-	addr+=sizeof(Setpoint);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed setpoint: "));Serial.println(Setpoint);
+	_setpoint = EEPROM.get(addr, _setpoint);
+	addr+=sizeof(_setpoint);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed setpoint: "));Serial.println(_setpoint);
 
 	kp = EEPROM.get(addr, kp);
 	addr+=sizeof(kp);Serial.print(F("Size: "));Serial.println(addr);
@@ -635,7 +629,7 @@ void PidState::loadFromEEProm(){
 
 
 
-void PidState::savetoEEprom(){
+void Controller::savetoEEprom(){
 	ESP.wdtFeed();
 	EEPROM.begin(512);
 
@@ -659,9 +653,9 @@ void PidState::savetoEEprom(){
 	EEPROM.put(addr, servoMaxValue);
 	addr+=sizeof(servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(Setpoint);
-	EEPROM.put(addr, Setpoint);
-	addr+=sizeof(Setpoint);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(_setpoint);
+	EEPROM.put(addr, _setpoint);
+	addr+=sizeof(_setpoint);Serial.print(F("Size: "));Serial.println(addr);
 
 	Serial.print(F("EEPROMWriteSettings. Kp: "));Serial.println(kp);
 	EEPROM.put(addr, kp);
@@ -698,7 +692,7 @@ void PidState::savetoEEprom(){
 
 }
 
-void PidState::saveServoDirToEEprom(){
+void Controller::saveServoDirToEEprom(){
 	EEPROM.begin(512);
 
 	int addr = 0;

@@ -22,6 +22,8 @@ RAMFUNC TemperatureProbe::TemperatureProbe() {
 
 	firIdx = 0;
 	filteredValue = 0;
+
+
 }
 
 bool tempReadRequested = false;

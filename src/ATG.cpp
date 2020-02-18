@@ -3,19 +3,17 @@
 #include <WiFiUdp.h>
 #include <WString.h>
 #include "Arduino.h"
-#include "pid/PID_v1.h"
 #include "LCDHelper.h"
 #include <Encoder.h>
 #include <WiFiUdp.h>
 
-#include <DallasTemperature.h>
 #include "TCPComm.h"
 #include <gdb.h>
 #include "Controller.h"
-#include "tempProbe.h"
 
-TemperatureProbe probe;
-PidState pidState;
+
+
+Controller pidState;
 LCDHelper lcdHelper;
 
 
@@ -32,13 +30,13 @@ void ICACHE_RAM_ATTR  handleEncPush() {
 	isEncoderPressed = digitalRead(pushButtonPin) == 0;
 }
 
-void readGasAlarm() {
-	float sensorValue = analogRead(A0);         // Read the Sensor Values from Analog Pin A0
-	float sensorVoltage = sensorValue/1024*5.0; // Calculate the Sensor Voltage
-	Serial.print("sensor voltage = ");          // Print the Message
-	Serial.print(sensorVoltage);                // Print the Values
-	Serial.println(" V");                       // Print the Message
-}
+//void readGasAlarm() {
+//	float sensorValue = analogRead(A0);         // Read the Sensor Values from Analog Pin A0
+//	float sensorVoltage = sensorValue/1024*5.0; // Calculate the Sensor Voltage
+//	Serial.print("sensor voltage = ");          // Print the Message
+//	Serial.print(sensorVoltage);                // Print the Values
+//	Serial.println(" V");                       // Print the Message
+//}
 
 #define MAX_SRV_CLIENTS 3
 WiFiServer server(8266);
@@ -101,9 +99,9 @@ void parseString(String s){
 			pidState.expectedReqId=iReqId;
 		}
 		if(property==F("SP")){
-			pidState.Setpoint = value.toFloat();
+			pidState.setSetpoint(value.toFloat());
 		} else if(property==F("RP")){
-			pidState.Ramp = value.toFloat();
+			pidState.setRamp(value.toFloat());
 		} else if(property==F("ST")){
 			pidState.autoModeOn = value.toInt();
 			MainMenu* pmm = (MainMenu*) pidState.topMenu;
@@ -163,7 +161,7 @@ void sendClients(String s){
 }
 
 void RAMFUNC loop() {
-	pidState.update(probe.readTemperature(),enc.read(),isEncoderPressed);
+	pidState.update(enc.read(),isEncoderPressed);
 
 	ESP.wdtFeed();
 	lcdHelper.display(pidState);

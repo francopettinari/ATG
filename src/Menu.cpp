@@ -481,18 +481,15 @@ void RunAutoMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 
 	if(rampMenu->Selected){
 		if(mvmnt==EncMoveCCW){
-			pidState.Ramp -= 1;
-			if(pidState.Ramp<0)pidState.Ramp=0;
+			pidState.decRamp();
 		}else if(mvmnt==EncMoveCW){
-			pidState.Ramp+=1;
+			pidState.incRamp();
 		}
 	}else if(setpointMenu->Selected){
 		if(mvmnt==EncMoveCCW){
-			pidState.Setpoint -= 1;
-			if(pidState.Setpoint<0)pidState.Setpoint=0;
+			pidState.decSetpoint();
 		}else if(mvmnt==EncMoveCW){
-			pidState.Setpoint+=1;
-			if(pidState.Setpoint>=120)pidState.Setpoint=120;
+			pidState.incSetpoint();
 		}
 	} else if(pidState.autoModeOn==0 && switchMenu->Selected){
 		//manual mode. handle output percentage
