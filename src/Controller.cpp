@@ -128,7 +128,7 @@ void RAMFUNC Controller::_writeServo(int value){
 		degree = servoMaxValue-degree;
 	}
 
-	if(servoPosition!=degree){
+	if(value==0 || servoPosition!=degree){
 		servo.write(degree);
 		delay(15);
 		servoPosition = degree;
@@ -138,8 +138,11 @@ void RAMFUNC Controller::_writeServo(int value){
 /**
  * here only the temperature flow is handled and the state transition should not depend
  * on other statuses. a burner switch off/on should always avoid flame bumps!!
+ *
+ * minValueSwitchOff=false only during configuration. All other cases it is true
  */
-void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
+void RAMFUNC Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
+
 	float now = millis();
 	if(log){
 		Serial.print(F("Current temp state: "));Serial.println(TempState);
@@ -168,7 +171,7 @@ void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log)
 		case TempStateSwitchingOn:
 			if (degree>=servoMinValue){
 				//now switchin on
-				if(now-PrevSwitchOnOffMillis>10000){
+				if(now-PrevSwitchOnOffMillis>5000){
 					_writeServo(servoMaxValue);
 					delay(1000);
 					_writeServo(degree);
@@ -177,7 +180,7 @@ void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log)
 					return;
 				}else{
 					//skip and wait
-					Serial.println(F("Switch on: wait 10 seconds..."));
+					Serial.println(F("Switch on: wait 5 seconds..."));
 					TcpComm->println(F("Switch on: wait 5 seconds..."));
 					return;
 				}
@@ -189,7 +192,7 @@ void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log)
 		case TempStateSwitchingOff:
 			if (degree<servoMinValue){
 				//now swtiching off
-				if(now-PrevSwitchOnOffMillis>10000){
+				if(now-PrevSwitchOnOffMillis>5000){
 					_writeServo(servoMaxValue);
 					delay(1000);
 					_writeServo(0);
@@ -198,8 +201,8 @@ void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log)
 					return;
 				}else{
 					//skip and wait
-					Serial.println(F("Switch off: wait 10 seconds..."));
-					TcpComm->println(F("Switch off: wait 10 seconds..."));
+					Serial.println(F("Switch off: wait 5 seconds..."));
+					TcpComm->println(F("Switch off: wait 5 seconds..."));
 					return;
 				}
 			}
@@ -234,29 +237,33 @@ void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log)
 
 void Controller::SetFsmState(FsmState value){
 	fsmState = value;
-	updatePidStatus();
+//	pid.SetTunings(kp,ki,kd);
+//	_dynamicSetpoint=_setpoint;
+//	updatePidStatus();
 }
 
-void Controller::updatePidStatus(){
-	Serial.print(F("State:"));Serial.println(fsmState);
-	TcpComm->print(F("State:"));TcpComm->println(fsmState);
-	//looks not useful anymore. replace with fixed values when
-	switch(fsmState){
-	case psIdle:
-			pid.SetTunings(kp,ki,kd);
-			_dynamicSetpoint=_setpoint;
-		break;
-	case psWaitDelay:
-	case psRampimg:
-			_dynamicSetpoint=_setpoint; //this has to be recalculated time by time
-			pid.SetTunings(kp,ki,kd);
-		break;
-	case psKeepTemp:
-			_dynamicSetpoint=_setpoint;
-			pid.SetTunings(kp,ki,kd);
-		break;
-	}
-}
+//void Controller::updatePidStatus(){
+//	Serial.print(F("State:"));Serial.println(fsmState);
+//	TcpComm->print(F("State:"));TcpComm->println(fsmState);
+//	//looks not useful anymore. replace with fixed values when
+//	pid.SetTunings(kp,ki,kd);
+//	_dynamicSetpoint=_setpoint;
+////	switch(fsmState){
+////	case psIdle:
+////			pid.SetTunings(kp,ki,kd);
+////			_dynamicSetpoint=_setpoint;
+////		break;
+////	case psWaitDelay:
+////	case psRampimg:
+////			_dynamicSetpoint=_setpoint; //this has to be recalculated time by time
+////			pid.SetTunings(kp,ki,kd);
+////		break;
+////	case psKeepTemp:
+////			_dynamicSetpoint=_setpoint;
+////			pid.SetTunings(kp,ki,kd);
+////		break;
+////	}
+//}
 
 void Controller::startRamp(){
 	approacingStartMillis = millis();
@@ -448,6 +455,7 @@ void Controller::update(int encoderPos, boolean encoderPress){
 
 			if(_ramp<=0 && fsmState!=psKeepTemp){
 				SetFsmState(psKeepTemp);
+				_dynamicSetpoint=_setpoint;
 			}
 
 			if(_ramp<=0){
@@ -465,6 +473,7 @@ void Controller::update(int encoderPos, boolean encoderPress){
 					startRamp();
 				} else if(temperature>_setpoint-1 /*&& temp<Setpoint*/){
 					SetFsmState(psKeepTemp);
+					_dynamicSetpoint=_setpoint;
 				}
 				Serial.print(F("NEW State:"));Serial.println(fsmState);
 				TcpComm->print(F("NEW State:"));TcpComm->println(fsmState);
@@ -477,18 +486,23 @@ void Controller::update(int encoderPos, boolean encoderPress){
 					startRamp();
 				}
 				if(temperature<=_setpoint-1){
-
 					updateRamp();
 				} else if(temperature>_setpoint){
 					SetFsmState(psKeepTemp);
+					_dynamicSetpoint=_setpoint;
 					pid.Reset();//avoid delay in switching off
 				}
 				break;
 			case psKeepTemp:
-				if(_ramp>0 && temperature<=_setpoint-1){
-					TcpComm->print(F("1 :"));TcpComm->print(temperature,2);TcpComm->println(fsmState);
-					SetFsmState(psIdle);//it's a way to restart
-				}
+				//this status switch is going to provoke a jump in the output:
+				//because status==psKeepTemp means that we arrived to setpoint and then themperature has
+				//falled down. if now status==psKeepTemp and temperature<=_setpoint-1 the output can be something like 25%-50%
+				//resetting state to psIdle will restart the ramping from 0%. this is wrong: now we only need much power, not less!
+//				if(_ramp>0 && temperature<=_setpoint-1){
+//					TcpComm->print(F("1 :"));TcpComm->print(temperature,2);TcpComm->println(fsmState);
+//					SetFsmState(psIdle);//it's a way to restart
+//					_dynamicSetpoint=_setpoint;
+//				}
 				break;
 			}
 			bool computed = false;
@@ -498,11 +512,7 @@ void Controller::update(int encoderPos, boolean encoderPress){
 				writeServoPosition(Output,true);
 			}else{
 				//max fire applied
-				setOutPerc(100);
 				writeServoPosition(servoMaxValue,true);
-			}
-			if(computed || (now-lastUdpDataSent>1000)){
-				sendStatus();
 			}
 			break;
 		}

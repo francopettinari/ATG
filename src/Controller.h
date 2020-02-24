@@ -133,7 +133,7 @@ public:
 
 	void update(int encoderPos, boolean encoderPress);
 	void SetFsmState(FsmState value);
-	void updatePidStatus();
+//	void updatePidStatus();
 	void startRamp();
 	bool waitRampStart();
 	void updateRamp();

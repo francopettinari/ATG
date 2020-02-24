@@ -6238,13 +6238,13 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LED/oper
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LED/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_FLAGS/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_FLAGS/value=-DLWIP_OPEN_SRC -DTCP_MSS\=1460
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_FLAGS/value=-DLWIP_OPEN_SRC -DTCP_MSS\=536
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_INCLUDE/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_INCLUDE/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_INCLUDE/value=lwip2/include
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_LIB/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_LIB/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_LIB/value=-llwip2_1460
+environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.LWIP_LIB/value=-llwip2
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.MCU/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.MCU/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.BUILD.MCU/value=esp8266
@@ -6658,7 +6658,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MAKE_LOCA
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MAKE_LOCATION/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\tools\\make\\
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/value=baud\=921600\nCpuFrequency\=80\nCrystalFreq\=26\ndbg\=Disabled\nDebug\=Disabled\nDebugLevel\=None____\neesz\=4M\nexception\=legacy\nFlashErase\=none\nFlashSize\=4M3M\nip\=lm2n\nled\=2\nlvl\=None____\nLwIPVariant\=v2mss1460\nResetMethod\=nodemcu\nssl\=all\nUploadSpeed\=921600\nvt\=iram\nVTable\=flash\nwipe\=none\nxtal\=80
+environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.MENU/value=baud\=921600\nCpuFrequency\=80\nCrystalFreq\=26\ndbg\=Disabled\nDebug\=Disabled\nDebugLevel\=None____\neesz\=4M\nexception\=legacy\nFlashErase\=none\nFlashSize\=4M3M\nip\=lm2n\nled\=2\nlvl\=None____\nLwIPVariant\=v2mss536\nResetMethod\=nodemcu\nssl\=all\nUploadSpeed\=921600\nvt\=iram\nVTable\=flash\nwipe\=none\nxtal\=80
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OBJCOPY/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OBJCOPY/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.OBJCOPY/value=${A.RECIPE.OBJCOPY.HEX.PATTERN}
