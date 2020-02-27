@@ -237,33 +237,7 @@ void RAMFUNC Controller::writeServoPosition(int degree, bool minValueSwitchOff,b
 
 void Controller::SetFsmState(FsmState value){
 	fsmState = value;
-//	pid.SetTunings(kp,ki,kd);
-//	_dynamicSetpoint=_setpoint;
-//	updatePidStatus();
 }
-
-//void Controller::updatePidStatus(){
-//	Serial.print(F("State:"));Serial.println(fsmState);
-//	TcpComm->print(F("State:"));TcpComm->println(fsmState);
-//	//looks not useful anymore. replace with fixed values when
-//	pid.SetTunings(kp,ki,kd);
-//	_dynamicSetpoint=_setpoint;
-////	switch(fsmState){
-////	case psIdle:
-////			pid.SetTunings(kp,ki,kd);
-////			_dynamicSetpoint=_setpoint;
-////		break;
-////	case psWaitDelay:
-////	case psRampimg:
-////			_dynamicSetpoint=_setpoint; //this has to be recalculated time by time
-////			pid.SetTunings(kp,ki,kd);
-////		break;
-////	case psKeepTemp:
-////			_dynamicSetpoint=_setpoint;
-////			pid.SetTunings(kp,ki,kd);
-////		break;
-////	}
-//}
 
 void Controller::startRamp(){
 	approacingStartMillis = millis();
@@ -274,12 +248,13 @@ void Controller::startRamp(){
 	}
 	lastDynSetpointCalcMillis=0;
 }
+
+//detect that heating has begun active if temperature has increased at least 0.1 deegres
 bool Controller::waitRampStart(){
 	return temperature<approacingStartTemp+0.1;
 }
 void Controller::updateRamp(){
 	float now = millis();
-//	Serial.print(F("Update ramp: "));Serial.print(lastDynSetpointCalcMillis);
 
 	if (lastDynSetpointCalcMillis==0)lastDynSetpointCalcMillis=now;
 	float deltaSecs   = (now-lastDynSetpointCalcMillis)/(float)1000.0;
@@ -290,7 +265,7 @@ void Controller::updateRamp(){
 		float elapsedDeltaTemp = _ramp/(float)60.0*elapsedSecs; //delta temp after elapsedSecs from start
 
 		_dynamicSetpoint = approacingStartTemp + elapsedDeltaTemp; //calc new setpoint according to ramp
-		if(fsmState==psWaitDelay || _dynamicSetpoint>_setpoint){ //target is Setpoit: do not exeed it!
+		if(fsmState==psWaitDelay || _dynamicSetpoint>_setpoint){ //target is Setpoint: do not exeed it!
 			_dynamicSetpoint = _setpoint;
 		}
 
@@ -453,18 +428,14 @@ void Controller::update(int encoderPos, boolean encoderPress){
 				pid.SetMode(AUTOMATIC);
 			}
 
-			if(_ramp<=0 && fsmState!=psKeepTemp){
-				SetFsmState(psKeepTemp);
+			if(_ramp<=0){
+				if(fsmState!=psKeepTemp){
+					SetFsmState(psKeepTemp);
+				}
 				_dynamicSetpoint=_setpoint;
 			}
 
-			if(_ramp<=0){
-				//no ramp is done, bit some logic is based on DynSetpoint, so set it to Setpoint
-				_dynamicSetpoint = _setpoint;
-			}
-
-//			Serial.print(F("Current state:"));Serial.println(fsmState);
-//			UdpTracer->print(F("Current state:"));UdpTracer->println(fsmState);
+			/*Handle fsm state, ramp and DynamicSetpoint*/
 			switch(fsmState){
 			case psIdle:
 				if(!probe.isReady()) break; //temperature reading not yet ready, then a false reading is executed
@@ -479,15 +450,16 @@ void Controller::update(int encoderPos, boolean encoderPress){
 				TcpComm->print(F("NEW State:"));TcpComm->println(fsmState);
 				break;
 			case psWaitDelay:
-			case psRampimg:
-				if(fsmState == psWaitDelay && waitRampStart()){
+				if(waitRampStart()){
 					SetFsmState(psRampimg);
 					pid.Reset();
 					startRamp();
+					break;
 				}
-				if(temperature<=_setpoint-1){
-					updateRamp();
-				} else if(temperature>_setpoint){
+				//also if waiting for ramp proceed to ramp handling
+			case psRampimg:
+				updateRamp(); //ramp until setpoint. it's the most graceful way to approach to setpoint
+				if(temperature>_setpoint){
 					SetFsmState(psKeepTemp);
 					_dynamicSetpoint=_setpoint;
 					pid.Reset();//avoid delay in switching off
@@ -505,9 +477,10 @@ void Controller::update(int encoderPos, boolean encoderPress){
 //				}
 				break;
 			}
+
 			bool computed = false;
 			if((_dynamicSetpoint - temperature)<3.5){
-				//activate pid modulation
+				//activate pid modulation to follow dynamic setpoint
 				computed = pid.Compute();
 				writeServoPosition(Output,true);
 			}else{
