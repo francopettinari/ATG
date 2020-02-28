@@ -9,7 +9,6 @@
 #define TEMPPROBE_H_
 
 #include <Arduino.h>
-#include <OneWire.h>
 #include <DallasTemperature.h>
 
 class TemperatureProbe {

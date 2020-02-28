@@ -8,7 +8,6 @@
 #include <WiFiUdp.h>
 
 #include "TCPComm.h"
-#include <gdb.h>
 #include "Controller.h"
 
 
@@ -155,12 +154,12 @@ void sendClients(String s){
 	for(int i = 0; i < MAX_SRV_CLIENTS; i++){
 		if (serverClients[i] && serverClients[i].connected()){
 		  serverClients[i].print(s);
-		  serverClients[i].flush();
+//		  serverClients[i].flush();
 		}
 	}
 }
 
-void RAMFUNC loop() {
+void loop() {
 	pidState.update(enc.read(),isEncoderPressed);
 
 	ESP.wdtFeed();
