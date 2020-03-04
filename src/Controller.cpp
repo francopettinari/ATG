@@ -17,17 +17,12 @@ Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, kp, ki,
 	servo.attach(D8);  // attaches the servo on pin 9 to the servo object
 	//setServoPosition(0);
 	currentMenu = new MainMenu();
-	approacingStartMillis=0;
+	approacingStartMillis = 0;
+	approacingEnd1Millis = 0;
+	approacingEnd2Millis = 0;
 
 //	dTemperature=0;
 
-	pid.myPTerm = &myPTerm;
-	pid.myITerm = &myITerm;
-	pid.myDTerm = &myDTerm;
-	pid.myDInput= &myDInput;
-	pid.myDTimeMillis= &myDTimeMillis;
-	pid.myError = &myError;
-	pid.myOutputSum = &myOutputSum;
 	PrevSwitchOnOffMillis = 0;
 }
 
@@ -145,11 +140,11 @@ void RAMFUNC Controller::writeServoPosition(int degree, bool minValueSwitchOff,b
 
 	float now = millis();
 	if(log){
-		Serial.print(F("Current temp state: "));Serial.println(TempState);
-		Serial.print(F("TimeToLastSwitch:"));Serial.print(now-PrevSwitchOnOffMillis);
-		Serial.print(F(" Degree:"));Serial.print(degree);
-		Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
-		Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
+//		Serial.print(F("Current temp state: "));Serial.println(TempState);
+//		Serial.print(F("TimeToLastSwitch:"));Serial.print(now-PrevSwitchOnOffMillis);
+//		Serial.print(F(" Degree:"));Serial.print(degree);
+//		Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
+//		Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
 	}
 	if(degree<servoMinValue || (minValueSwitchOff && degree==servoMinValue)) degree=0; //switch off on minVal
 	switch(TempState){
@@ -241,7 +236,11 @@ void Controller::SetFsmState(FsmState value){
 
 void Controller::startRamp(){
 	approacingStartMillis = millis();
+	approacingEnd1Millis = 0;
+	approacingEnd2Millis = 0;
 	approacingStartTemp = temperature;
+	approacingEnd1Temp=0;
+	approacingEnd2Temp=0;
 	_dynamicSetpoint=temperature; //gives an impulse so that it must start to move up
 	if(_dynamicSetpoint>_setpoint){
 		_dynamicSetpoint=_setpoint;
@@ -257,14 +256,34 @@ void Controller::updateRamp(){
 	float now = millis();
 
 	if (lastDynSetpointCalcMillis==0)lastDynSetpointCalcMillis=now;
-	float deltaSecs   = (now-lastDynSetpointCalcMillis)/(float)1000.0;
-	float elapsedSecs = (now-approacingStartMillis)/(float)1000.0;
-//	Serial.print(F(" "));Serial.println(deltaSecs);
-	if(deltaSecs>5){
-		//		Serial.print(DynamicSetpoint);Serial.print(F(" "));Serial.print(pDynamicSetpoint);
-		float elapsedDeltaTemp = _ramp/(float)60.0*elapsedSecs; //delta temp after elapsedSecs from start
+	float deltaMillis = now-lastDynSetpointCalcMillis;
+	if(deltaMillis>5000){
 
-		_dynamicSetpoint = approacingStartTemp + elapsedDeltaTemp; //calc new setpoint according to ramp
+		float   currRamp = _ramp;
+		float   currStartMillis = approacingStartMillis;
+		double  currStartTemp = approacingStartTemp;
+		if(_setpoint-temperature<2){
+			if(approacingEnd1Millis==0){
+				approacingEnd1Millis=now;
+				approacingEnd1Temp = _dynamicSetpoint;
+			}
+			currStartMillis = approacingEnd1Millis;
+			currStartTemp = approacingEnd1Temp;
+			currRamp=currRamp/2;
+		}
+		if(_setpoint-temperature<1){
+			if(approacingEnd2Millis==0){
+				approacingEnd2Millis=now;
+				approacingEnd2Temp = _dynamicSetpoint;
+			}
+			currStartMillis = approacingEnd2Millis;
+			currStartTemp = approacingEnd2Temp;
+			currRamp=currRamp/2;
+		}
+		float elapsedSecs = (now-currStartMillis)/1000.0f;
+		float elapsedDeltaTemp = currRamp/60.0f*elapsedSecs; //delta temp after elapsedSecs from start
+
+		_dynamicSetpoint = currStartTemp + elapsedDeltaTemp; //calc new setpoint according to ramp
 		if(fsmState==psWaitDelay || _dynamicSetpoint>_setpoint){ //target is Setpoint: do not exeed it!
 			_dynamicSetpoint = _setpoint;
 		}
@@ -295,12 +314,7 @@ void Controller::sendStatus(){
 	TcpComm->print(F(";TEMP:")    );TcpComm->print(temperature,4);
 	TcpComm->print(F(";OUT:")     );TcpComm->print(Output,4);
 	TcpComm->print(F(";OUTPERC:") );TcpComm->print((float)getOutPerc(),0);
-	TcpComm->print(F(";SERVOPOS:"));TcpComm->print((float)servoPosition,0);
-	TcpComm->print(F(";PGAIN:")   );TcpComm->print(myPTerm,4);
-	TcpComm->print(F(";IGAIN:")   );TcpComm->print(myITerm,4);
-	TcpComm->print(F(";DGAIN:")   );TcpComm->print(myDTerm,4);
-	TcpComm->print(F(";OUTSUM:")  );TcpComm->print(myOutputSum,4);
-	TcpComm->print(F(";PIDDTEMP:"));TcpComm->println(myDInput,4);
+	TcpComm->print(F(";SERVOPOS:"));TcpComm->println((float)servoPosition,0);
 
 	lastUdpDataSent = now;
 }
@@ -332,7 +346,6 @@ void Controller::update(int encoderPos, boolean encoderPress){
 	   state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
 	{
 		pid.SetMode(MANUAL);
-		pid.Initialize();
 
 	}
 
@@ -439,15 +452,14 @@ void Controller::update(int encoderPos, boolean encoderPress){
 			switch(fsmState){
 			case psIdle:
 				if(!probe.isReady()) break; //temperature reading not yet ready, then a false reading is executed
-				if(temperature<=_setpoint-1){
+				if(temperature<=_setpoint-deltaKeepTemp){
 					SetFsmState(psWaitDelay);
 					startRamp();
-				} else if(temperature>_setpoint-1 /*&& temp<Setpoint*/){
+				} else if(temperature>_setpoint-deltaKeepTemp){
 					SetFsmState(psKeepTemp);
 					_dynamicSetpoint=_setpoint;
 				}
-				Serial.print(F("NEW State:"));Serial.println(fsmState);
-				TcpComm->print(F("NEW State:"));TcpComm->println(fsmState);
+
 				break;
 			case psWaitDelay:
 				if(waitRampStart()){
@@ -459,6 +471,7 @@ void Controller::update(int encoderPos, boolean encoderPress){
 				//also if waiting for ramp proceed to ramp handling
 			case psRampimg:
 				updateRamp(); //ramp until setpoint. it's the most graceful way to approach to setpoint
+
 				if(temperature>_setpoint){
 					SetFsmState(psKeepTemp);
 					_dynamicSetpoint=_setpoint;
@@ -478,14 +491,18 @@ void Controller::update(int encoderPos, boolean encoderPress){
 				break;
 			}
 
-			bool computed = false;
-			if((_dynamicSetpoint - temperature)<3.5){
-				//activate pid modulation to follow dynamic setpoint
-				computed = pid.Compute();
-				writeServoPosition(Output,true);
+			bool computed = pid.Compute();
+			if(temperature >=_dynamicSetpoint){
+				//force output to 0
+				writeServoPosition(0,true);
 			}else{
-				//max fire applied
-				writeServoPosition(servoMaxValue,true);
+				if((_dynamicSetpoint - temperature)<3.5){
+					//activate pid modulation to reach
+					writeServoPosition(Output,true);
+				}else{
+					//max fire applied
+					writeServoPosition(servoMaxValue,true);
+				}
 			}
 			break;
 		}

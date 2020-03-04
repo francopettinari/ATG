@@ -59,22 +59,16 @@ class PID
 	double GetKd();						  // where it's important to know what is actually 
 	int GetMode();						  //  inside the PID.
 	int GetDirection();					  //
-
-	double *myPTerm;
-	double *myITerm;
-	double *myDTerm;
-	double *myDInput;
-	double *myDTimeMillis;
-	double *myError;
-	double *myOutputSum;
+	bool isPoE(){return pOnE;};
+	bool isPoM(){return !pOnE;};
 
 	void Reset(){
 		outputSum=0;
 	}
-	void Initialize();
   private:
-	
 
+	void Initialize();
+	
 	double dispKp;				// * we'll hold on to the tuning parameters in user-entered 
 	double dispKi;				//   format for display purposes
 	double dispKd;				//
@@ -91,8 +85,6 @@ class PID
     double *mySetpoint;           //   PID, freeing the user from having to constantly tell us
                                   //   what these values are.  with pointers we'll just know.
 			  
-
-
 	unsigned long lastTime;
 	double outputSum, lastInput;
 

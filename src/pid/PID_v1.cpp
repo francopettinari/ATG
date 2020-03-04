@@ -65,33 +65,20 @@ bool PID::Compute()
       /*Compute all the working error variables*/
       double input = *myInput;
       double error = *mySetpoint - input;
-      *myError = error;
       double dInput = (input - lastInput);
-      *myDInput = dInput;
-      *myDTimeMillis = timeChange;
-
-      //Serial.printf("err=%.3f-%.3f, %.3f x %.3f = %.3f\n",*mySetpoint,input,ki,error,(ki * error));
-      *myITerm = (ki * error);
       outputSum+= (ki * error);
 
       /*Add Proportional on Measurement, if P_ON_M is specified*/
-      if(!pOnE){
-    	  *myPTerm = -(kp * dInput);
-    	  outputSum-= kp * dInput;
-      }
+      if(!pOnE) outputSum-= kp * dInput;
 
       if(outputSum > outMax) outputSum= outMax;
       else if(outputSum < outMin) outputSum= outMin;
-      *myOutputSum=outputSum;
 
       /*Add Proportional on Error, if P_ON_E is specified*/
-	  double output;
-      if(pOnE) {
-    	  *myPTerm = -(kp * error);
-    	  output = kp * error;
-      }
+	   double output;
+      if(pOnE) output = kp * error;
       else output = 0;
-      *myDTerm = -(kd * dInput);
+
       /*Compute Rest of PID Output*/
       output += outputSum - kd * dInput;
 
