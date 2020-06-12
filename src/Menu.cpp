@@ -193,8 +193,8 @@ void KpPidConfigMenu::OnSelectedInMenu(){
 void KpPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	Serial.print(F(">>>>>> Kp Enc Mov <<<<<<  "));Serial.println(pidState.state);
 
-	int ikp = (int)pidState.kp;
-	float decPart = (pidState.kp-ikp);
+	int ikp = (int)pidState.GetKp();
+	float decPart = (pidState.GetKp()-ikp);
 
 	if(pidState.state==svPidKpiConfig){
 		if(mvmnt==EncMoveCCW){
@@ -202,7 +202,7 @@ void KpPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 		}else if(mvmnt==EncMoveCW){
 			ikp++;
 		}
-		pidState.kp=ikp+decPart;
+		pidState.SetKp(ikp+decPart);
 	} else if(pidState.state==svPidKpdConfig){
 		decPart = (int)(decPart*100);
 		if(mvmnt==EncMoveCCW){
@@ -212,7 +212,7 @@ void KpPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 			//Serial.println(F("CW"));
 			decPart+=1.0;
 		}
-		pidState.kp=ikp+(decPart/100.0);
+		pidState.SetKp(ikp+(decPart/100.0));
 	} else if(pidState.state==svPidSampleTimeConfig){
 		if(mvmnt==EncMoveCCW){
 			pidState.pidSampleTimeSecs-=1.0;
@@ -240,34 +240,34 @@ void KiPidConfigMenu::OnSelectedInMenu(){
 }
 void KiPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(pidState.state==svPidKiiConfig){
-		int iki = (int)pidState.ki;
-		float decPart = (pidState.ki-iki);
+		int iki = (int)pidState.GetKi();
+		float decPart = (pidState.GetKi()-iki);
 		if(mvmnt==EncMoveCCW){
 			iki--;
 		}else if(mvmnt==EncMoveCW){
 			iki++;
 		}
-		pidState.ki=iki+decPart;
+		pidState.SetKi(iki+decPart);
 	} else if(pidState.state==svPidKidConfig) {
-		int iki = (int)pidState.ki;
-		float decPart = (pidState.ki-iki);
+		int iki = (int)pidState.GetKi();
+		float decPart = (pidState.GetKi()-iki);
 		decPart = (int)(decPart*100);
 		if(mvmnt==EncMoveCCW){
 			decPart-=1.0;
 		}else if(mvmnt==EncMoveCW){
 			decPart+=1.0;
 		}
-		pidState.ki=iki+(decPart/100.0);
+		pidState.SetKi(iki+(decPart/100.0));
 	}else if(pidState.state==svPidKicConfig) {
-		int iki = (int)pidState.ki;
-		float millPart = (pidState.ki-iki);
+		int iki = (int)pidState.GetKi();
+		float millPart = (pidState.GetKi()-iki);
 		millPart = (int)(millPart*1000);
 		if(mvmnt==EncMoveCCW){
 			millPart-=1.0;
 		}else if(mvmnt==EncMoveCW){
 			millPart+=1.0;
 		}
-		pidState.ki=iki+(millPart/1000.0);
+		pidState.SetKi(iki+(millPart/1000.0));
 	}
 }
 void KiPidConfigMenu::HandleEncoderPush(EncoderPushButtonState pst){
@@ -290,24 +290,24 @@ void KdPidConfigMenu::OnSelectedInMenu(){
 }
 void KdPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(pidState.state==svPidKdiConfig) {
-		int ikd = (int)pidState.kd;
-		float decPart = (pidState.kd-ikd);
+		int ikd = (int)pidState.GetKd();
+		float decPart = (pidState.GetKd()-ikd);
 		if(mvmnt==EncMoveCCW){
 			ikd-=1.0;
 		}else if(mvmnt==EncMoveCW){
 			ikd+=1.0;
 		}
-		pidState.kd=ikd+decPart;
+		pidState.SetKd(ikd+decPart);
 	} else if(pidState.state==svPidKddConfig) {
-		int ikd = (int)pidState.kd;
-		float decPart = (pidState.kd-ikd);
+		int ikd = (int)pidState.GetKd();
+		float decPart = (pidState.GetKd()-ikd);
 		decPart = (int)(decPart*100);
 		if(mvmnt==EncMoveCCW){
 			decPart-=1.0;
 		}else if(mvmnt==EncMoveCW){
 			decPart+=1.0;
 		}
-		pidState.kd=ikd+(decPart/100.0);
+		pidState.SetKd(ikd+(decPart/100.0));
 	}
 }
 void KdPidConfigMenu::HandleEncoderPush(EncoderPushButtonState pst){

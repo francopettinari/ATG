@@ -18,7 +18,7 @@ LCDBuffer::LCDBuffer(const int width, const int height) {
 
 	this->_buffer = new char[this->_size];
 
-	Wire.begin(D2,D1);
+	Wire.begin(D2,D1); //ESP32 GPIO12 GPIO14 pin 13, pin 12
 	_lcd->begin(20,4);
 	_lcd->clear();
 }
@@ -45,9 +45,6 @@ unsigned short crc16(char* data_p, unsigned char length){
 
 
 void LCDBuffer::render() {
-//	unsigned short currentCRC = crc16(_buffer, 16);
-//	if(currentCRC==previousCRC) return;
-//	previousCRC = currentCRC;
 #ifdef LCD_DEBUG
 	Serial.println(F("--------------------"));
 	for(byte y=0;y<_height;y++){
@@ -59,8 +56,6 @@ void LCDBuffer::render() {
 	}
 	Serial.println(F("--------------------"));
 #endif
-//	this->_lcd->print(_buffer);
-	//Serial.println(F("LCD render 1"));
 	char line[_width+1];
 	for (int y = 0; y < _height; y++) {
 		memcpy(line,&_buffer[y*_width],_width);
@@ -68,7 +63,6 @@ void LCDBuffer::render() {
 		this->_lcd->setCursor(0,y);
 		this->_lcd->write(line,_width);
 	}
-	//Serial.println(F("LCD render 10"));
 }
 
 void LCDBuffer::PrintPChar(const int x, const int y,const char *s) {

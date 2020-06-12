@@ -11,17 +11,14 @@
 #include <gdb.h>
 #include "TCPComm.h"
 
-Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, kp, ki, kd,P_ON_E, DIRECT){
+Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, _kp, _ki, _kd,P_ON_E, DIRECT){
 	pid.SetSampleTime(pidSampleTimeSecs*1000);
 	pid.SetMode(MANUAL);
-	servo.attach(D8);  // attaches the servo on pin 9 to the servo object
-	//setServoPosition(0);
+	servo.attach(D8);  // attaches the servo on pin 9 to the servo object //ESP32 -> D25,pin 9
 	currentMenu = new MainMenu();
 	approacingStartMillis = 0;
 	approacingEnd1Millis = 0;
 	approacingEnd2Millis = 0;
-
-//	dTemperature=0;
 
 	PrevSwitchOnOffMillis = 0;
 }
@@ -128,6 +125,8 @@ void RAMFUNC Controller::_writeServo(int value){
 		delay(15);
 		servoPosition = degree;
 	}
+
+
 }
 
 /**
@@ -136,7 +135,7 @@ void RAMFUNC Controller::_writeServo(int value){
  *
  * minValueSwitchOff=false only during configuration. All other cases it is true
  */
-void RAMFUNC Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
+void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
 
 	float now = millis();
 	if(log){
@@ -241,7 +240,7 @@ void Controller::startRamp(){
 	approacingStartTemp = temperature;
 	approacingEnd1Temp=0;
 	approacingEnd2Temp=0;
-	_dynamicSetpoint=temperature; //gives an impulse so that it must start to move up
+	_dynamicSetpoint=temperature; //ramp start from current temperature
 	if(_dynamicSetpoint>_setpoint){
 		_dynamicSetpoint=_setpoint;
 	}
@@ -249,10 +248,11 @@ void Controller::startRamp(){
 }
 
 //detect that heating has begun active if temperature has increased at least 0.1 deegres
-bool Controller::waitRampStart(){
-	return temperature<approacingStartTemp+0.1;
+bool Controller::rampStarted(){
+	return temperature>=approacingStartTemp+0.1;
 }
 void Controller::updateRamp(){
+	//if(fsmState!=psRampimg) return;
 	float now = millis();
 
 	if (lastDynSetpointCalcMillis==0)lastDynSetpointCalcMillis=now;
@@ -262,23 +262,23 @@ void Controller::updateRamp(){
 		float   currRamp = _ramp;
 		float   currStartMillis = approacingStartMillis;
 		double  currStartTemp = approacingStartTemp;
-		if(_setpoint-temperature<2){
+		if(_setpoint-_dynamicSetpoint<2){
 			if(approacingEnd1Millis==0){
 				approacingEnd1Millis=now;
 				approacingEnd1Temp = _dynamicSetpoint;
 			}
 			currStartMillis = approacingEnd1Millis;
 			currStartTemp = approacingEnd1Temp;
-			currRamp=currRamp/2;
+			currRamp=currRamp/1.5;
 		}
-		if(_setpoint-temperature<1){
+		if(_setpoint-_dynamicSetpoint<1){
 			if(approacingEnd2Millis==0){
 				approacingEnd2Millis=now;
 				approacingEnd2Temp = _dynamicSetpoint;
 			}
 			currStartMillis = approacingEnd2Millis;
 			currStartTemp = approacingEnd2Temp;
-			currRamp=currRamp/2;
+			currRamp=currRamp/1.5;
 		}
 		float elapsedSecs = (now-currStartMillis)/1000.0f;
 		float elapsedDeltaTemp = currRamp/60.0f*elapsedSecs; //delta temp after elapsedSecs from start
@@ -299,13 +299,16 @@ bool Controller::isAutoState(int state){
 }
 
 void Controller::sendStatus(){
-//	Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
+	//Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
 	//Serial.print(Setpoint,4);Serial.print(F(" "));
-	Serial.println(temperature,4);Serial.print(F(" "));
+	//Serial.println(temperature,4);Serial.print(F(" "));
 	//Serial.println(Output);
 	float now = millis();
 	TcpComm->print(F("LOG:")      );TcpComm->print(now,4);
 	TcpComm->print(F(";EXPRQID:") );TcpComm->print((float)expectedReqId,0);
+	TcpComm->print(F(";KP:")   );TcpComm->print((float)pid.GetKp(),4);
+	TcpComm->print(F(";KI:")   );TcpComm->print((float)pid.GetKi(),4);
+	TcpComm->print(F(";KD:")   );TcpComm->print((float)pid.GetKd(),4);
 	TcpComm->print(F(";STATE:")   );TcpComm->print((float)autoModeOn,0);
 	TcpComm->print(F(";FSM_STATE:")   );TcpComm->print(fsmState);
 	TcpComm->print(F(";SETP:")    );TcpComm->print(_setpoint,4);
@@ -335,7 +338,7 @@ void Controller::setOutPerc(double val){
 	writeServoPosition(Output,true,true);
 }
 
-void Controller::update(int encoderPos, boolean encoderPress){
+void RAMFUNC Controller::update(int encoderPos, boolean encoderPress){
     double tempp = probe.readTemperature();
 	setTemperature(tempp);
 
@@ -411,7 +414,6 @@ void Controller::update(int encoderPos, boolean encoderPress){
 
 	//fsm idle in case not automatic
 	if(autoModeOn==0 || !isAutoState(state)){
-		TcpComm->print(F("2 :"));TcpComm->println(fsmState);
 		fsmState = psIdle;
 	}
 
@@ -435,15 +437,16 @@ void Controller::update(int encoderPos, boolean encoderPress){
 			//if here, pid should be in auto. if not, then let's force it!
 			if(pid.GetMode()!=AUTOMATIC){
 				Serial.println(F("PID switched to AUTOMATIC"));
-				pid.SetTunings(kp,ki,kd,P_ON_E);
+				pid.SetTunings(_kp,_ki,_kd,P_ON_E);
 				pid.SetControllerDirection(DIRECT);
 				pid.SetOutputLimits(servoMinValue,servoMaxValue);
 				pid.SetMode(AUTOMATIC);
 			}
 
+			//FIXME: move to startRamp/updateRamp ?
 			if(_ramp<=0){
-				if(fsmState!=psKeepTemp){
-					SetFsmState(psKeepTemp);
+				if(fsmState!=psSoak){
+					SetFsmState(psSoak);
 				}
 				_dynamicSetpoint=_setpoint;
 			}
@@ -451,38 +454,43 @@ void Controller::update(int encoderPos, boolean encoderPress){
 			/*Handle fsm state, ramp and DynamicSetpoint*/
 			switch(fsmState){
 			case psIdle:
-				if(!probe.isReady()) break; //temperature reading not yet ready, then a false reading is executed
-				if(temperature<=_setpoint-deltaKeepTemp){
-					SetFsmState(psWaitDelay);
-					startRamp();
-				} else if(temperature>_setpoint-deltaKeepTemp){
-					SetFsmState(psKeepTemp);
-					_dynamicSetpoint=_setpoint;
-				}
-
+				SetFsmState(psWaitDelay);
+				startRamp();
 				break;
 			case psWaitDelay:
-				if(waitRampStart()){
+				//ramp is started, but we also must wait that also temperature starts to move.
+				//we detect that temperature has started to move if
+				//it is at least 0.2 degrees more that initial value
+				if(rampStarted()){
+					//ramp start has been detected: temp >= initialRampTemp+0.2
+					//change state, reset pid and recalculate ramp start so that we adjust delays
 					SetFsmState(psRampimg);
-					pid.Reset();
+					//pid.Reset(); //avoiding reset can avoid heat jumps. at this point some windup is present, but can be soon smoothedfrom temperature increasing
 					startRamp();
 					break;
 				}
-				//also if waiting for ramp proceed to ramp handling
+				//if ramp not yet started we must anyway continue to update the ramp value so that
+				//heat output is step by step increased and head change can be detected.
+				//for this reason breack is missing.
 			case psRampimg:
 				updateRamp(); //ramp until setpoint. it's the most graceful way to approach to setpoint
 
 				if(temperature>_setpoint){
-					SetFsmState(psKeepTemp);
+					SetFsmState(psSoak);
 					_dynamicSetpoint=_setpoint;
 					pid.Reset();//avoid delay in switching off
 				}
 				break;
-			case psKeepTemp:
-				//this status switch is going to provoke a jump in the output:
-				//because status==psKeepTemp means that we arrived to setpoint and then themperature has
-				//falled down. if now status==psKeepTemp and temperature<=_setpoint-1 the output can be something like 25%-50%
-				//resetting state to psIdle will restart the ramping from 0%. this is wrong: now we only need much power, not less!
+			case psSoak:
+				//arrived to target temperature. now let's keep it stable
+				//no more leave this status. no more ramp.
+				//only setpoint change can provoke a ramp.
+
+
+//				this status switch is going to provoke a jump in the output:
+//				because status==psKeepTemp means that we arrived to setpoint and then themperature has
+//				falled down. if now status==psSoakTemp and temperature<=_setpoint-1 the output can be something like 25%-50%
+//				resetting state to psIdle will restart the ramping from 0%. this is wrong: now we only need much power, not less!
 //				if(_ramp>0 && temperature<=_setpoint-1){
 //					TcpComm->print(F("1 :"));TcpComm->print(temperature,2);TcpComm->println(fsmState);
 //					SetFsmState(psIdle);//it's a way to restart
@@ -490,20 +498,19 @@ void Controller::update(int encoderPos, boolean encoderPress){
 //				}
 				break;
 			}
-
 			bool computed = pid.Compute();
-			if(temperature >=_dynamicSetpoint){
-				//force output to 0
-				writeServoPosition(0,true);
-			}else{
-				if((_dynamicSetpoint - temperature)<3.5){
-					//activate pid modulation to reach
-					writeServoPosition(Output,true);
-				}else{
-					//max fire applied
-					writeServoPosition(servoMaxValue,true);
-				}
-			}
+//			if(temperature >_dynamicSetpoint){
+//				//force output to 0
+//				//Output = 0;
+//				//writeServoPosition(Output,true);
+//				//pid.Reset();
+//			}else if((_dynamicSetpoint - temperature)>7){
+//				//too far from _dynamicSetpoint: max fire applied
+//				Output = servoMaxValue;
+//				pid.Reset();
+//			}
+			writeServoPosition(Output,true);
+
 			break;
 		}
 		break;
@@ -570,17 +577,17 @@ void Controller::loadFromEEProm(){
 	addr+=sizeof(_setpoint);Serial.print(F("Size: "));Serial.println(addr);
 	Serial.print(F("Readed setpoint: "));Serial.println(_setpoint);
 
-	kp = EEPROM.get(addr, kp);
-	addr+=sizeof(kp);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed kp: "));Serial.println(kp);
+	_kp = EEPROM.get(addr, _kp);
+	addr+=sizeof(_kp);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed kp: "));Serial.println(_kp);
 
-	ki = EEPROM.get(addr, ki);
-	addr+=sizeof(ki);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed ki: "));Serial.println(ki);
+	_ki = EEPROM.get(addr, _ki);
+	addr+=sizeof(_ki);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed ki: "));Serial.println(_ki);
 
-	kd = EEPROM.get(addr, kd);
-	addr+=sizeof(kd);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed kd: "));Serial.println(kd);
+	_kd = EEPROM.get(addr, _kd);
+	addr+=sizeof(_kd);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed kd: "));Serial.println(_kd);
 
 	pidSampleTimeSecs = EEPROM.get(addr, pidSampleTimeSecs);
 	addr+=sizeof(pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
@@ -657,17 +664,17 @@ void Controller::savetoEEprom(){
 	EEPROM.put(addr, _setpoint);
 	addr+=sizeof(_setpoint);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. Kp: "));Serial.println(kp);
-	EEPROM.put(addr, kp);
-	addr+=sizeof(kp);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. Kp: "));Serial.println(_kp);
+	EEPROM.put(addr, _kp);
+	addr+=sizeof(_kp);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. Ki: "));Serial.println(ki);
-	EEPROM.put(addr, ki);
-	addr+=sizeof(ki);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. Ki: "));Serial.println(_ki);
+	EEPROM.put(addr, _ki);
+	addr+=sizeof(_ki);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. Kd: "));Serial.println(kd);
-	EEPROM.put(addr, kd);
-	addr+=sizeof(kd);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. Kd: "));Serial.println(_kd);
+	EEPROM.put(addr, _kd);
+	addr+=sizeof(_kd);Serial.print(F("Size: "));Serial.println(addr);
 
 	Serial.print(F("EEPROMWriteSettings. Sample time secs: "));Serial.println(pidSampleTimeSecs);
 	EEPROM.put(addr, pidSampleTimeSecs);

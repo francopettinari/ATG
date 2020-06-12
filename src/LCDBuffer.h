@@ -35,7 +35,6 @@ private:
   int _width, _height, _size;
   char *_buffer;
   LiquidCrystal_I2C *_lcd;
-  unsigned short previousCRC;
 };
 
 #endif /* LCDBUFFER_H_ */

@@ -41,7 +41,7 @@ enum FsmState {
 	psWaitDelay=5, //wait initial response after head has been applied
 	psRampimg=10,  //temperature ramping has started. dynSetpoint is calculated so that ramp is calculated
 	               //ramp is activated if temperature is more thasn 3°C far from setpoint
-	psKeepTemp=30};//setpoint has been reached. now temperature must be kept stable
+	psSoak=30};//setpoint has been reached. now temperature must be kept stable
 enum TemperatureTransitionState {TempStateUndefined=0,TempStateOff=10,TempStateOn=20,TempStateSwitchingOn=30,TempStateSwitchingOff=40};
 
 class Controller {
@@ -58,18 +58,53 @@ private:
 
 	bool isAutoState(int state);
 	byte eepromVer = 06;  // eeprom data tracking
+
+	double _kp=50,_ki=0.3,_kd=0;
+	//last used KP=50, ki=0.15
+	//good resolution(75, 0.4, 0)
+	//last calculated 2020.06.09 KP=35, KI=KP/(deadTime*3.3)=25/(15*3.3)=0,7 (15 secs delay)
 	PID pid;
 	TemperatureProbe probe;
 	Servo servo;
 	double _setpoint = 25,_dynamicSetpoint=25,_ramp=1;
 
-	int deltaKeepTemp = 2; //°C
 public:
 
+	float GetKp(){return _kp;}
+	void SetKp(float val){
+		_kp = val;
+		pid.SetTunings(_kp, _ki, _kd);
+	}
+	float GetKi(){return _ki;}
+	void SetKi(float val){
+		_ki = val;
+		pid.SetTunings(_kp, _ki, _kd);
+	}
+	float GetKd(){return _kd;}
+	void SetKd(float val){
+		_kd = val;
+		pid.SetTunings(_kp, _ki, _kd);
+	}
 	double setpoint(){ return _setpoint; }
-	void setSetpoint(double value){ _setpoint=value; }
-	void incSetpoint(){ _setpoint++; if(_setpoint>=120)_setpoint=120; }
-	void decSetpoint(){ _setpoint--; if(_setpoint<0)_setpoint=0;}
+	void setSetpoint(double value){
+		_setpoint=value;
+		if(fsmState==psSoak){
+			SetFsmState(psIdle);
+		}
+		updateRamp();
+	}
+	void incSetpoint(){
+		_setpoint++; if(_setpoint>=120)_setpoint=120;
+		if(fsmState==psRampimg){
+			updateRamp();
+		}
+	}
+	void decSetpoint(){
+		_setpoint--; if(_setpoint<0)_setpoint=0;
+		if(fsmState==psRampimg){
+			updateRamp();
+		}
+	}
 
 	double dynamicSetpoint(){ return _dynamicSetpoint; }
 	void setDynamicSetpoint(double value){ _dynamicSetpoint=value; }
@@ -103,7 +138,6 @@ public:
 	int servoPosition=0;
 
 	void writeServoPosition(int degree, bool minValueSwitchOff,bool log=true);
-	double kp=50,ki=0.15,kd=0;
 
 	int expectedReqId = 1; //expected request id
 
@@ -136,7 +170,7 @@ public:
 	void SetFsmState(FsmState value);
 //	void updatePidStatus();
 	void startRamp();
-	bool waitRampStart();
+	bool rampStarted();
 	void updateRamp();
 	void sendStatus();
 

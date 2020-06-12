@@ -9,6 +9,7 @@
 
 #include "TCPComm.h"
 #include "Controller.h"
+#include "gdb.h"
 
 
 
@@ -16,9 +17,9 @@ Controller pidState;
 LCDHelper lcdHelper;
 
 
-const byte encoderCk     = D5; // rotary encoder Clock
-const byte pushButtonPin = D7; // rotary encoder pushbutton
-const byte encoderDt     = D6; // rotary encoder Data
+const byte encoderCk     = D5; // rotary encoder Clock      // ESP32 GPIO4 pin 26
+const byte pushButtonPin = D7; // rotary encoder pushbutton // ESP32 GPIO0 pin 25
+const byte encoderDt     = D6; // rotary encoder Data       // ESP32 GPIO2 pin 24
 boolean isEncoderPressed;
 Encoder enc(encoderCk, encoderDt);
 
@@ -75,6 +76,14 @@ void setup() {
 
 }
 
+#define SP 1
+#define RP 2
+#define ST 3
+#define OUT 4
+#define KP 5
+#define KI 6
+#define KD 7
+
 char parOpenChar = '(';
 char separator = ':';
 char parClosedChar = ')';
@@ -86,6 +95,7 @@ void parseString(String s){
 		int semicolIdx2 = s.indexOf(separator,semicolIdx1+1);
 		int parClosedIdx = s.indexOf(parClosedChar);
 		String property = s.substring(parOpenIdx+1,semicolIdx1);
+		int iProperty   = property.toInt();
 		String cReqId   = s.substring(semicolIdx1+1,semicolIdx2);
 		String value    = s.substring(semicolIdx2+1,parClosedIdx);
 		int iReqId = cReqId.toInt();
@@ -97,28 +107,42 @@ void parseString(String s){
 			Serial.print(F("Received reqId: "));Serial.print(cReqId);Serial.print(F(". Expected: "));Serial.print(pidState.expectedReqId);
 			pidState.expectedReqId=iReqId;
 		}
-		if(property==F("SP")){
-			pidState.setSetpoint(value.toFloat());
-		} else if(property==F("RP")){
-			pidState.setRamp(value.toFloat());
-		} else if(property==F("ST")){
-			pidState.autoModeOn = value.toInt();
-			MainMenu* pmm = (MainMenu*) pidState.topMenu;
-			if(pidState.autoModeOn){
-				pmm->runMenu->switchMenu->Caption=F("Auto");
-			}else{
-				pmm->runMenu->switchMenu->Caption=F("Manual");
-			}
-		} else if(property==F("OUT")){
-			pidState.forcedOutput = value.toInt();
+		switch (iProperty){
+			case SP:
 
+				pidState.setSetpoint(value.toFloat());
+				break;
+			case RP:
+				pidState.setRamp(value.toFloat());
+				break;
+			case ST: {
+					pidState.autoModeOn = value.toInt();
+					MainMenu* pmm = (MainMenu*) pidState.topMenu;
+					if(pidState.autoModeOn){
+						pmm->runMenu->switchMenu->Caption=F("Auto");
+					}else{
+						pmm->runMenu->switchMenu->Caption=F("Manual");
+					}
+			    }
+				break;
+			case OUT:
+				pidState.forcedOutput = value.toInt();
+				break;
+			case KP:
+				pidState.SetKp(value.toFloat());
+				break;
+			case KI:
+				pidState.SetKi(value.toFloat());
+				break;
+			case KD:
+				pidState.SetKd(value.toFloat());
+				break;
 		}
 		pidState.savetoEEprom();
 		pidState.sendStatus();
 		TcpComm->Log(F("RESP:"));
 		TcpComm->Log(cReqId);
 		TcpComm->Log(F("\n"));
-
 	}
 
 }
@@ -159,7 +183,7 @@ void sendClients(String s){
 	}
 }
 
-void loop() {
+void RAMFUNC loop() {
 	pidState.update(enc.read(),isEncoderPressed);
 
 	ESP.wdtFeed();

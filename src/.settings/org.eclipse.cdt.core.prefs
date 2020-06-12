@@ -980,7 +980,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUI
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.DEBUG_LEVEL/value=
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.DEBUG_PORT/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.DEBUG_PORT/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.DEBUG_PORT/value=-DDEBUG_ESP_PORT\=Serial
+environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.DEBUG_PORT/value=
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.EXTRA_FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.EXTRA_FLAGS/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.EXTRA_FLAGS/value=-DESP8266
@@ -1055,7 +1055,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUI
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.VARIANT/value=esp8266\:nodemcu
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.VTABLE_FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.VTABLE_FLAGS/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.VTABLE_FLAGS/value=-DVTABLES_IN_FLASH
+environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.BUILD.VTABLE_FLAGS/value=-DVTABLES_IN_DRAM
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.COMPILER.AR.CMD/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.COMPILER.AR.CMD/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/A.COMPILER.AR.CMD/value=xtensa-lx106-elf-ar
@@ -1433,7 +1433,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJ
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.MAKE_LOCATION/value=E\:\\ProgramFiles\\sloeber\\arduinoPlugin\\tools\\make\\
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.MENU/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.MENU/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.MENU/value=CpuFrequency\=80\nCrystalFreq\=26\nDebug\=Serial\nDebugLevel\=None____\nFlashErase\=none\nFlashSize\=4M1M\nled\=11\nLwIPVariant\=v2mss536\nResetMethod\=nodemcu\nUploadSpeed\=921600\nVTable\=flash
+environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.MENU/value=CpuFrequency\=80\nCrystalFreq\=26\nDebug\=Disabled\nDebugLevel\=None____\nFlashErase\=none\nFlashSize\=4M1M\nled\=11\nLwIPVariant\=v2mss536\nResetMethod\=nodemcu\nUploadSpeed\=921600\nVTable\=heap
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.OBJCOPY/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.OBJCOPY/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083.1269442709/JANTJE.OBJCOPY/value=${A.RECIPE.OBJCOPY.HEX.PATTERN}
