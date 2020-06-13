@@ -44,52 +44,52 @@
 		<link>
 			<name>libraries/DallasTemperature</name>
 			<type>2</type>
-			<location>E:/ProgramFiles/SloeberNew/arduinoPlugin/libraries/DallasTemperature/3.8.0</location>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/DallasTemperature/3.8.0</locationURI>
 		</link>
 		<link>
 			<name>libraries/EEPROM</name>
 			<type>2</type>
-			<location>E:/ProgramFiles/SloeberNew/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/EEPROM</location>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/EEPROM</locationURI>
 		</link>
 		<link>
 			<name>libraries/ESP8266WebServer</name>
 			<type>2</type>
-			<location>E:/ProgramFiles/SloeberNew/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/ESP8266WebServer</location>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/ESP8266WebServer</locationURI>
 		</link>
 		<link>
 			<name>libraries/ESP8266WiFi</name>
 			<type>2</type>
-			<location>E:/ProgramFiles/SloeberNew/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/ESP8266WiFi</location>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/ESP8266WiFi</locationURI>
 		</link>
 		<link>
 			<name>libraries/ESP8266mDNS</name>
 			<type>2</type>
-			<location>E:/ProgramFiles/SloeberNew/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/ESP8266mDNS</location>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/ESP8266mDNS</locationURI>
 		</link>
 		<link>
 			<name>libraries/Encoder</name>
 			<type>2</type>
-			<location>E:/ProgramFiles/SloeberNew/arduinoPlugin/libraries/Encoder/1.4.1</location>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/Encoder/1.4.1</locationURI>
 		</link>
 		<link>
 			<name>libraries/OneWire</name>
 			<type>2</type>
-			<location>E:/ProgramFiles/SloeberNew/arduinoPlugin/libraries/OneWire/2.3.0</location>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/OneWire/2.3.0</locationURI>
 		</link>
 		<link>
 			<name>libraries/Servo</name>
 			<type>2</type>
-			<location>E:/ProgramFiles/SloeberNew/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/Servo</location>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/Servo</locationURI>
 		</link>
 		<link>
 			<name>libraries/Wire</name>
 			<type>2</type>
-			<location>E:/ProgramFiles/SloeberNew/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/Wire</location>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/esp8266/hardware/esp8266/2.4.2/libraries/Wire</locationURI>
 		</link>
 		<link>
 			<name>libraries/gdb</name>
 			<type>2</type>
-			<location>E:/ProgramFiles/SloeberNew/arduinoPlugin/libraries/gdb/1.0.0</location>
+			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/gdb/1.0.0</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
