@@ -1,6 +1,5 @@
 #include "Menu.h"
 #include "LCDHelper.h"
-#include <Encoder.h>
 
 #include "ATG.h"
 #include "Controller.h"

@@ -1,34 +1,73 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
+#include <WiFi.h>
 #include <WiFiUdp.h>
 #include <WString.h>
-#include "Arduino.h"
+#include <Arduino.h>
 #include "LCDHelper.h"
-#include <Encoder.h>
+#include <MD_REncoder.h>
 #include <WiFiUdp.h>
 
 #include "TCPComm.h"
 #include "Controller.h"
 #include "gdb.h"
+#include "LiquidCrystal-I2C/LiquidCrystal_I2C.h"
 
-
+LiquidCrystal_I2C lcdx(0x27, 20,4);
 
 Controller pidState;
-LCDHelper lcdHelper;
+LCDHelper lcdHelper(lcdx);
+
+#define ROTARY_PINA 15
+#define ROTARY_PINB 4
+#define ROTARY_PINSW 5
+
+long int rotValue=0, swValue=0;
+uint8_t state=0;
+
+portMUX_TYPE gpioMux = portMUX_INITIALIZER_UNLOCKED;
+
+void IRAM_ATTR isrAB() {
+   uint8_t s = state & 3;
+
+  portENTER_CRITICAL_ISR(&gpioMux);
+    if (digitalRead(ROTARY_PINA)) s |= 4;
+    if (digitalRead(ROTARY_PINB)) s |= 8;
+    switch (s) {
+      case 0: case 5: case 10: case 15:
+        break;
+      case 1: case 7: case 8: case 14:
+        rotValue++; break;
+      case 2: case 4: case 11: case 13:
+        rotValue--; break;
+      case 3: case 12:
+        rotValue += 2; break;
+      default:
+        rotValue -= 2; break;
+    }
+    state = (s >> 2);
+   portEXIT_CRITICAL_ISR(&gpioMux);
+
+}
 
 
-const byte encoderCk     = D5; // rotary encoder Clock      // ESP32 GPIO4 pin 26
-const byte pushButtonPin = D7; // rotary encoder pushbutton // ESP32 GPIO0 pin 25
-const byte encoderDt     = D6; // rotary encoder Data       // ESP32 GPIO2 pin 24
-boolean isEncoderPressed;
-Encoder enc(encoderCk, encoderDt);
+void IRAM_ATTR isrSWAll() {
+
+ portENTER_CRITICAL_ISR(&gpioMux);
+ swValue++;
+ portEXIT_CRITICAL_ISR(&gpioMux);
+
+}
+//const byte encoderCk     = 4; // rotary encoder Clock      // ESP32 GPIO4=T0 pin 26
+//const byte pushButtonPin = T1; // rotary encoder pushbutton // ESP32 GPIO0=T1 pin 25
+//const byte encoderDt     = 5; // rotary encoder Data       // ESP32 GPIO5=T2 pin 24
+//boolean isEncoderPressed;
+//MD_REncoder enc(encoderCk, encoderDt);
 
 const char *ssid = "ATG";
 const char *password = "log4fape@ATG";
 
-void ICACHE_RAM_ATTR  handleEncPush() {
-	isEncoderPressed = digitalRead(pushButtonPin) == 0;
-}
+//void ICACHE_RAM_ATTR  handleEncPush() {
+//	isEncoderPressed = digitalRead(pushButtonPin) == 0;
+//}
 
 //void readGasAlarm() {
 //	float sensorValue = analogRead(A0);         // Read the Sensor Values from Analog Pin A0
@@ -42,9 +81,19 @@ void ICACHE_RAM_ATTR  handleEncPush() {
 WiFiServer server(8266);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
 
-
-
 void setup() {
+	lcdx.begin();
+	lcdx.backlight();
+
+	//encoder setup
+	pinMode(ROTARY_PINA, INPUT_PULLUP);
+	pinMode(ROTARY_PINB, INPUT_PULLUP);
+	pinMode(ROTARY_PINSW, INPUT_PULLUP);
+
+	attachInterrupt(ROTARY_PINA, isrAB, CHANGE);
+	attachInterrupt(ROTARY_PINB, isrAB, CHANGE);
+	attachInterrupt(ROTARY_PINSW, isrSWAll, CHANGE);
+
 #ifdef DEBUG
 	uart_div_modify(0,UART_CLK_FREQ / 115200);
 	Serial.begin(115200);
@@ -62,14 +111,14 @@ void setup() {
 	server.begin();
     server.setNoDelay(true);
 
-	pinMode(pushButtonPin, INPUT_PULLUP);
-	attachInterrupt(pushButtonPin, handleEncPush, CHANGE);
+	//pinMode(pushButtonPin, INPUT_PULLUP);
+	//attachInterrupt(pushButtonPin, handleEncPush, CHANGE);
 	pidState.loadFromEEProm();
 
 	InitializeMenus();
 
-	ESP.wdtDisable();
-	ESP.wdtEnable(WDTO_8S);
+//	ESP.wdtDisable();
+//	ESP.wdtEnable(WDTO_8S);
 
 
 	Serial.println(F("Initialized from EEProm"));
@@ -183,10 +232,14 @@ void sendClients(String s){
 	}
 }
 
+long int prevSwVal = 0;
 void RAMFUNC loop() {
-	pidState.update(enc.read(),isEncoderPressed);
 
-	ESP.wdtFeed();
+	bool isEncoderPressed = (swValue-prevSwVal)>0;
+	prevSwVal = swValue;
+	pidState.update(rotValue,isEncoderPressed);
+
+//	ESP.wdtFeed();
 	lcdHelper.display(pidState);
 
 	handleClients();

@@ -14,7 +14,7 @@
 Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, _kp, _ki, _kd,P_ON_E, DIRECT){
 	pid.SetSampleTime(pidSampleTimeSecs*1000);
 	pid.SetMode(MANUAL);
-	servo.attach(D8);  // attaches the servo on pin 9 to the servo object //ESP32 -> D25,pin 9
+	servo.attach(DAC1);  // attaches the servo on pin 9 to the servo object //ESP32 -> GPIO25=DAC1,pin 9
 	currentMenu = new MainMenu();
 	approacingStartMillis = 0;
 	approacingEnd1Millis = 0;
@@ -27,7 +27,6 @@ MenuItem* Controller::decodeCurrentMenu(){
 	MainMenu* pmm = (MainMenu*) topMenu;
 
 	switch(state){
-	case svUndefiend:
 		case svMain :
 			return pmm;
 		case svRunAuto :
@@ -377,7 +376,7 @@ void RAMFUNC Controller::update(int encoderPos, boolean encoderPress){
 
     //Serial.print(F("State selection: "));Serial.println(stateSelection);
 	//Serial.print(F("Encoder push: "));Serial.println(encoderPushButtonState);
-	ESP.wdtFeed();
+//	ESP.wdtFeed();
 	setCurrentMenu(decodeCurrentMenu());
 
 	if(encMovement!=EncMoveNone){
@@ -410,7 +409,7 @@ void RAMFUNC Controller::update(int encoderPos, boolean encoderPress){
 	}
 
 	float now = millis();
-	ESP.wdtFeed();
+//	ESP.wdtFeed();
 
 	//fsm idle in case not automatic
 	if(autoModeOn==0 || !isAutoState(state)){
@@ -514,6 +513,8 @@ void RAMFUNC Controller::update(int encoderPos, boolean encoderPress){
 			break;
 		}
 		break;
+		default:
+		  break;
 	}
 	if(now-lastUdpDataSent>1000){
 		sendStatus();
@@ -637,7 +638,7 @@ void Controller::loadFromEEProm(){
 
 
 void Controller::savetoEEprom(){
-	ESP.wdtFeed();
+//	ESP.wdtFeed();
 	EEPROM.begin(512);
 
 	int addr = 0;
@@ -695,7 +696,7 @@ void Controller::savetoEEprom(){
 	EEPROM.commit();
 	EEPROM.end();
 
-	ESP.wdtFeed();
+//	ESP.wdtFeed();
 
 }
 

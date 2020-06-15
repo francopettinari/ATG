@@ -31,7 +31,7 @@ public:
 //	void print(byte col, byte row, int val);
 	void print(byte col, byte row,  __FlashStringHelper *ifsh);
 
-	LCDHelper();
+	LCDHelper(LiquidCrystal_I2C& lcd);
 };
 
 #endif /* LCDHELPER_H_ */

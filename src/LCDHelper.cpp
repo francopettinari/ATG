@@ -96,14 +96,15 @@ static const int DERIV_CHAR = 4;
 static const int DEGMIN_CHAR = 5;
 static const int TIMER_CHAR = 6;
 
-LCDHelper::LCDHelper():lcd(20,4) {
-	lcd.getLcd()->createChar(TEMPERATURE_CHAR, tempCustomChar);
-	lcd.getLcd()->createChar(DEGREE_CHAR, degreeCustomChar);
-	lcd.getLcd()->createChar(SETPOINT_CHAR, setpointCustomChar);
-	lcd.getLcd()->createChar(HEAT_CHAR, heatCustomChar);
-	lcd.getLcd()->createChar(DERIV_CHAR, derivateCustomChar);
-	lcd.getLcd()->createChar(DEGMIN_CHAR, degMinChar);
-	lcd.getLcd()->createChar(TIMER_CHAR, timerChar);
+LCDHelper::LCDHelper(LiquidCrystal_I2C& l):lcd(l,20,4) {
+//	l.print("2 Hello, world!");
+	this->lcd.getLcd()->createChar(TEMPERATURE_CHAR, tempCustomChar);
+	this->lcd.getLcd()->createChar(DEGREE_CHAR, degreeCustomChar);
+	this->lcd.getLcd()->createChar(SETPOINT_CHAR, setpointCustomChar);
+	this->lcd.getLcd()->createChar(HEAT_CHAR, heatCustomChar);
+	this->lcd.getLcd()->createChar(DERIV_CHAR, derivateCustomChar);
+	this->lcd.getLcd()->createChar(DEGMIN_CHAR, degMinChar);
+	this->lcd.getLcd()->createChar(TIMER_CHAR, timerChar);
 }
 
 void LCDHelper::display(Controller pstate){

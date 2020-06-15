@@ -6,25 +6,19 @@
  */
 
 #include "LCDBuffer.h"
-#include <Wire.h>
+#include <Arduino.h>
+//#include <Wire.h>
 //#define LCD_DEBUG = 1
 
-LCDBuffer::LCDBuffer(const int width, const int height) {
+LCDBuffer::LCDBuffer(LiquidCrystal_I2C& lcd,const int width, const int height):_lcd(lcd) {
 	this->_width = width;
 	this->_height = height;
 	this->_size = width * height;
-
-	_lcd = new LiquidCrystal_I2C(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
-
 	this->_buffer = new char[this->_size];
-
-	Wire.begin(D2,D1); //ESP32 GPIO12 GPIO14 pin 13, pin 12
-	_lcd->begin(20,4);
-	_lcd->clear();
 }
 
 LiquidCrystal_I2C* LCDBuffer::getLcd(){
-	return _lcd;
+	return &_lcd;
 }
 
 void LCDBuffer::clear() {
@@ -46,6 +40,10 @@ unsigned short crc16(char* data_p, unsigned char length){
 
 void LCDBuffer::render() {
 #ifdef LCD_DEBUG
+	Serial.write(27);       // ESC command
+	Serial.print("[2J");    // clear screen command
+	Serial.write(27);
+	Serial.print("[H");     // cursor to home command
 	Serial.println(F("--------------------"));
 	for(byte y=0;y<_height;y++){
 		for(byte x=0;x<_width;x++){
@@ -56,12 +54,15 @@ void LCDBuffer::render() {
 	}
 	Serial.println(F("--------------------"));
 #endif
+//	_lcd.setCursor(0,1);
+//	_lcd.print("2 Hello, world!");
+//	return;
 	char line[_width+1];
 	for (int y = 0; y < _height; y++) {
 		memcpy(line,&_buffer[y*_width],_width);
 		line[_width]=0;//NULL terminated
-		this->_lcd->setCursor(0,y);
-		this->_lcd->write(line,_width);
+		this->_lcd.setCursor(0,y);
+		this->_lcd.print(line);
 	}
 }
 
@@ -107,7 +108,6 @@ float roundToDp( float f, int digits ) {
 	f = roundf( f * multiplier ) / multiplier;
 	return f;
 }
-
 
 void formatDouble(double d,char *buff, int decimals){
 	d = roundToDp(d,decimals);

@@ -7,11 +7,14 @@
 
 #ifndef LCDBUFFER_H_
 #define LCDBUFFER_H_
-#include "LiquidCrystalI2C/LiquidCrystal_I2C.h"
+//#include <Wire.h>
+#include "LiquidCrystal-I2C/LiquidCrystal_I2C.h"
+
+
 
 class LCDBuffer {
 public:
-  LCDBuffer(const int width, const int height);
+  LCDBuffer(LiquidCrystal_I2C& lcd,const int width, const int height);
 
   int width() { return this->_width; }
   int height() { return this->_height; }
@@ -34,7 +37,7 @@ public:
 private:
   int _width, _height, _size;
   char *_buffer;
-  LiquidCrystal_I2C *_lcd;
+  LiquidCrystal_I2C& _lcd;
 };
 
 #endif /* LCDBUFFER_H_ */

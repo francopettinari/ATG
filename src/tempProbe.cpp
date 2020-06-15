@@ -12,7 +12,7 @@
 #include <gdb.h>
 
 RAMFUNC TemperatureProbe::TemperatureProbe() {
-	onewire = new OneWire(D3); //ESP32 GPIO18 pin 30
+	onewire = new OneWire(T4); //ESP32 GPIO13=T4 pin 15
 	sensors = new DallasTemperature(onewire);
 
 	sensors->setWaitForConversion(false);

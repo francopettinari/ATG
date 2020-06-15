@@ -8,6 +8,7 @@
 #ifndef CONTROLLER_H_
 #define CONTROLLER_H_
 
+#include "Servo_ESP32.h"
 #include <WString.h>
 
 enum EncoderMovement {EncMoveNone=-1,EncMoveCW=0,EncMoveCCW=1};
@@ -15,7 +16,6 @@ enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1
 
 #include "Menu.h"
 #include "pid/PID_v1.h"
-#include <Servo.h>
 
 class LCDHelper;
 class MenuItem;
@@ -24,7 +24,7 @@ class MenuItem;
 #include "tempProbe.h"
 
 enum PidStateValue {
-	svUndefiend=-1,svMain=0,
+	svMain=0,
 	svRunAuto=10, svRunAutoSetpoint=13,svRunAutoRamp=17,
 	svConfig=20,
 	svPidConfig=22,
@@ -65,7 +65,7 @@ private:
 	//last calculated 2020.06.09 KP=35, KI=KP/(deadTime*3.3)=25/(15*3.3)=0,7 (15 secs delay)
 	PID pid;
 	TemperatureProbe probe;
-	Servo servo;
+	Servo_ESP32 servo;
 	double _setpoint = 25,_dynamicSetpoint=25,_ramp=1;
 
 public:
