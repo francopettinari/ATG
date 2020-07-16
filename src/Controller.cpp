@@ -10,11 +10,12 @@
 #include <EEPROM.h>
 #include <gdb.h>
 #include "TCPComm.h"
+#include "ATG.h"
 
 Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, _kp, _ki, _kd,P_ON_E, DIRECT){
 	pid.SetSampleTime(pidSampleTimeSecs*1000);
 	pid.SetMode(MANUAL);
-	servo.attach(DAC1);  // attaches the servo on pin 9 to the servo object //ESP32 -> GPIO25=DAC1,pin 9
+	servo.attach(SERVO1_PIN);  // attaches the servo on pin 9 to the servo object //ESP32 -> GPIO25=DAC1,pin 9
 	currentMenu = new MainMenu();
 	approacingStartMillis = 0;
 	approacingEnd1Millis = 0;

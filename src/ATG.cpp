@@ -1,3 +1,4 @@
+#include "ATG.H"
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <WString.h>
@@ -16,9 +17,7 @@ LiquidCrystal_I2C lcdx(0x27, 20,4);
 Controller pidState;
 LCDHelper lcdHelper(lcdx);
 
-#define ROTARY_PINA 15
-#define ROTARY_PINB 4
-#define ROTARY_PINSW 5
+
 
 long int rotValue=0, swValue=0;
 uint8_t state=0;
@@ -56,26 +55,9 @@ void IRAM_ATTR isrSWAll() {
  portEXIT_CRITICAL_ISR(&gpioMux);
 
 }
-//const byte encoderCk     = 4; // rotary encoder Clock      // ESP32 GPIO4=T0 pin 26
-//const byte pushButtonPin = T1; // rotary encoder pushbutton // ESP32 GPIO0=T1 pin 25
-//const byte encoderDt     = 5; // rotary encoder Data       // ESP32 GPIO5=T2 pin 24
-//boolean isEncoderPressed;
-//MD_REncoder enc(encoderCk, encoderDt);
 
 const char *ssid = "ATG";
 const char *password = "log4fape@ATG";
-
-//void ICACHE_RAM_ATTR  handleEncPush() {
-//	isEncoderPressed = digitalRead(pushButtonPin) == 0;
-//}
-
-//void readGasAlarm() {
-//	float sensorValue = analogRead(A0);         // Read the Sensor Values from Analog Pin A0
-//	float sensorVoltage = sensorValue/1024*5.0; // Calculate the Sensor Voltage
-//	Serial.print("sensor voltage = ");          // Print the Message
-//	Serial.print(sensorVoltage);                // Print the Values
-//	Serial.println(" V");                       // Print the Message
-//}
 
 #define MAX_SRV_CLIENTS 3
 WiFiServer server(8266);
