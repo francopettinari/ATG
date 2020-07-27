@@ -34,12 +34,12 @@
 		<link>
 			<name>core/core</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/arduino-esp32/cores/esp32</locationURI>
+			<location>E:/sloeber_workspace/arduino-esp32/cores/esp32</location>
 		</link>
 		<link>
 			<name>core/variant</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/arduino-esp32/variants/esp32</locationURI>
+			<location>E:/sloeber_workspace/arduino-esp32/variants/esp32</location>
 		</link>
 		<link>
 			<name>libraries/DallasTemperature</name>
@@ -49,17 +49,7 @@
 		<link>
 			<name>libraries/EEPROM</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/arduino-esp32/libraries/EEPROM</locationURI>
-		</link>
-		<link>
-			<name>libraries/ESP32Servo</name>
-			<type>2</type>
-			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/ESP32Servo/0.8.0</locationURI>
-		</link>
-		<link>
-			<name>libraries/FS</name>
-			<type>2</type>
-			<locationURI>WORKSPACE_LOC/arduino-esp32/libraries/FS</locationURI>
+			<location>E:/sloeber_workspace/arduino-esp32/libraries/EEPROM</location>
 		</link>
 		<link>
 			<name>libraries/MD_REncoder</name>
@@ -74,17 +64,17 @@
 		<link>
 			<name>libraries/SimpleBLE</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/arduino-esp32/libraries/SimpleBLE</locationURI>
+			<location>E:/sloeber_workspace/arduino-esp32/libraries/SimpleBLE</location>
 		</link>
 		<link>
 			<name>libraries/WiFi</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/arduino-esp32/libraries/WiFi</locationURI>
+			<location>E:/sloeber_workspace/arduino-esp32/libraries/WiFi</location>
 		</link>
 		<link>
 			<name>libraries/Wire</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/arduino-esp32/libraries/Wire</locationURI>
+			<location>E:/sloeber_workspace/arduino-esp32/libraries/Wire</location>
 		</link>
 		<link>
 			<name>libraries/gdb</name>

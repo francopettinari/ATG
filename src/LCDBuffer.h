@@ -7,7 +7,7 @@
 
 #ifndef LCDBUFFER_H_
 #define LCDBUFFER_H_
-//#include <Wire.h>
+#include <Wire.h>
 #include "LiquidCrystal-I2C/LiquidCrystal_I2C.h"
 
 

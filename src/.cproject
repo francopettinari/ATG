@@ -26,14 +26,12 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/DallasTemperature}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/gdb}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP32Servo/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/FS/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/LiquidCrystal_I2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/MD_REncoder/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/SimpleBLE/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/WiFi/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Wire/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/FreeRTOS/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/SimpleBLE/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.cpp.sketch.input.1809655131" name="Sorgente CPP" superClass="io.sloeber.compiler.cpp.sketch.input"/>
 							</tool>
@@ -46,14 +44,12 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/DallasTemperature}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/gdb}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP32Servo/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/FS/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/LiquidCrystal_I2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/MD_REncoder/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/SimpleBLE/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/WiFi/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Wire/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/FreeRTOS/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/SimpleBLE/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.c.sketch.input.1377943925" name="Sorgente C" superClass="io.sloeber.compiler.c.sketch.input"/>
 							</tool>
@@ -66,14 +62,12 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/DallasTemperature}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/gdb}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/ESP32Servo/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/FS/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/LiquidCrystal_I2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/MD_REncoder/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/SimpleBLE/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/WiFi/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Wire/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/FreeRTOS/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/SimpleBLE/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM/src}&quot;"/>
 								</option>
 								<inputType id="io.sloeber.compiler.S.sketch.input.157865573" name="Sorgente Assembly" superClass="io.sloeber.compiler.S.sketch.input"/>
 							</tool>
