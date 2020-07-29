@@ -13,5 +13,7 @@
 extern Controller pidState;
 extern LCDHelper lcdHelper;
 
+extern Servo_ESP32 servo;
+
 //Do not add code below this line
 #endif /* _Pid_H_ */

@@ -15,7 +15,7 @@
 Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, _kp, _ki, _kd,P_ON_E, DIRECT){
 	pid.SetSampleTime(pidSampleTimeSecs*1000);
 	pid.SetMode(MANUAL);
-	servo.attach(SERVO1_PIN);  // attaches the servo on pin 9 to the servo object //ESP32 -> GPIO25=DAC1,pin 9
+//	servo.attach(SERVO1_PIN);  // attaches the servo on pin 9 to the servo object //ESP32 -> GPIO25=DAC1,pin 9
 	currentMenu = new MainMenu();
 	approacingStartMillis = 0;
 	approacingEnd1Millis = 0;
@@ -120,6 +120,7 @@ void RAMFUNC Controller::_writeServo(int value){
 		degree = servoMaxValue-degree;
 	}
 
+	Serial.print("Servo pos:");Serial.print(servoPosition);Serial.print("; degree:");Serial.println(+degree);
 	if(value==0 || servoPosition!=degree){
 		servo.write(degree);
 		delay(15);
@@ -338,7 +339,8 @@ void Controller::setOutPerc(double val){
 	writeServoPosition(Output,true,true);
 }
 
-void RAMFUNC Controller::update(int encoderPos, boolean encoderPress){
+void Controller::update(int encoderPos, boolean encoderPress){
+
     double tempp = probe.readTemperature();
 	setTemperature(tempp);
 

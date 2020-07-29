@@ -63,7 +63,10 @@ const char *password = "log4fape@ATG";
 WiFiServer server(8266);
 WiFiClient serverClients[MAX_SRV_CLIENTS];
 
+Servo_ESP32 servo;
 void setup() {
+	servo.attach(SERVO1_PIN);
+
 	lcdx.begin();
 	lcdx.backlight();
 
@@ -214,8 +217,18 @@ void sendClients(String s){
 	}
 }
 
+
+int angle =0;
+int angleStep = 5;
+
+int angleMin =0;
+int angleMax = 180;
+int dir = 1;
+
+
+
 long int prevSwVal = 0;
-void RAMFUNC loop() {
+void loop() {
 
 	bool isEncoderPressed = (swValue-prevSwVal)>0;
 	prevSwVal = swValue;
@@ -226,3 +239,4 @@ void RAMFUNC loop() {
 
 	handleClients();
 }
+

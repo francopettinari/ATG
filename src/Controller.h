@@ -65,7 +65,7 @@ private:
 	//last calculated 2020.06.09 KP=35, KI=KP/(deadTime*3.3)=25/(15*3.3)=0,7 (15 secs delay)
 	PID pid;
 	TemperatureProbe probe;
-	Servo_ESP32 servo;
+//	Servo_ESP32 servo;
 	double _setpoint = 25,_dynamicSetpoint=25,_ramp=1;
 
 public:
