@@ -67,9 +67,8 @@ Servo_ESP32 servo;
 void setup() {
 	servo.attach(SERVO1_PIN);
 
-	lcdx.begin();
-	lcdx.backlight();
 
+	lcdHelper.createCustomChars();
 	//encoder setup
 	pinMode(ROTARY_PINA, INPUT_PULLUP);
 	pinMode(ROTARY_PINB, INPUT_PULLUP);

@@ -27,6 +27,7 @@ class LCDHelper {
 //	int lastDisplayCount = 0;
 //	double lastDisplayMillis = 0;
 public:
+	void createCustomChars();
 	void display(Controller state);
 //	void print(byte col, byte row, int val);
 	void print(byte col, byte row,  __FlashStringHelper *ifsh);

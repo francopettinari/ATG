@@ -73,7 +73,7 @@ void LCDBuffer::PrintPChar(const int x, const int y,const char *s) {
 
 void LCDBuffer::PrintChar(const int x, const int y,char s) {
 	char *o = this->_buffer + (x + (y * this->_width));
-	memcpy(o, &s, 1);
+	*o = s;
 }
 
 void LCDBuffer::PrintString(const int x, const int y, String s){

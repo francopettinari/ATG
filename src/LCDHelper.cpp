@@ -11,7 +11,7 @@
 
 #include "Controller.h"
 
-byte tempCustomChar[] = {
+uint8_t tempCustomChar[] = {
   B00100,
   B01010,
   B01010,
@@ -22,17 +22,17 @@ byte tempCustomChar[] = {
   B01110
 };
 
-byte degreeCustomChar[] = {
+uint8_t degreeCustomChar[8] = {
 		B01100,
-		  B10010,
-		  B10010,
-		  B01100,
-		  B00000,
-		  B00000,
-		  B00000,
-		  B00000
-		};
-byte setpointCustomChar[] = {
+		B10010,
+		B10010,
+		B01100,
+		B00000,
+		B00000,
+		B00000,
+		B00000
+};
+uint8_t setpointCustomChar[8] = {
 		B11100,
 		B10000,
 		B11100,
@@ -43,7 +43,7 @@ byte setpointCustomChar[] = {
 		B00100
 };
 
-byte heatCustomChar[] = {
+uint8_t heatCustomChar[8] = {
 		 B01110,
 		  B10001,
 		  B00000,
@@ -54,7 +54,7 @@ byte heatCustomChar[] = {
 		  B10001
 };
 
-byte derivateCustomChar[] = {
+uint8_t derivateCustomChar[8] = {
 		  B00001,
 		  B01101,
 		  B10011,
@@ -65,7 +65,7 @@ byte derivateCustomChar[] = {
 		  B00000
 };
 
-byte degMinChar[] = {
+uint8_t degMinChar[8] = {
   B11000,
   B11000,
   B00000,
@@ -76,7 +76,7 @@ byte degMinChar[] = {
   B10101
 };
 
-byte timerChar[] = {
+uint8_t timerChar[8] = {
   B00000,
   B00000,
   B01110,
@@ -98,6 +98,12 @@ static const int TIMER_CHAR = 6;
 
 LCDHelper::LCDHelper(LiquidCrystal_I2C& l):lcd(l,20,4) {
 //	l.print("2 Hello, world!");
+
+}
+
+void LCDHelper::createCustomChars(){
+	this->lcd.getLcd()->begin();
+	this->lcd.getLcd()->backlight();
 	this->lcd.getLcd()->createChar(TEMPERATURE_CHAR, tempCustomChar);
 	this->lcd.getLcd()->createChar(DEGREE_CHAR, degreeCustomChar);
 	this->lcd.getLcd()->createChar(SETPOINT_CHAR, setpointCustomChar);
@@ -106,8 +112,8 @@ LCDHelper::LCDHelper(LiquidCrystal_I2C& l):lcd(l,20,4) {
 	this->lcd.getLcd()->createChar(DEGMIN_CHAR, degMinChar);
 	this->lcd.getLcd()->createChar(TIMER_CHAR, timerChar);
 }
-
 void LCDHelper::display(Controller pstate){
+	this->lcd.getLcd()->home();
 	lcd.clear();
 	lcd.PrintString(0,0,pstate.getCurrentMenu()->Caption.c_str());
 	std::vector<MenuItem *> subMenuItems = pstate.getCurrentMenu()->subMenuItems;
