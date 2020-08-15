@@ -16,19 +16,21 @@ class Controller;
 
 class LCDHelper {
     LCDBuffer lcd;
-	void displayRun(Controller pstate);
-	void displayManual(Controller pstate);
-	void displayTimerValue(Controller pstate);
-	void displayConfigServo(Controller pstate);
-	void displayConfigPid(Controller pstate);
-	void displayConfigProbe(Controller pstate);
-	void displayDefault(Controller pstate);
+	void displayRun();
+	void displayManual();
+	void displayTimerValue();
+	void displayConfig();
+	void displayConfigServo();
+	void displayConfigPid();
+	void displayConfigProbe();
+	void displayConfigAssign();
+	void displayDefault();
 
 //	int lastDisplayCount = 0;
 //	double lastDisplayMillis = 0;
 public:
 	void createCustomChars();
-	void display(Controller state);
+	void display();
 //	void print(byte col, byte row, int val);
 	void print(byte col, byte row,  __FlashStringHelper *ifsh);
 

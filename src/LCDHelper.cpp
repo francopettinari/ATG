@@ -1,13 +1,6 @@
-/*
- * LCD.cpp
- *
- *  Created on: 29 ott 2018
- *      Author: franc
- */
-
-//LCD 20x4
-
 #include "LCDHelper.h"
+
+#include "ATG.h"
 
 #include "Controller.h"
 
@@ -112,38 +105,46 @@ void LCDHelper::createCustomChars(){
 	this->lcd.getLcd()->createChar(DEGMIN_CHAR, degMinChar);
 	this->lcd.getLcd()->createChar(TIMER_CHAR, timerChar);
 }
-void LCDHelper::display(Controller pstate){
+void LCDHelper::display(){
 	this->lcd.getLcd()->home();
-	lcd.clear();
-	lcd.PrintString(0,0,pstate.getCurrentMenu()->Caption.c_str());
-	std::vector<MenuItem *> subMenuItems = pstate.getCurrentMenu()->subMenuItems;
-	int max = subMenuItems.size()-1;
-	int y=1;
-	for(int idx = pstate.currMenuStart;idx<=max;idx++){
-		if(y>3) break;
-		if(!subMenuItems[idx]->Visible) {
-			//Serial.print(subMenuItems[idx]->Caption.c_str());Serial.println(F(" NOT VISIBLE"));
-			continue;
-		}
-		//int y=idx+1-pstate.currMenuStart;
-		if(idx == pstate.stateSelection){
-			lcd.PrintF(0,y,F(">"));
-		}else{
-			lcd.PrintF(0,y,F(" "));
-		}
+	this->lcd.clear();
+	if(atg.isMenuActive()){
+		lcd.PrintString(0,0,atg.getCurrentMenu()->Caption.c_str());
+		std::vector<MenuItem *> subMenuItems = atg.getCurrentMenu()->subMenuItems;
+		int max = subMenuItems.size()-1;
+		int y=1;
+		for(int idx = atg.currMenuStart;idx<=max;idx++){
+			if(y>3) break;
+			if(!subMenuItems[idx]->Visible) {
+				//Serial.print(subMenuItems[idx]->Caption.c_str());Serial.println(F(" NOT VISIBLE"));
+				continue;
+			}
+			//int y=idx+1-pstate.currMenuStart;
+			if(idx == atg.stateSelection){
+				lcd.PrintF(0,y,F(">"));
+			}else{
+				lcd.PrintF(0,y,F(" "));
+			}
 
-		if(idx<=max && subMenuItems[idx]->Selected){
-			lcd.PrintF(0,y,F("o"));
+			if(idx<=max && subMenuItems[idx]->Selected){
+				lcd.PrintF(0,y,F("o"));
+			}
+			if(idx<=max){
+				lcd.PrintString(1,y,atg.getCurrentMenu()->subMenuItems[idx]->Caption.c_str());
+			}
+			y++;
 		}
-		if(idx<=max){
-			lcd.PrintString(1,y,pstate.getCurrentMenu()->subMenuItems[idx]->Caption.c_str());
-		}
-		y++;
 	}
-	switch(pstate.getState()) {
+	switch(atg.getState()) {
 		case svRunAuto:
 		case svRunAutoSetpoint:
-			displayRun(pstate);
+			displayRun();
+			break;
+		case svConfig:
+			displayConfig();
+			break;
+		case svConfigController:
+			displayConfig();
 			break;
 		case svPidConfig:
 		case svPidKpiConfig:
@@ -154,19 +155,22 @@ void LCDHelper::display(Controller pstate){
 		case svPidKdiConfig:
 		case svPidKddConfig:
 		case svPidSampleTimeConfig:
-			displayConfigPid(pstate);
+			displayConfigPid();
 			break;
 		case svServo_Config:
 		case svConfig_ServoDirection:
 		case svConfig_ServoMin:
 		case svConfig_ServoMax:
-			displayConfigServo(pstate);
+			displayConfigServo();
 			break;
-		case svConfig_Probe:
-			displayConfigProbe(pstate);
+		case svConfig_ProbeCorrection:
+			displayConfigProbe();
+			break;
+		case svConfig_ProbeAssign:
+			displayConfigAssign();
 			break;
 		default:
-			displayDefault(pstate);
+			displayDefault();
 			break;
 	}
 	lcd.render();
@@ -175,39 +179,84 @@ void LCDHelper::display(Controller pstate){
 //	Serial.println(F(" "));
 }
 
-void LCDHelper::displayDefault(Controller pstate){
-	lcd.PrintChar(13, 0,(char)TEMPERATURE_CHAR); lcd.PrintDoubleFD(14, 0,pstate.getTemperature(),2,1);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+void LCDHelper::displayDefault(){
+	float t0 = atg.pidStates[0].getTemperature();
+	float t1 = atg.pidStates[1].getTemperature();
+
+	int tPos = t0<100?15:14;
+	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,t0,2,1);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+	if(atg.pidStates[1].getProbeAddress()>0){
+		/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 1,t1,2,1);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
+	}
 }
 
-void LCDHelper::displayConfigPid(Controller pstate){
-	lcd.PrintF(10, 0,F("Kp"));lcd.PrintDoubleFD(13, 0,pstate.GetKp(),2,3);
-	lcd.PrintF(10, 1,F("Ki"));lcd.PrintDoubleFD(13, 1,pstate.GetKi(),2,3);
-	lcd.PrintF(10, 2,F("Kd"));lcd.PrintDoubleFD(13, 2,pstate.GetKd(),2,3);
-	lcd.PrintF(10, 3,F("St"));lcd.PrintDoubleFD(16, 3,pstate.pidSampleTimeSecs,2,0);
+void LCDHelper::displayConfig(){
+	if(atg.selectedController==0){
+		lcd.PrintF(5, 0,F("Ctrl 1"));
+	}else{
+		lcd.PrintF(5, 0,F("Ctrl 2"));
+	}
 }
 
-void LCDHelper::displayRun(Controller pstate){
-	int spPos = pstate.setpoint()<100?17:16;
-	int tPos = pstate.getTemperature()<100?spPos-5:spPos-6;
-	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,pstate.getTemperature(),2,1);lcd.PrintChar(spPos-1, 0,'/'); lcd.PrintDoubleFD(spPos, 0,pstate.setpoint(),2,0);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-	int o = pstate.getOutPerc();
+void LCDHelper::displayConfigPid(){
+	if(atg.selectedController==0){
+		lcd.PrintF(5, 0,F("Ctrl 1"));
+	}else{
+		lcd.PrintF(5, 0,F("Ctrl 2"));
+	}
+
+	lcd.PrintF(10, 0,F("Kp"));lcd.PrintDoubleFD(13, 0,atg.pidStates[atg.selectedController].GetKp(),2,3);
+	lcd.PrintF(10, 1,F("Ki"));lcd.PrintDoubleFD(13, 1,atg.pidStates[atg.selectedController].GetKi(),2,3);
+	lcd.PrintF(10, 2,F("Kd"));lcd.PrintDoubleFD(13, 2,atg.pidStates[atg.selectedController].GetKd(),2,3);
+	lcd.PrintF(10, 3,F("St"));lcd.PrintDoubleFD(16, 3,atg.pidStates[atg.selectedController].pidSampleTimeSecs,2,0);
+}
+
+void LCDHelper::displayRun(){
+	Controller ctrl = atg.getSelectedController();
+	int spPos = ctrl.setpoint()<100?17:16;
+	int tPos = ctrl.getTemperature()<100?spPos-5:spPos-6;
+	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,ctrl.getTemperature(),2,1);lcd.PrintChar(spPos-1, 0,'/'); lcd.PrintDoubleFD(spPos, 0,ctrl.setpoint(),2,0);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+	int o = ctrl.getOutPerc();
 	/*lcd.PrintChar(13, 1,(char)HEAT_CHAR);*/ lcd.PrintDoubleD(15, 1,o,0); 	lcd.PrintF(19, 1,F("%"));
-	/*lcd.PrintF(13, 2,F("/"));*/ lcd.PrintDoubleD(15, 2,pstate.ramp(),0);lcd.PrintChar(19, 2,(char)DEGMIN_CHAR);
+	/*lcd.PrintF(13, 2,F("/"));*/ lcd.PrintDoubleD(15, 2,ctrl.ramp(),0);lcd.PrintChar(19, 2,(char)DEGMIN_CHAR);
 }
 
-void LCDHelper::displayConfigServo(Controller pstate){
-	if(pstate.servoDirection==ServoDirectionCW){
+void LCDHelper::displayConfigServo(){
+	Controller ctrl = atg.getSelectedController();
+	if(ctrl.servoDirection==ServoDirectionCW){
 		lcd.PrintF(11, 0,F("Dir CW"));
-	}else if(pstate.servoDirection==ServoDirectionCCW){
+	}else if(ctrl.servoDirection==ServoDirectionCCW){
 		lcd.PrintF(11, 0,F("Dir CCW"));
 	}
-	lcd.PrintF(11, 1,F("Min "));lcd.PrintDoubleFD(15, 1,pstate.servoMinValue,3,0);
-	lcd.PrintF(11, 2,F("Max "));lcd.PrintDoubleFD(15, 2,pstate.servoMaxValue,3,0);
+	lcd.PrintF(11, 1,F("Min "));lcd.PrintDoubleFD(15, 1,ctrl.servoMinValue,3,0);
+	lcd.PrintF(11, 2,F("Max "));lcd.PrintDoubleFD(15, 2,ctrl.servoMaxValue,3,0);
 }
 
-void LCDHelper::displayConfigProbe(Controller pstate){
+void LCDHelper::displayConfigProbe(){
+	Controller ctrl = atg.getSelectedController();
 	lcd.PrintF(5, 0,F("Temp correction"));
-	lcd.PrintDoubleFD(15, 2,pstate.temperatureCorrection,3,0);
+	lcd.PrintDoubleFD(15, 2,ctrl.temperatureCorrection,3,0);
+}
+
+void LCDHelper::displayConfigAssign(){
+	Controller ctrl = atg.getSelectedController();
+	lcd.PrintF(5, 0,F("Probe assignment"));
+	//lcd.PrintDoubleFD(15, 2,pstate.temperatureCorrection,3,0);
+	Serial.println(F("Locating devices..."));
+	ctrl.probe.deviceCount = ctrl.probe.getDeviceCount();
+	lcd.PrintF(5, 1,F("Sensors: "));lcd.PrintFloat(14, 1,ctrl.probe.deviceCount,0);
+	Serial.print(F("Found "));Serial.print(ctrl.probe.deviceCount, DEC);Serial.println(F(" devices."));
+
+	Serial.println("Temperatures...");
+	lcd.PrintF(5, 2,F("Temperatures:"));
+	for (int i = 0;  i < ctrl.probe.deviceCount;  i++){
+		float temp = ctrl.probe.readTemperatureByIndex(i);
+		Serial.print(i);Serial.print(F(" : "));Serial.println(temp);
+		lcd.PrintFloat(5, 3+i,temp,2);
+//		sensors.getAddress(Thermometer, i);
+//		printAddress(Thermometer);
+	}
+
 }
 
 void LCDHelper::print(byte col, byte row,  __FlashStringHelper *ifsh){

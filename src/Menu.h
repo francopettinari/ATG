@@ -11,11 +11,17 @@
 class ConfigMenu;
 #include <WString.h>
 #include <vector>
-#include "Controller.h"
+#include <Arduino.h>
+
+enum EncoderMovement {EncMoveNone=-1,EncMoveCW=0,EncMoveCCW=1};
+
+//enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1};
+enum EncoderSwStates {EncoderPressNone=0,EncoderPressPressed=1,EncoderPressLongPressed=2,EncoderPressDblPressed=3};
+static const char* EncoderSwStatesNames[] = { "None", "Pressed", "Long Pressed","Doble Pressed" };
 
 typedef  void (*SelectedInMenuCallback)();
 typedef  void (*EncoderMovementCallback)(EncoderMovement mvmnt);
-typedef  void (*EncoderPushCallback)(EncoderPushButtonState pst);
+typedef  void (*EncoderPushCallback)(EncoderSwStates pst);
 
 class MenuItem;
 class MainMenu;
@@ -26,6 +32,7 @@ typedef MenuItem* MenuItemPtr;
 
 class MenuItem {
 protected:
+	MenuItem* parent;
 public:
 	bool Visible=true;
 	bool Selected=false;
@@ -36,13 +43,15 @@ public:
     	return subMenuItems.size();
     }
 
-    MenuItem(int state);
-    MenuItem(int state, String s);
+//    MenuItem(MenuItem* parent,int state);
+    MenuItem(MenuItem* parent,int state, String s);
     virtual ~MenuItem(){}
 
-	virtual void OnSelectedInMenu()=0;
+	virtual void OnSelectedInMenu();
+	virtual void OnLongPress();
+	virtual void OnDoublePress();
 	virtual void HandleEncoderMovement(EncoderMovement mvmnt);
-	virtual void HandleEncoderPush(EncoderPushButtonState pst);
+	virtual void HandleEncoderPush(EncoderSwStates pst);
 };
 
 class CallbackMenuItem : public MenuItem {
@@ -51,49 +60,49 @@ protected:
 	EncoderMovementCallback encoderMovementCallBack = NULL;
 	EncoderPushCallback encoderPushCallback = NULL;
 public:
-	CallbackMenuItem(int state, String s,SelectedInMenuCallback cb);
+	CallbackMenuItem(MenuItem* parent,int state, String s,SelectedInMenuCallback cb);
     virtual ~CallbackMenuItem(){}
 
 	void OnSelectedInMenu();
 	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderPush(EncoderSwStates pst);
 };
 
 
 class UpMenu : public MenuItem {
 public:
 	int upState=-1;
-	UpMenu(int upstate);
+	UpMenu(MenuItem* parent,int upstate);
 	void OnSelectedInMenu();
 };
 
 class ServoConfigDirMenu : public MenuItem {
 public:
-	ServoConfigDirMenu();
+	ServoConfigDirMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderPush(EncoderSwStates pst);
 };
 
 class ServoConfigMinMenu : public MenuItem {
 public:
-	ServoConfigMinMenu();
+	ServoConfigMinMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderPush(EncoderSwStates pst);
 };
 
 class ServoConfigMaxMenu : public MenuItem {
 public:
-	ServoConfigMaxMenu();
+	ServoConfigMaxMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderPush(EncoderSwStates pst);
 };
 
 class ServoConfigMenu : public MenuItem {
 public:
-	ServoConfigMenu();
+	ServoConfigMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 
 	ServoConfigDirMenu* dirMenu;
@@ -103,39 +112,39 @@ public:
 
 class KpPidConfigMenu : public MenuItem {
 public:
-	KpPidConfigMenu();
+	KpPidConfigMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderPush(EncoderSwStates pst);
 };
 
 class KiPidConfigMenu : public MenuItem {
 public:
-	KiPidConfigMenu();
+	KiPidConfigMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderPush(EncoderSwStates pst);
 };
 
 class KdPidConfigMenu : public MenuItem {
 public:
-	KdPidConfigMenu();
+	KdPidConfigMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderPush(EncoderSwStates pst);
 };
 
 class SampleTimePidConfigMenu : public MenuItem {
 public:
-	SampleTimePidConfigMenu();
+	SampleTimePidConfigMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderPush(EncoderSwStates pst);
 };
 
 class PidConfigMenu : public MenuItem {
 public:
-	PidConfigMenu();
+	PidConfigMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 
 	KpPidConfigMenu* kpMenu;
@@ -144,20 +153,50 @@ public:
 	SampleTimePidConfigMenu* sampleTimeMenu;
 };
 
-class ConfigProbeMenu : public MenuItem {
+class ProbeCorrectionMenu : public MenuItem {
 public:
-	ConfigProbeMenu();
+	ProbeCorrectionMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderPush(EncoderSwStates pst);
+};
+
+class ProbeAssignmentMenu : public MenuItem {
+public:
+
+	ProbeAssignmentMenu(MenuItem* parent);
+	void OnSelectedInMenu();
+//	void HandleEncoderMovement(EncoderMovement mvmnt);
+	void HandleEncoderPush(EncoderSwStates pst);
+};
+
+class ConfigProbeMenu : public MenuItem {
+public:
+	ConfigProbeMenu(MenuItem* parent);
+	void OnSelectedInMenu();
+	void HandleEncoderMovement(EncoderMovement mvmnt);
+	void HandleEncoderPush(EncoderSwStates pst);
+
+	MenuItem* upMenu;
+	ProbeCorrectionMenu* correctionMenu;
+	ProbeAssignmentMenu* assignmentMenu;
+};
+
+class ConfigController : public MenuItem{
+public:
+	ConfigController(MenuItem* parent);
+	void OnSelectedInMenu();
+	void HandleEncoderPush(EncoderSwStates pst);
+	void HandleEncoderMovement(EncoderMovement mvmnt);
 };
 
 class ConfigMenu : public MenuItem{
 public:
-	ConfigMenu();
+	ConfigMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 
 	MenuItem* upMenu;
+	ConfigController* configControllerMenu;
 	ServoConfigMenu* servoMenu;
 	PidConfigMenu* pidMenu;
 	ConfigProbeMenu* probeMenu;
@@ -165,48 +204,50 @@ public:
 
 class RunAutoSetpointMenu : public MenuItem {
 public:
-	RunAutoSetpointMenu();
+	RunAutoSetpointMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 };
 
 class RunAutoRampMenu : public MenuItem {
 public:
 
-	RunAutoRampMenu();
+	RunAutoRampMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 };
 
 class RunAutoSwitch : public MenuItem {
 public:
 
-	RunAutoSwitch();
-	void OnSelectedInMenu();
+	RunAutoSwitch(MenuItem* parent);
+	void OnLongPress();
 };
 
 class RunAutoMenu : public MenuItem {
 public:
-	RunAutoMenu();
+	RunAutoMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 
 	RunAutoSetpointMenu* setpointMenu;
 	RunAutoRampMenu* rampMenu;
 	RunAutoSwitch* switchMenu;
 
-	void HandleEncoderPush(EncoderPushButtonState pst);
+	void HandleEncoderPush(EncoderSwStates pst);
 	void HandleEncoderMovement(EncoderMovement mvmnt);
 };
 
 class MainMenu : public MenuItem {
+private:
+
+
 public:
 	MainMenu();
 	void OnSelectedInMenu();
+
+
 
 	ConfigMenu* configMenu;
 	RunAutoMenu* runMenu;
 };
 
-
-
-void InitializeMenus();
 
 #endif /* MENU_H_ */

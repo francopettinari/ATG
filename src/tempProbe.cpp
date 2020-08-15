@@ -26,8 +26,16 @@ RAMFUNC TemperatureProbe::TemperatureProbe() {
 
 }
 
+float TemperatureProbe::readTemperatureByIndex(int index){
+	return readTemperature(index,0);
+}
+
+float TemperatureProbe::readTemperatureByAddress(const uint8_t* deviceAddress){
+	return readTemperature(-1,deviceAddress);
+}
+
 bool tempReadRequested = false;
-float RAMFUNC TemperatureProbe::readTemperature(){
+float TemperatureProbe::readTemperature(int index, const uint8_t* deviceAddress){
 	unsigned long now = millis();
 
 	//too early
@@ -43,7 +51,7 @@ float RAMFUNC TemperatureProbe::readTemperature(){
 		tempReadRequested = true;
 		lastTempReadMillis = now;
 	}else if(sensors->isConversionComplete()){
-		float temp = sensors->getTempCByIndex(0);
+		float temp = index>=0?sensors->getTempCByIndex(index):sensors->getTempC(deviceAddress);
 		tempReadRequested = false;
 		firArray[firIdx%firNOfSamples] = temp;
 		firIdx=firIdx+1;

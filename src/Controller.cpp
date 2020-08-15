@@ -15,8 +15,7 @@
 Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, _kp, _ki, _kd,P_ON_E, DIRECT){
 	pid.SetSampleTime(pidSampleTimeSecs*1000);
 	pid.SetMode(MANUAL);
-//	servo.attach(SERVO1_PIN);  // attaches the servo on pin 9 to the servo object //ESP32 -> GPIO25=DAC1,pin 9
-	currentMenu = new MainMenu();
+
 	approacingStartMillis = 0;
 	approacingEnd1Millis = 0;
 	approacingEnd2Millis = 0;
@@ -24,105 +23,19 @@ Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, _kp, _k
 	PrevSwitchOnOffMillis = 0;
 }
 
-MenuItem* Controller::decodeCurrentMenu(){
-	MainMenu* pmm = (MainMenu*) topMenu;
-
-	switch(state){
-		case svMain :
-			return pmm;
-		case svRunAuto :
-			return pmm->runMenu;
-		case svRunAutoSetpoint :
-			return pmm->runMenu->setpointMenu;
-		case svRunAutoRamp :
-			return pmm->runMenu->rampMenu;
-		case svConfig:
-			return pmm->configMenu;
-		case svServo_Config:
-			return pmm->configMenu->servoMenu;
-		case svConfig_ServoDirection :
-			return pmm->configMenu->servoMenu->dirMenu;
-		case svConfig_ServoMin :
-			return pmm->configMenu->servoMenu->minMenu;
-		case svConfig_ServoMax:
-			return pmm->configMenu->servoMenu->maxMenu;
-		case svPidConfig:
-			return pmm->configMenu->pidMenu;
-		case svPidKpiConfig:
-		case svPidKpdConfig:
-			return pmm->configMenu->pidMenu->kpMenu;
-		case svPidKiiConfig:
-		case svPidKidConfig:
-		case svPidKicConfig:
-			return pmm->configMenu->pidMenu->kiMenu;
-		case svPidKdiConfig:
-		case svPidKddConfig:
-			return pmm->configMenu->pidMenu->kdMenu;
-		case svPidSampleTimeConfig:
-			return pmm->configMenu->pidMenu->sampleTimeMenu;
-		case svConfig_Probe:
-			return pmm->configMenu->probeMenu;
-	}
-	return pmm;
-}
-
-void Controller::setCurrentMenu(MenuItem *m){
-	if(currentMenu == m) return;
-	currentMenu = m;
-	stateSelection=0;
-	currMenuStart = 0;
-}
 
 long lastLog=0;
 
 
-
-EncoderPushButtonState Controller::decodeEncoderPushBtnState (boolean encoderPress){
-	if(encoderPress){
-		lastPressMillis = millis();
-		if(lastPressState == EncoderPushButtonNone){
-			lastPressMillis = millis();
-			lastPressState = EncoderPushButtonPressed;
-			return EncoderPushButtonPressed;
-		} else {
-			//already pressed. hinibit this pressure until a release occours
-			//pressed, but not yet long press
-			lastPressState = EncoderPushButtonPressed;
-			return EncoderPushButtonNone;
-		}
-	} else {
-		lastPressMillis = -1;
-		lastPressState = EncoderPushButtonNone;
-		return EncoderPushButtonNone;
-	}
-}
-
-boolean Controller::IsEncoderPressed(boolean encoderPress){
-	return encoderPress && lastPressState == EncoderPushButtonPressed;
-}
-
-EncoderMovement Controller::decodeEncoderMoveDirection(int encoderPos){
-	prevEncoderPos = currEncoderPos;
-	currEncoderPos = encoderPos/4;
-	if(currEncoderPos>prevEncoderPos){
-		return EncMoveCCW;
-	}else if(currEncoderPos<prevEncoderPos){
-		return EncMoveCW;
-	}
-	return EncMoveNone;
-}
-
-
-
-void RAMFUNC Controller::_writeServo(int value){
+void Controller::_writeServo(int value){
 	int degree = value;
 	if(servoDirection==ServoDirectionCCW){
 		degree = servoMaxValue-degree;
 	}
 
-	Serial.print("Servo pos:");Serial.print(servoPosition);Serial.print("; degree:");Serial.println(+degree);
+	//Serial.print("Servo pos:");Serial.print(servoPosition);Serial.print("; degree:");Serial.println(+degree);
 	if(value==0 || servoPosition!=degree){
-		servo.write(degree);
+		pServo->write(degree);
 		delay(15);
 		servoPosition = degree;
 	}
@@ -299,29 +212,7 @@ bool Controller::isAutoState(int state){
 	return state==svRunAuto || state==svRunAutoSetpoint || state==svRunAutoRamp;
 }
 
-void Controller::sendStatus(){
-	//Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
-	//Serial.print(Setpoint,4);Serial.print(F(" "));
-	//Serial.println(temperature,4);Serial.print(F(" "));
-	//Serial.println(Output);
-	float now = millis();
-	TcpComm->print(F("LOG:")      );TcpComm->print(now,4);
-	TcpComm->print(F(";EXPRQID:") );TcpComm->print((float)expectedReqId,0);
-	TcpComm->print(F(";KP:")   );TcpComm->print((float)pid.GetKp(),4);
-	TcpComm->print(F(";KI:")   );TcpComm->print((float)pid.GetKi(),4);
-	TcpComm->print(F(";KD:")   );TcpComm->print((float)pid.GetKd(),4);
-	TcpComm->print(F(";STATE:")   );TcpComm->print((float)autoModeOn,0);
-	TcpComm->print(F(";FSM_STATE:")   );TcpComm->print(fsmState);
-	TcpComm->print(F(";SETP:")    );TcpComm->print(_setpoint,4);
-	TcpComm->print(F(";RAMP:")    );TcpComm->print(_ramp,4);
-	TcpComm->print(F(";DSETP:")   );TcpComm->print(_dynamicSetpoint,4);
-	TcpComm->print(F(";TEMP:")    );TcpComm->print(temperature,4);
-	TcpComm->print(F(";OUT:")     );TcpComm->print(Output,4);
-	TcpComm->print(F(";OUTPERC:") );TcpComm->print((float)getOutPerc(),0);
-	TcpComm->print(F(";SERVOPOS:"));TcpComm->println((float)servoPosition,0);
 
-	lastUdpDataSent = now;
-}
 
 int Controller::getOutPerc(){
 	int o = 0;
@@ -339,16 +230,22 @@ void Controller::setOutPerc(double val){
 	writeServoPosition(Output,true,true);
 }
 
-void Controller::update(int encoderPos, boolean encoderPress){
+void Controller::update(){
 
-    double tempp = probe.readTemperature();
+	double tempp = 0;
+	if(probeAddress==0){
+		tempp = probe.readTemperatureByIndex(0);
+	}else{
+		tempp = probe.readTemperatureByAddress(&probeAddress);
+	}
+
 	setTemperature(tempp);
 
 	//force to manual when:
 	//- not in auto
 	//- not configuring
-	if(pid.GetMode()!=MANUAL && !isAutoState(state) &&
-	   state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
+	if(pid.GetMode()!=MANUAL && !isAutoState(atg.state) &&
+			atg.state!=svConfig_ServoDirection && atg.state!=svConfig_ServoMin&&atg.state!=svConfig_ServoMax)
 	{
 		pid.SetMode(MANUAL);
 
@@ -362,64 +259,22 @@ void Controller::update(int encoderPos, boolean encoderPress){
 
 	//this is not clear!
 	//when in Auto, but automode==0, then it shuts down.... ???
-	if(!isAutoState(state) &&
-		state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax)
+	if(!isAutoState(atg.state) &&
+			atg.state!=svConfig_ServoDirection && atg.state!=svConfig_ServoMin&&atg.state!=svConfig_ServoMax)
 	{
 		Output=0;
 		writeServoPosition(Output,true,false);
-	}
-
-
-
-	//encoder position
-	EncoderMovement encMovement = decodeEncoderMoveDirection(encoderPos);
-
-	//encoder push button
-	EncoderPushButtonState encoderPushButtonState = decodeEncoderPushBtnState(encoderPress);
-
-    //Serial.print(F("State selection: "));Serial.println(stateSelection);
-	//Serial.print(F("Encoder push: "));Serial.println(encoderPushButtonState);
-//	ESP.wdtFeed();
-	setCurrentMenu(decodeCurrentMenu());
-
-	if(encMovement!=EncMoveNone){
-		Serial.print(F(">>>>>> Enc mov <<<<<<  "));
-		if(encMovement==EncMoveCW){
-			Serial.println(F(" CW "));
-		}else{
-			Serial.println(F(" CCW "));
-		}
-		Serial.print(F("Menu    :"));Serial.println(getCurrentMenu()->Caption);
-		Serial.print(F("Menu len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
-		if(getCurrentMenu()->subMenuItemsLen()>0){
-			Serial.print(F("Sel menu:"));Serial.println(getCurrentMenu()->subMenuItems[stateSelection]->Caption);
-		}
-		Serial.print(F("Selected :"));Serial.println(stateSelection);
-		getCurrentMenu()->HandleEncoderMovement(encMovement);
-		if(getCurrentMenu()->subMenuItemsLen()>0){
-			Serial.print(F("New Sel menu:"));Serial.println(getCurrentMenu()->subMenuItems[stateSelection]->Caption);
-		}
-		Serial.print(F("New Selected :"));Serial.println(stateSelection);
-	}
-	if(encoderPushButtonState==EncoderPushButtonPressed) {
-		Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(stateSelection);
-		Serial.print(F("Menu     :"));Serial.println(getCurrentMenu()->Caption);
-		Serial.print(F("Menu  len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
-		if(getCurrentMenu()->subMenuItemsLen()>0){
-			Serial.print(F("Sel menu:"));Serial.println(getCurrentMenu()->subMenuItems[stateSelection]->Caption);
-		}
-		getCurrentMenu()->HandleEncoderPush(encoderPushButtonState);
 	}
 
 	float now = millis();
 //	ESP.wdtFeed();
 
 	//fsm idle in case not automatic
-	if(autoModeOn==0 || !isAutoState(state)){
+	if(autoModeOn==0 || !isAutoState(atg.state)){
 		fsmState = psIdle;
 	}
 
-	switch(state){
+	switch(atg.state){
 		case svMain:
 			writeServoPosition(0,true);
 		break;
@@ -519,203 +374,203 @@ void Controller::update(int encoderPos, boolean encoderPress){
 		default:
 		  break;
 	}
-	if(now-lastUdpDataSent>1000){
-		sendStatus();
+	if(now-atg.lastUdpDataSent>1000){
+		atg.sendStatus();
 	}
 }
 
-void Controller::saveSetPointTotoEEprom(){
-	EEPROM.begin(512);
-
-	int addr = 0;
-	addr+=1;
-	addr+=sizeof(PidStateValue);
-	addr+=sizeof(ServoDirection);
-	addr+=sizeof(int);
-	addr+=sizeof(int);
-	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(_setpoint);
-	EEPROM.put(addr, _setpoint);
-	addr+=sizeof(double);
-
-	EEPROM.commit();
-//	EEPROM.end();
-
-}
-
-void Controller::loadFromEEProm(){
-	Serial.print(F("EEPROMReadSettings: Expected EEPROM_VER:"));Serial.println(eepromVer);
-
-	EEPROM.begin(512);
-	byte temp=0;
-	int addr = 0;
-	temp = EEPROM.get(addr, temp);
-	addr+=1;Serial.print(F("Size: "));Serial.println(addr);
-
-//	if(temp!=eepromVer && temp!=eepromVer-1){
-//		Serial.print(F(">>>>>>>> WRONG EPROM VERSION expected "));Serial.print(eepromVer);Serial.print(F("FOUND "));Serial.println(temp);
+//void Controller::saveSetPointTotoEEprom(){
+//	EEPROM.begin(512);
+//
+//	int addr = 0;
+//	addr+=1;
+//	addr+=sizeof(PidStateValue);
+//	addr+=sizeof(ServoDirection);
+//	addr+=sizeof(int);
+//	addr+=sizeof(int);
+//	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(_setpoint);
+//	EEPROM.put(addr, _setpoint);
+//	addr+=sizeof(double);
+//
+//	EEPROM.commit();
+////	EEPROM.end();
+//
+//}
+//
+//void Controller::loadFromEEProm(){
+//	Serial.print(F("EEPROMReadSettings: Expected EEPROM_VER:"));Serial.println(eepromVer);
+//
+//	EEPROM.begin(512);
+//	byte temp=0;
+//	int addr = 0;
+//	temp = EEPROM.get(addr, temp);
+//	addr+=1;Serial.print(F("Size: "));Serial.println(addr);
+//
+////	if(temp!=eepromVer && temp!=eepromVer-1){
+////		Serial.print(F(">>>>>>>> WRONG EPROM VERSION expected "));Serial.print(eepromVer);Serial.print(F("FOUND "));Serial.println(temp);
+////		return;
+////	}
+//
+//	state=EEPROM.get(addr, state);
+//	addr+=sizeof(PidStateValue);Serial.print(F("Size: "));Serial.println(addr);
+//	Serial.print(F("Readed state: "));Serial.println(state);
+//	if(state<0 || state>100){
+//		state=svMain;
+//		Serial.println(F(">>>>>>>> SOMETHING WENT WRONG.... ABORT READING!"));
 //		return;
 //	}
-
-	state=EEPROM.get(addr, state);
-	addr+=sizeof(PidStateValue);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed state: "));Serial.println(state);
-	if(state<0 || state>100){
-		state=svMain;
-		Serial.println(F(">>>>>>>> SOMETHING WENT WRONG.... ABORT READING!"));
-		return;
-	}
-
-	servoDirection = EEPROM.get(addr, servoDirection);
-	addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed servo dir: "));Serial.println(servoDirection);
-
-	servoMinValue = EEPROM.get(addr, servoMinValue);
-	addr+=sizeof(servoMinValue);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed servo min: "));Serial.println(servoMinValue);
-
-	servoMaxValue = EEPROM.get(addr, servoMaxValue);
-	addr+=sizeof(servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed servo max: "));Serial.println(servoMaxValue);
-
-	_setpoint = EEPROM.get(addr, _setpoint);
-	addr+=sizeof(_setpoint);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed setpoint: "));Serial.println(_setpoint);
-
-	_kp = EEPROM.get(addr, _kp);
-	addr+=sizeof(_kp);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed kp: "));Serial.println(_kp);
-
-	_ki = EEPROM.get(addr, _ki);
-	addr+=sizeof(_ki);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed ki: "));Serial.println(_ki);
-
-	_kd = EEPROM.get(addr, _kd);
-	addr+=sizeof(_kd);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed kd: "));Serial.println(_kd);
-
-	pidSampleTimeSecs = EEPROM.get(addr, pidSampleTimeSecs);
-	addr+=sizeof(pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed Sample time secs: "));Serial.println(pidSampleTimeSecs);
-	if(pidSampleTimeSecs==NAN)pidSampleTimeSecs=5;
-
-	if(temp==4){
-		int dummy = 0;
-		dummy = EEPROM.get(addr, dummy);
-		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed Timer secs: "));Serial.println(dummy);
-		if(dummy>60*24)dummy=0;
-		Serial.print(F("Calculated Timer mins: "));Serial.println(dummy);
-
-		dummy = EEPROM.get(addr, dummy);
-		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed Timer state: "));Serial.println(dummy);
-		if(dummy<0||dummy>2)dummy=0;
-		Serial.print(F("Calculated Timer state: "));Serial.println(dummy);
-
-		dummy = EEPROM.get(addr, dummy);
-		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed Timer elapsed secs: "));Serial.println(dummy);
-		if(dummy>60*60*24)dummy=0;
-		if(dummy<0)dummy=0;
-	}
-	if(temp>=5){
-		autoModeOn = EEPROM.get(addr, autoModeOn);
-		addr+=sizeof(autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed autoModeOn: "));Serial.println(autoModeOn);
-
-		forcedOutput = EEPROM.get(addr, forcedOutput);
-		addr+=sizeof(forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed forcedOutput: "));Serial.println(forcedOutput);
-	}
-	if(temp>=6){
-		temperatureCorrection = EEPROM.get(addr, temperatureCorrection);
-		addr+=sizeof(temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed temperatureCorrection: "));Serial.println(temperatureCorrection*0.1);
-	}
-	EEPROM.commit();
-	EEPROM.end();
-}
+//
+//	servoDirection = EEPROM.get(addr, servoDirection);
+//	addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
+//	Serial.print(F("Readed servo dir: "));Serial.println(servoDirection);
+//
+//	servoMinValue = EEPROM.get(addr, servoMinValue);
+//	addr+=sizeof(servoMinValue);Serial.print(F("Size: "));Serial.println(addr);
+//	Serial.print(F("Readed servo min: "));Serial.println(servoMinValue);
+//
+//	servoMaxValue = EEPROM.get(addr, servoMaxValue);
+//	addr+=sizeof(servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
+//	Serial.print(F("Readed servo max: "));Serial.println(servoMaxValue);
+//
+//	_setpoint = EEPROM.get(addr, _setpoint);
+//	addr+=sizeof(_setpoint);Serial.print(F("Size: "));Serial.println(addr);
+//	Serial.print(F("Readed setpoint: "));Serial.println(_setpoint);
+//
+//	_kp = EEPROM.get(addr, _kp);
+//	addr+=sizeof(_kp);Serial.print(F("Size: "));Serial.println(addr);
+//	Serial.print(F("Readed kp: "));Serial.println(_kp);
+//
+//	_ki = EEPROM.get(addr, _ki);
+//	addr+=sizeof(_ki);Serial.print(F("Size: "));Serial.println(addr);
+//	Serial.print(F("Readed ki: "));Serial.println(_ki);
+//
+//	_kd = EEPROM.get(addr, _kd);
+//	addr+=sizeof(_kd);Serial.print(F("Size: "));Serial.println(addr);
+//	Serial.print(F("Readed kd: "));Serial.println(_kd);
+//
+//	pidSampleTimeSecs = EEPROM.get(addr, pidSampleTimeSecs);
+//	addr+=sizeof(pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
+//	Serial.print(F("Readed Sample time secs: "));Serial.println(pidSampleTimeSecs);
+//	if(pidSampleTimeSecs==NAN)pidSampleTimeSecs=5;
+//
+//	if(temp==4){
+//		int dummy = 0;
+//		dummy = EEPROM.get(addr, dummy);
+//		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
+//		Serial.print(F("Readed Timer secs: "));Serial.println(dummy);
+//		if(dummy>60*24)dummy=0;
+//		Serial.print(F("Calculated Timer mins: "));Serial.println(dummy);
+//
+//		dummy = EEPROM.get(addr, dummy);
+//		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
+//		Serial.print(F("Readed Timer state: "));Serial.println(dummy);
+//		if(dummy<0||dummy>2)dummy=0;
+//		Serial.print(F("Calculated Timer state: "));Serial.println(dummy);
+//
+//		dummy = EEPROM.get(addr, dummy);
+//		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
+//		Serial.print(F("Readed Timer elapsed secs: "));Serial.println(dummy);
+//		if(dummy>60*60*24)dummy=0;
+//		if(dummy<0)dummy=0;
+//	}
+//	if(temp>=5){
+//		autoModeOn = EEPROM.get(addr, autoModeOn);
+//		addr+=sizeof(autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
+//		Serial.print(F("Readed autoModeOn: "));Serial.println(autoModeOn);
+//
+//		forcedOutput = EEPROM.get(addr, forcedOutput);
+//		addr+=sizeof(forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
+//		Serial.print(F("Readed forcedOutput: "));Serial.println(forcedOutput);
+//	}
+//	if(temp>=6){
+//		temperatureCorrection = EEPROM.get(addr, temperatureCorrection);
+//		addr+=sizeof(temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+//		Serial.print(F("Readed temperatureCorrection: "));Serial.println(temperatureCorrection*0.1);
+//	}
+//	EEPROM.commit();
+//	EEPROM.end();
+//}
 
 
 
 
 
-void Controller::savetoEEprom(){
-//	ESP.wdtFeed();
-	EEPROM.begin(512);
-
-	int addr = 0;
-	EEPROM.put(addr, eepromVer);
-	addr+=1;Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. pid state: "));Serial.println(state);
-	EEPROM.put(addr, state);
-	addr+=sizeof(PidStateValue);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. servo dir: "));Serial.println(servoDirection);
-	EEPROM.put(addr, servoDirection);
-	addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. servo min: "));Serial.println(servoMinValue);
-	EEPROM.put(addr, servoMinValue);
-	addr+=sizeof(int);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. servo max: "));Serial.println(servoMaxValue);
-	EEPROM.put(addr, servoMaxValue);
-	addr+=sizeof(servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(_setpoint);
-	EEPROM.put(addr, _setpoint);
-	addr+=sizeof(_setpoint);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. Kp: "));Serial.println(_kp);
-	EEPROM.put(addr, _kp);
-	addr+=sizeof(_kp);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. Ki: "));Serial.println(_ki);
-	EEPROM.put(addr, _ki);
-	addr+=sizeof(_ki);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. Kd: "));Serial.println(_kd);
-	EEPROM.put(addr, _kd);
-	addr+=sizeof(_kd);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. Sample time secs: "));Serial.println(pidSampleTimeSecs);
-	EEPROM.put(addr, pidSampleTimeSecs);
-	addr+=sizeof(pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. autoModeOn: "));Serial.println(autoModeOn);
-	EEPROM.put(addr, autoModeOn);
-	addr+=sizeof(autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. forcedOutput: "));Serial.println(forcedOutput);
-	EEPROM.put(addr, forcedOutput);
-	addr+=sizeof(forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
-
-	Serial.print(F("EEPROMWriteSettings. temperatureCorrection: "));Serial.println(temperatureCorrection*0.1);
-	EEPROM.put(addr, temperatureCorrection);
-	addr+=sizeof(temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
-
-	EEPROM.commit();
-	EEPROM.end();
-
-//	ESP.wdtFeed();
-
-}
-
-void Controller::saveServoDirToEEprom(){
-	EEPROM.begin(512);
-
-	int addr = 0;
-	addr+=1;
-	addr+=sizeof(PidStateValue);
-	Serial.print(F("EEPROMWriteSettings. servo dir: "));Serial.println(servoDirection);
-	EEPROM.put(addr, servoDirection);
-	addr+=sizeof(ServoDirection);
-	addr+=sizeof(int);
-	addr+=sizeof(int);
-	addr+=sizeof(double);
-
-	EEPROM.commit();
-	EEPROM.end();
-}
+//void Controller::savetoEEprom(){
+////	ESP.wdtFeed();
+//	EEPROM.begin(512);
+//
+//	int addr = 0;
+//	EEPROM.put(addr, eepromVer);
+//	addr+=1;Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. pid state: "));Serial.println(state);
+//	EEPROM.put(addr, state);
+//	addr+=sizeof(PidStateValue);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. servo dir: "));Serial.println(servoDirection);
+//	EEPROM.put(addr, servoDirection);
+//	addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. servo min: "));Serial.println(servoMinValue);
+//	EEPROM.put(addr, servoMinValue);
+//	addr+=sizeof(int);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. servo max: "));Serial.println(servoMaxValue);
+//	EEPROM.put(addr, servoMaxValue);
+//	addr+=sizeof(servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(_setpoint);
+//	EEPROM.put(addr, _setpoint);
+//	addr+=sizeof(_setpoint);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. Kp: "));Serial.println(_kp);
+//	EEPROM.put(addr, _kp);
+//	addr+=sizeof(_kp);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. Ki: "));Serial.println(_ki);
+//	EEPROM.put(addr, _ki);
+//	addr+=sizeof(_ki);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. Kd: "));Serial.println(_kd);
+//	EEPROM.put(addr, _kd);
+//	addr+=sizeof(_kd);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. Sample time secs: "));Serial.println(pidSampleTimeSecs);
+//	EEPROM.put(addr, pidSampleTimeSecs);
+//	addr+=sizeof(pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. autoModeOn: "));Serial.println(autoModeOn);
+//	EEPROM.put(addr, autoModeOn);
+//	addr+=sizeof(autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. forcedOutput: "));Serial.println(forcedOutput);
+//	EEPROM.put(addr, forcedOutput);
+//	addr+=sizeof(forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	Serial.print(F("EEPROMWriteSettings. temperatureCorrection: "));Serial.println(temperatureCorrection*0.1);
+//	EEPROM.put(addr, temperatureCorrection);
+//	addr+=sizeof(temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+//
+//	EEPROM.commit();
+//	EEPROM.end();
+//
+////	ESP.wdtFeed();
+//
+//}
+//
+//void Controller::saveServoDirToEEprom(){
+//	EEPROM.begin(512);
+//
+//	int addr = 0;
+//	addr+=1;
+//	addr+=sizeof(PidStateValue);
+//	Serial.print(F("EEPROMWriteSettings. servo dir: "));Serial.println(servoDirection);
+//	EEPROM.put(addr, servoDirection);
+//	addr+=sizeof(ServoDirection);
+//	addr+=sizeof(int);
+//	addr+=sizeof(int);
+//	addr+=sizeof(double);
+//
+//	EEPROM.commit();
+//	EEPROM.end();
+//}
