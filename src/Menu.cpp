@@ -73,11 +73,13 @@ void MenuItem::HandleEncoderPush(EncoderSwStates pst){
 		selMI->OnSelectedInMenu();
 		break;
 	case EncoderPressLongPressed:
-		Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(atg.stateSelection);
+		Serial.print(F(">>>>>> LongPush <<<<<<  "));Serial.println(atg.stateSelection);
 		selMI->OnLongPress();
 		break;
 	case EncoderPressDblPressed:
-			break;
+		Serial.print(F(">>>>>> DblPress <<<<<<  "));Serial.println(atg.stateSelection);
+		selMI->OnDoublePress();
+		break;
 	case EncoderPressNone:
 			break;
 	}
@@ -89,7 +91,6 @@ void MenuItem::HandleEncoderPush(EncoderSwStates pst){
  }
 
  void CallbackMenuItem::OnSelectedInMenu(){
- 	Serial.print(F(">>>>>> Press <<<<<<  "));Serial.println(Caption);
  	if(callBack!=NULL){
  		Serial.println(F("Callback"));
  		callBack();
@@ -114,7 +115,6 @@ UpMenu::UpMenu(MenuItem* parent,int state):MenuItem(parent,-1,F("Up")){
 }
 
 void UpMenu::OnSelectedInMenu(){
-	Serial.print(F(">>>>>> Press <<<<<<  "));Serial.println(Caption);
 	Serial.print(F("Up to "));Serial.println(upState);
 	atg.SetState((PidStateValue)upState);
 }
@@ -127,9 +127,9 @@ void ServoConfigDirMenu::OnSelectedInMenu(){
 }
 void ServoConfigDirMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(mvmnt==EncMoveCCW){
-		if(atg.pidStates[atg.selectedController].servoDirection==ServoDirectionCW)atg.pidStates[atg.selectedController].servoDirection=ServoDirectionCCW;
+		if(atg.getSelectedController()->servoDirection==ServoDirectionCW)atg.getSelectedController()->setServoDirection(ServoDirectionCCW);
 	}else if(mvmnt==EncMoveCW){
-		if(atg.pidStates[atg.selectedController].servoDirection==ServoDirectionCCW)atg.pidStates[atg.selectedController].servoDirection=ServoDirectionCW;
+		if(atg.getSelectedController()->servoDirection==ServoDirectionCCW)atg.getSelectedController()->setServoDirection(ServoDirectionCW);
 	}
 }
 void ServoConfigDirMenu:: HandleEncoderPush(EncoderSwStates pst){
@@ -146,11 +146,9 @@ void ServoConfigMinMenu::OnSelectedInMenu(){
 }
 void ServoConfigMinMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(mvmnt==EncMoveCCW){
-		atg.pidStates[atg.selectedController].servoMinValue--;
-		if(atg.pidStates[atg.selectedController].servoMinValue<0)atg.pidStates[atg.selectedController].servoMinValue=0;
+		atg.getSelectedController()->decServoMinValue();
 	}else if(mvmnt==EncMoveCW){
-		if(atg.pidStates[atg.selectedController].servoMinValue<atg.pidStates[atg.selectedController].servoMaxValue-1)atg.pidStates[atg.selectedController].servoMinValue++;
-		if(atg.pidStates[atg.selectedController].servoMinValue>=180)atg.pidStates[atg.selectedController].servoMinValue=179;
+		atg.getSelectedController()->incServoMinValue();
 	}
 }
 void ServoConfigMinMenu:: HandleEncoderPush(EncoderSwStates pst){
@@ -167,11 +165,9 @@ void ServoConfigMaxMenu::OnSelectedInMenu(){
 }
 void ServoConfigMaxMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(mvmnt==EncMoveCCW){
-		if(atg.pidStates[atg.selectedController].servoMaxValue>atg.pidStates[atg.selectedController].servoMinValue+1)atg.pidStates[atg.selectedController].servoMaxValue--;
-		if(atg.pidStates[atg.selectedController].servoMaxValue<=0)atg.pidStates[atg.selectedController].servoMaxValue=1;
+		atg.getSelectedController()->decServoMaxValue();
 	}else if(mvmnt==EncMoveCW){
-		atg.pidStates[atg.selectedController].servoMaxValue++;
-		if(atg.pidStates[atg.selectedController].servoMaxValue>180)atg.pidStates[atg.selectedController].servoMaxValue=180;
+		atg.getSelectedController()->incServoMaxValue();
 	}
 }
 void ServoConfigMaxMenu::HandleEncoderPush(EncoderSwStates pst){
@@ -192,7 +188,6 @@ ServoConfigMenu::ServoConfigMenu(MenuItem* parent):MenuItem(parent,svServo_Confi
 }
 
 void ServoConfigMenu::OnSelectedInMenu(){
-	Serial.print(F(">>>>>> Press <<<<<<  "));Serial.println(Caption);
 	atg.SetState(svServo_Config);
 }
 
@@ -205,8 +200,8 @@ void KpPidConfigMenu::OnSelectedInMenu(){
 void KpPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	Serial.print(F(">>>>>> Kp Enc Mov <<<<<<  "));Serial.println(atg.state);
 
-	int ikp = (int)atg.pidStates[atg.selectedController].GetKp();
-	float decPart = (atg.pidStates[atg.selectedController].GetKp()-ikp);
+	int ikp = (int)atg.getSelectedController()->GetKp();
+	float decPart = (atg.getSelectedController()->GetKp()-ikp);
 
 	if(atg.state==svPidKpiConfig){
 		if(mvmnt==EncMoveCCW){
@@ -214,7 +209,7 @@ void KpPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 		}else if(mvmnt==EncMoveCW){
 			ikp++;
 		}
-		atg.pidStates[atg.selectedController].SetKp(ikp+decPart);
+		atg.getSelectedController()->SetKp(ikp+decPart);
 	} else if(atg.state==svPidKpdConfig){
 		decPart = (int)(decPart*100);
 		if(mvmnt==EncMoveCCW){
@@ -224,12 +219,12 @@ void KpPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 			//Serial.println(F("CW"));
 			decPart+=1.0;
 		}
-		atg.pidStates[atg.selectedController].SetKp(ikp+(decPart/100.0));
+		atg.getSelectedController()->SetKp(ikp+(decPart/100.0));
 	} else if(atg.state==svPidSampleTimeConfig){
 		if(mvmnt==EncMoveCCW){
-			atg.pidStates[atg.selectedController].pidSampleTimeSecs-=1.0;
+			atg.getSelectedController()->decSampleTimeSecs();
 		}else if(mvmnt==EncMoveCW){
-			atg.pidStates[atg.selectedController].pidSampleTimeSecs+=1.0;
+			atg.getSelectedController()->incSampleTimeSecs();
 		}
 	}
 }
@@ -251,34 +246,34 @@ void KiPidConfigMenu::OnSelectedInMenu(){
 }
 void KiPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(atg.state==svPidKiiConfig){
-		int iki = (int)atg.pidStates[atg.selectedController].GetKi();
-		float decPart = (atg.pidStates[atg.selectedController].GetKi()-iki);
+		int iki = (int)atg.getSelectedController()->GetKi();
+		float decPart = (atg.getSelectedController()->GetKi()-iki);
 		if(mvmnt==EncMoveCCW){
 			iki--;
 		}else if(mvmnt==EncMoveCW){
 			iki++;
 		}
-		atg.pidStates[atg.selectedController].SetKi(iki+decPart);
+		atg.getSelectedController()->SetKi(iki+decPart);
 	} else if(atg.state==svPidKidConfig) {
-		int iki = (int)atg.pidStates[atg.selectedController].GetKi();
-		float decPart = (atg.pidStates[atg.selectedController].GetKi()-iki);
+		int iki = (int)atg.getSelectedController()->GetKi();
+		float decPart = (atg.getSelectedController()->GetKi()-iki);
 		decPart = (int)(decPart*100);
 		if(mvmnt==EncMoveCCW){
 			decPart-=1.0;
 		}else if(mvmnt==EncMoveCW){
 			decPart+=1.0;
 		}
-		atg.pidStates[atg.selectedController].SetKi(iki+(decPart/100.0));
+		atg.getSelectedController()->SetKi(iki+(decPart/100.0));
 	}else if(atg.state==svPidKicConfig) {
-		int iki = (int)atg.pidStates[atg.selectedController].GetKi();
-		float millPart = (atg.pidStates[atg.selectedController].GetKi()-iki);
+		int iki = (int)atg.getSelectedController()->GetKi();
+		float millPart = (atg.getSelectedController()->GetKi()-iki);
 		millPart = (int)(millPart*1000);
 		if(mvmnt==EncMoveCCW){
 			millPart-=1.0;
 		}else if(mvmnt==EncMoveCW){
 			millPart+=1.0;
 		}
-		atg.pidStates[atg.selectedController].SetKi(iki+(millPart/1000.0));
+		atg.getSelectedController()->SetKi(iki+(millPart/1000.0));
 	}
 }
 void KiPidConfigMenu::HandleEncoderPush(EncoderSwStates pst){
@@ -300,24 +295,24 @@ void KdPidConfigMenu::OnSelectedInMenu(){
 }
 void KdPidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(atg.state==svPidKdiConfig) {
-		int ikd = (int)atg.pidStates[atg.selectedController].GetKd();
-		float decPart = (atg.pidStates[atg.selectedController].GetKd()-ikd);
+		int ikd = (int)atg.getSelectedController()->GetKd();
+		float decPart = (atg.getSelectedController()->GetKd()-ikd);
 		if(mvmnt==EncMoveCCW){
 			ikd-=1.0;
 		}else if(mvmnt==EncMoveCW){
 			ikd+=1.0;
 		}
-		atg.pidStates[atg.selectedController].SetKd(ikd+decPart);
+		atg.getSelectedController()->SetKd(ikd+decPart);
 	} else if(atg.state==svPidKddConfig) {
-		int ikd = (int)atg.pidStates[atg.selectedController].GetKd();
-		float decPart = (atg.pidStates[atg.selectedController].GetKd()-ikd);
+		int ikd = (int)atg.getSelectedController()->GetKd();
+		float decPart = (atg.getSelectedController()->GetKd()-ikd);
 		decPart = (int)(decPart*100);
 		if(mvmnt==EncMoveCCW){
 			decPart-=1.0;
 		}else if(mvmnt==EncMoveCW){
 			decPart+=1.0;
 		}
-		atg.pidStates[atg.selectedController].SetKd(ikd+(decPart/100.0));
+		atg.getSelectedController()->SetKd(ikd+(decPart/100.0));
 	}
 }
 void KdPidConfigMenu::HandleEncoderPush(EncoderSwStates pst){
@@ -337,9 +332,9 @@ void SampleTimePidConfigMenu::OnSelectedInMenu(){
 }
 void SampleTimePidConfigMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(mvmnt==EncMoveCCW){
-		atg.pidStates[atg.selectedController].pidSampleTimeSecs--;
+		atg.getSelectedController()->decSampleTimeSecs();
 	}else if(mvmnt==EncMoveCW){
-		atg.pidStates[atg.selectedController].pidSampleTimeSecs++;
+		atg.getSelectedController()->incSampleTimeSecs();
 	}
 }
 void SampleTimePidConfigMenu::HandleEncoderPush(EncoderSwStates pst){
@@ -368,100 +363,43 @@ void ProbeCorrectionMenu::OnSelectedInMenu(){
 }
 void ProbeCorrectionMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(mvmnt==EncMoveCCW){
-		atg.pidStates[atg.selectedController].temperatureCorrection--;
+		atg.getSelectedController()->decTempCorrection();
 	}else if(mvmnt==EncMoveCW){
-		atg.pidStates[atg.selectedController].temperatureCorrection++;
+		atg.getSelectedController()->incTempCorrection();
 	}
 }
 void ProbeCorrectionMenu::HandleEncoderPush(EncoderSwStates pst){
-	atg.state = svConfig_Probe;
-	atg.savetoEEprom();
+	atg.SetState(svConfigController, true);
 }
 
-
-
-ProbeAssignmentMenu::ProbeAssignmentMenu(MenuItem* parent):MenuItem(parent,svConfig_ProbeAssign,F("Probe assignment")){
-	Serial.println(F("Locating devices..."));
-	Serial.print(F("Found "));
-	int deviceCount = atg.pidStates[atg.selectedController].probe.getDeviceCount();
-	Serial.print(deviceCount, DEC);
-	Serial.println(F(" devices."));
-
-	Serial.println("Temperatures...");
-	for (int i = 0;  i < deviceCount;  i++){
-		Serial.print("Sensor ");Serial.print(i);Serial.print(" : ");atg.pidStates[atg.selectedController].probe.readTemperatureByIndex(i);
-//		sensors.getAddress(Thermometer, i);
-//		printAddress(Thermometer);
-	}
-
-}
-void ProbeAssignmentMenu::OnSelectedInMenu(){
-	atg.SetState(svConfig_ProbeAssign);
-}
-//void ProbeAssignmentMenu::HandleEncoderMovement(EncoderMovement mvmnt){
-//	if(mvmnt==EncMoveCCW){
-//		pidState.temperatureCorrection--;
-//	}else if(mvmnt==EncMoveCW){
-//		pidState.temperatureCorrection++;
-//	}
-//}
-
-void ProbeAssignmentMenu::HandleEncoderPush(EncoderSwStates pst){
-	atg.state = svConfig_Probe;
-	atg.savetoEEprom();
-}
-
-
-
-ConfigProbeMenu::ConfigProbeMenu(MenuItem* parent):MenuItem(parent,svConfig_Probe,F("Probe configuration")){
-	subMenuItems.resize(3);
-	subMenuItems[0] = upMenu = new UpMenu(this,svConfig);
-	subMenuItems[1] = correctionMenu = new ProbeCorrectionMenu(this);
-	subMenuItems[2] = assignmentMenu = new ProbeAssignmentMenu(this);
-}
-void ConfigProbeMenu::OnSelectedInMenu(){
-	atg.SetState(svConfig_Probe);
-}
-void ConfigProbeMenu::HandleEncoderMovement(EncoderMovement mvmnt){
-	if(mvmnt==EncMoveCCW){
-		atg.pidStates[atg.selectedController].temperatureCorrection--;
-	}else if(mvmnt==EncMoveCW){
-		atg.pidStates[atg.selectedController].temperatureCorrection++;
-	}
-}
-void ConfigProbeMenu::HandleEncoderPush(EncoderSwStates pst){
-	atg.state = svConfig;
-	atg.savetoEEprom();
-}
-
-ConfigController::ConfigController(MenuItem* parent):MenuItem(parent,svConfigController,F("Ctrl sel")){
+ControllerSelection::ControllerSelection(MenuItem* parent):MenuItem(parent,svConfigController,F("Ctrl sel")){
 	subMenuItems.resize(0);
 }
 
-void ConfigController::OnSelectedInMenu(){
+void ControllerSelection::OnSelectedInMenu(){
 	atg.SetState(svConfigController,false);
 }
 
-void ConfigController::HandleEncoderPush(EncoderSwStates pst){
+void ControllerSelection::HandleEncoderPush(EncoderSwStates pst){
 	atg.SetState(svConfig,false);
 }
 
-void ConfigController::HandleEncoderMovement(EncoderMovement mvmnt){
+void ControllerSelection::HandleEncoderMovement(EncoderMovement mvmnt){
 	if(mvmnt==EncMoveCCW){
-		atg.selectedController ++;
+		atg.setSelectedController(atg.getSelectedControllerIdx()-1);
 	}else if(mvmnt==EncMoveCW){
-		atg.selectedController --;
+		atg.setSelectedController(atg.getSelectedControllerIdx()+1);
 	}
-	atg.selectedController = atg.selectedController % atg.nOfControllers;
+
 }
 
 ConfigMenu::ConfigMenu(MenuItem* parent):MenuItem(parent,svConfig,F("Config")){
 	subMenuItems.resize(5);
 	subMenuItems[0] = upMenu = new UpMenu(this,svMain);
-	subMenuItems[1] = configControllerMenu = new ConfigController(this);
+	subMenuItems[1] = configControllerMenu = new ControllerSelection(this);
 	subMenuItems[2] = servoMenu = new ServoConfigMenu(this);
 	subMenuItems[3] = pidMenu = new PidConfigMenu(this);
-	subMenuItems[4] = probeMenu = new ConfigProbeMenu(this);
+	subMenuItems[4] = correctionMenu = new ProbeCorrectionMenu(this);
 }
 
 void ConfigMenu::OnSelectedInMenu(){
@@ -481,48 +419,61 @@ RunAutoRampMenu::RunAutoRampMenu(MenuItem* parent):MenuItem(parent,svRunAutoRamp
 }
 void RunAutoRampMenu::OnSelectedInMenu(){
 	Serial.print(F(">>>>>> Push Run Ramp <<<<<<  "));Serial.println(atg.state);
+	if(Selected)atg.savetoEEprom();
+	Selected = !Selected;
+}
+
+AutoControllerSelection::AutoControllerSelection(MenuItem* parent):MenuItem(parent,svRunAutoCtrlSel,F("Ctrl sel")){
+}
+
+void AutoControllerSelection::OnSelectedInMenu(){
+	Serial.print(F(">>>>>> Push Ctrl Sel <<<<<<  "));Serial.println(atg.state);
+	Selected = !Selected;
+}
+
+RunAutoSwitch::RunAutoSwitch(MenuItem* parent):MenuItem(parent,svRunAuto,F("")){
+	Controller* pCtrl = atg.getSelectedController();
+	if(pCtrl==NULL) return;
+	if(pCtrl->autoModeOn>0){
+		Caption=F("Auto");
+	}else{
+		Caption=F("Manual");
+	}
+}
+
+void RunAutoSwitch::OnDoublePress(){
+    Serial.print(F(">>>>>> Auto Switch dbl press <<<<<<  "));Serial.println(atg.getSelectedController()->autoModeOn);
+
+	atg.getSelectedController()->toggleAutoModeOn();
+	atg.savetoEEprom();
+	if(atg.getSelectedController()->autoModeOn>0){
+		Caption=F("Auto");
+	}else{
+		Caption=F("Manual");
+	}
+}
+
+void RunAutoSwitch::OnSelectedInMenu(){
+	Serial.print(F(">>>>>> Select Auto <<<<<<  "));Serial.println(atg.state);
 	Serial.println(atg.state);
 	if(Selected)atg.savetoEEprom();
 	Selected = !Selected;
 }
 
-RunAutoSwitch::RunAutoSwitch(MenuItem* parent):MenuItem(parent,svRunAuto,F("")){
-	if(atg.pidStates[atg.selectedController].autoModeOn>0){
-		Caption=F("Auto");
-	}else{
-		Caption=F("Manual");
-	}
-}
 
-void RunAutoSwitch::OnLongPress(){
-    Serial.print(F(">>>>>> Long press Switch <<<<<<  "));Serial.println(atg.pidStates[atg.selectedController].autoModeOn);
-
-	if(atg.pidStates[atg.selectedController].autoModeOn==1){
-		atg.pidStates[atg.selectedController].autoModeOn = 0;
-	}else{
-		atg.pidStates[atg.selectedController].autoModeOn = 1;
-		atg.pidStates[atg.selectedController].forcedOutput=0;
-	}
-	atg.savetoEEprom();
-
-	if(atg.pidStates[atg.selectedController].autoModeOn>0){
-		Caption=F("Auto");
-	}else{
-		Caption=F("Manual");
-	}
-
-}
 
 RunAutoMenu::RunAutoMenu(MenuItem* parent):MenuItem(parent,svRunAuto,F("Auto")){
-	subMenuItems.resize(4);
+	subMenuItems.resize(5);
 	
 	subMenuItems[0] = new UpMenu(this,svMain);
 	subMenuItems[1] = switchMenu = new RunAutoSwitch(this);
 	subMenuItems[2] = setpointMenu = new RunAutoSetpointMenu(this);
 	subMenuItems[3] = rampMenu = new RunAutoRampMenu(this);
+	subMenuItems[4] = ctrlSelMenu = new AutoControllerSelection(this);
 }
 
 void RunAutoMenu::OnSelectedInMenu(){
+	atg.setSelectedController(0);
 	atg.SetState(svRunAuto);
 }
 
@@ -531,42 +482,42 @@ void RunAutoMenu::HandleEncoderPush(EncoderSwStates pst){
 }
 
 void RunAutoMenu::HandleEncoderMovement(EncoderMovement mvmnt){
-	if(!rampMenu->Selected&&!setpointMenu->Selected && !(atg.pidStates[atg.selectedController].autoModeOn==0 &&switchMenu->Selected)){
+	if(!rampMenu->Selected&&!setpointMenu->Selected && !ctrlSelMenu->Selected&& !(atg.getSelectedController()->autoModeOn==0 &&switchMenu->Selected)){
 		MenuItem::HandleEncoderMovement(mvmnt);
 	}
 
 	//last resort status fix
-	if(atg.pidStates[atg.selectedController].autoModeOn==1) switchMenu->Selected = false;
+	if(atg.getSelectedController()->autoModeOn==1) switchMenu->Selected = false;
 
 	if(rampMenu->Selected){
 		if(mvmnt==EncMoveCCW){
-			atg.pidStates[atg.selectedController].decRamp();
+			atg.getSelectedController()->decRamp();
 		}else if(mvmnt==EncMoveCW){
-			atg.pidStates[atg.selectedController].incRamp();
+			atg.getSelectedController()->incRamp();
 		}
 	}else if(setpointMenu->Selected){
 		if(mvmnt==EncMoveCCW){
-			atg.pidStates[atg.selectedController].decSetpoint();
+			atg.getSelectedController()->decSetpoint();
 		}else if(mvmnt==EncMoveCW){
-			atg.pidStates[atg.selectedController].incSetpoint();
+			atg.getSelectedController()->incSetpoint();
 		}
-	} else if(atg.pidStates[atg.selectedController].autoModeOn==0 && switchMenu->Selected){
+	} else if(atg.getSelectedController()->autoModeOn==0 && switchMenu->Selected){
 		//manual mode. handle output percentage
 
 		if(mvmnt==EncMoveCCW){
-			Serial.print(F(">>>>>> Change forced output to"));Serial.println(atg.pidStates[atg.selectedController].forcedOutput+1);
-			atg.pidStates[atg.selectedController].forcedOutput++;
-			if(atg.pidStates[atg.selectedController].forcedOutput>100){
-				atg.pidStates[atg.selectedController].forcedOutput=100;
-			}
+			Serial.print(F(">>>>>> Change forced output to"));Serial.println(atg.getSelectedController()->forcedOutput-1);
+			atg.getSelectedController()->setForcedOutput(atg.getSelectedController()->forcedOutput-1);
 		}else if(mvmnt==EncMoveCW){
-			Serial.print(F(">>>>>> Change forced output to"));Serial.println(atg.pidStates[atg.selectedController].forcedOutput-1);
-			atg.pidStates[atg.selectedController].forcedOutput--;
-			if(atg.pidStates[atg.selectedController].forcedOutput<0){
-				atg.pidStates[atg.selectedController].forcedOutput=0;
-			}
+			Serial.print(F(">>>>>> Change forced output to"));Serial.println(atg.getSelectedController()->forcedOutput+1);
+			atg.getSelectedController()->setForcedOutput(atg.getSelectedController()->forcedOutput+1);
 		}
-		atg.pidStates[atg.selectedController].setOutPerc(atg.pidStates[atg.selectedController].forcedOutput);
+		atg.getSelectedController()->setOutPerc(atg.getSelectedController()->forcedOutput);
+	} else if(ctrlSelMenu->Selected){
+		if(mvmnt==EncMoveCCW){
+			atg.setSelectedController(atg.getSelectedControllerIdx()-1);
+		}else if(mvmnt==EncMoveCW){
+			atg.setSelectedController(atg.getSelectedControllerIdx()+1);
+		}
 	}
 }
 

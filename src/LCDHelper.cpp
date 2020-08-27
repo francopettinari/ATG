@@ -137,9 +137,13 @@ void LCDHelper::display(){
 	}
 	switch(atg.getState()) {
 		case svRunAuto:
+
 		case svRunAutoSetpoint:
 			displayRun();
 			break;
+//		case svRunAutoCtrlSel:
+//			displayAutoCtrlSel();
+//			break;
 		case svConfig:
 			displayConfig();
 			break;
@@ -164,10 +168,7 @@ void LCDHelper::display(){
 			displayConfigServo();
 			break;
 		case svConfig_ProbeCorrection:
-			displayConfigProbe();
-			break;
-		case svConfig_ProbeAssign:
-			displayConfigAssign();
+			displayConfigProbeCorrection();
 			break;
 		default:
 			displayDefault();
@@ -180,49 +181,74 @@ void LCDHelper::display(){
 }
 
 void LCDHelper::displayDefault(){
-	float t0 = atg.pidStates[0].getTemperature();
-	float t1 = atg.pidStates[1].getTemperature();
+	float t0 = atg.getController(0)->getTemperature();
+	float t1 = atg.getController(1)->getTemperature();
 
-	int tPos = t0<100?15:14;
+	int tPos = t0<100?14:13;
+	if(t0<0)tPos--;
 	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,t0,2,1);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-	if(atg.pidStates[1].getProbeAddress()>0){
-		/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 1,t1,2,1);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
-	}
+	tPos = t1<100?14:13;
+	if(t1<0)tPos--;
+	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 1,t1,2,1);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
 }
 
 void LCDHelper::displayConfig(){
-	if(atg.selectedController==0){
-		lcd.PrintF(5, 0,F("Ctrl 1"));
+	if(atg.getSelectedControllerIdx()==0){
+		lcd.PrintF(10, 0,F("Ctrl 1"));
 	}else{
-		lcd.PrintF(5, 0,F("Ctrl 2"));
+		lcd.PrintF(10, 0,F("Ctrl 2"));
 	}
 }
 
 void LCDHelper::displayConfigPid(){
-	if(atg.selectedController==0){
-		lcd.PrintF(5, 0,F("Ctrl 1"));
+	if(atg.getSelectedControllerIdx()==0){
+		lcd.PrintF(10, 0,F("Ctrl 1"));
 	}else{
-		lcd.PrintF(5, 0,F("Ctrl 2"));
+		lcd.PrintF(10, 0,F("Ctrl 2"));
 	}
+	Controller ctrl = *atg.getSelectedController();
+	lcd.PrintF(10, 0,F("Kp"));lcd.PrintDoubleFD(13, 0,ctrl.GetKp(),2,3);
+	lcd.PrintF(10, 1,F("Ki"));lcd.PrintDoubleFD(13, 1,ctrl.GetKi(),2,3);
+	lcd.PrintF(10, 2,F("Kd"));lcd.PrintDoubleFD(13, 2,ctrl.GetKd(),2,3);
+	lcd.PrintF(10, 3,F("St"));lcd.PrintDoubleFD(16, 3,ctrl.pidSampleTimeSecs,2,0);
+}
 
-	lcd.PrintF(10, 0,F("Kp"));lcd.PrintDoubleFD(13, 0,atg.pidStates[atg.selectedController].GetKp(),2,3);
-	lcd.PrintF(10, 1,F("Ki"));lcd.PrintDoubleFD(13, 1,atg.pidStates[atg.selectedController].GetKi(),2,3);
-	lcd.PrintF(10, 2,F("Kd"));lcd.PrintDoubleFD(13, 2,atg.pidStates[atg.selectedController].GetKd(),2,3);
-	lcd.PrintF(10, 3,F("St"));lcd.PrintDoubleFD(16, 3,atg.pidStates[atg.selectedController].pidSampleTimeSecs,2,0);
+void LCDHelper::displayRun(int idx,Controller ctrl, bool showCtrlLabel){
+	if(showCtrlLabel){
+		if(atg.getSelectedControllerIdx()==0){
+			lcd.PrintF(5, 0, F("Mash"));
+		}else{
+			lcd.PrintF(5, 0, F("Sparge"));
+		}
+	}
+	int base =idx*10;
+	int spPos = ctrl.setpoint()<100?base+7:base+6;
+	int tPos = ctrl.getTemperature()<100?spPos-5:spPos-6;
+	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,ctrl.getTemperature(),2,1);lcd.PrintChar(spPos-1, 0,'/'); lcd.PrintDoubleFD(spPos, 0,ctrl.setpoint(),2,0);lcd.PrintChar(base+9, 0,(char)DEGREE_CHAR);
+	int o = ctrl.getOutPerc();
+	/*lcd.PrintChar(13, 1,(char)HEAT_CHAR);*/ lcd.PrintDoubleD(base+5, 1,o,0); 	lcd.PrintF(base+9, 1,F("%"));
+	/*lcd.PrintF(13, 2,F("/"));*/ lcd.PrintDoubleD(base+5, 2,ctrl.ramp(),0);lcd.PrintChar(base+9, 2,(char)DEGMIN_CHAR);
 }
 
 void LCDHelper::displayRun(){
-	Controller ctrl = atg.getSelectedController();
-	int spPos = ctrl.setpoint()<100?17:16;
-	int tPos = ctrl.getTemperature()<100?spPos-5:spPos-6;
-	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,ctrl.getTemperature(),2,1);lcd.PrintChar(spPos-1, 0,'/'); lcd.PrintDoubleFD(spPos, 0,ctrl.setpoint(),2,0);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-	int o = ctrl.getOutPerc();
-	/*lcd.PrintChar(13, 1,(char)HEAT_CHAR);*/ lcd.PrintDoubleD(15, 1,o,0); 	lcd.PrintF(19, 1,F("%"));
-	/*lcd.PrintF(13, 2,F("/"));*/ lcd.PrintDoubleD(15, 2,ctrl.ramp(),0);lcd.PrintChar(19, 2,(char)DEGMIN_CHAR);
+	if(atg.isMenuActive()){
+		displayRun(1,*atg.getSelectedController(),true);
+	}else{
+		displayRun(0,*atg.getController(0),false);
+		displayRun(1,*atg.getController(1),false);
+	}
 }
 
+//void LCDHelper::displayAutoCtrlSel(){
+//	if(atg.getSelectedControllerIdx()==0){
+//		lcd.PrintF(10, 0,F("Ctrl 1"));
+//	}else{
+//		lcd.PrintF(10, 0,F("Ctrl 2"));
+//	}
+//}
+
 void LCDHelper::displayConfigServo(){
-	Controller ctrl = atg.getSelectedController();
+	Controller ctrl = *atg.getSelectedController();
 	if(ctrl.servoDirection==ServoDirectionCW){
 		lcd.PrintF(11, 0,F("Dir CW"));
 	}else if(ctrl.servoDirection==ServoDirectionCCW){
@@ -232,31 +258,10 @@ void LCDHelper::displayConfigServo(){
 	lcd.PrintF(11, 2,F("Max "));lcd.PrintDoubleFD(15, 2,ctrl.servoMaxValue,3,0);
 }
 
-void LCDHelper::displayConfigProbe(){
-	Controller ctrl = atg.getSelectedController();
+void LCDHelper::displayConfigProbeCorrection(){
+	Controller ctrl = *atg.getSelectedController();
 	lcd.PrintF(5, 0,F("Temp correction"));
 	lcd.PrintDoubleFD(15, 2,ctrl.temperatureCorrection,3,0);
-}
-
-void LCDHelper::displayConfigAssign(){
-	Controller ctrl = atg.getSelectedController();
-	lcd.PrintF(5, 0,F("Probe assignment"));
-	//lcd.PrintDoubleFD(15, 2,pstate.temperatureCorrection,3,0);
-	Serial.println(F("Locating devices..."));
-	ctrl.probe.deviceCount = ctrl.probe.getDeviceCount();
-	lcd.PrintF(5, 1,F("Sensors: "));lcd.PrintFloat(14, 1,ctrl.probe.deviceCount,0);
-	Serial.print(F("Found "));Serial.print(ctrl.probe.deviceCount, DEC);Serial.println(F(" devices."));
-
-	Serial.println("Temperatures...");
-	lcd.PrintF(5, 2,F("Temperatures:"));
-	for (int i = 0;  i < ctrl.probe.deviceCount;  i++){
-		float temp = ctrl.probe.readTemperatureByIndex(i);
-		Serial.print(i);Serial.print(F(" : "));Serial.println(temp);
-		lcd.PrintFloat(5, 3+i,temp,2);
-//		sensors.getAddress(Thermometer, i);
-//		printAddress(Thermometer);
-	}
-
 }
 
 void LCDHelper::print(byte col, byte row,  __FlashStringHelper *ifsh){

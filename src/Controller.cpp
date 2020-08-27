@@ -21,8 +21,9 @@ Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, _kp, _k
 	approacingEnd2Millis = 0;
 
 	PrevSwitchOnOffMillis = 0;
-}
 
+
+}
 
 long lastLog=0;
 
@@ -52,13 +53,13 @@ void Controller::_writeServo(int value){
 void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
 
 	float now = millis();
-	if(log){
-//		Serial.print(F("Current temp state: "));Serial.println(TempState);
-//		Serial.print(F("TimeToLastSwitch:"));Serial.print(now-PrevSwitchOnOffMillis);
-//		Serial.print(F(" Degree:"));Serial.print(degree);
-//		Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
-//		Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
-	}
+	//if(log){
+		Serial.print(F("Current temp state: "));Serial.println(TempState);
+		Serial.print(F("TimeToLastSwitch:"));Serial.print(now-PrevSwitchOnOffMillis);
+		Serial.print(F(" Degree:"));Serial.print(degree);
+		Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
+		Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
+	//}
 	if(degree<servoMinValue || (minValueSwitchOff && degree==servoMinValue)) degree=0; //switch off on minVal
 	switch(TempState){
 		case TempStateUndefined:
@@ -209,7 +210,7 @@ void Controller::updateRamp(){
 }
 
 bool Controller::isAutoState(int state){
-	return state==svRunAuto || state==svRunAutoSetpoint || state==svRunAutoRamp;
+	return state==svRunAuto || state==svRunAutoSetpoint || state==svRunAutoRamp || state==svRunAutoCtrlSel;
 }
 
 
@@ -232,12 +233,7 @@ void Controller::setOutPerc(double val){
 
 void Controller::update(){
 
-	double tempp = 0;
-	if(probeAddress==0){
-		tempp = probe.readTemperatureByIndex(0);
-	}else{
-		tempp = probe.readTemperatureByAddress(&probeAddress);
-	}
+	double tempp = pProbe->readTemperature();
 
 	setTemperature(tempp);
 
@@ -280,7 +276,8 @@ void Controller::update(){
 		break;
 		case svRunAuto :
 		case svRunAutoSetpoint :
-		case svRunAutoRamp : {
+		case svRunAutoRamp :
+		case svRunAutoCtrlSel : {
 
 			//if autoModeOn is disabled, then force the manual output and return
 			if(autoModeOn==0){

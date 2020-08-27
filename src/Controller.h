@@ -25,7 +25,7 @@ class MenuItem;
 
 enum PidStateValue { //FIXME: to be renamed to something common to two pids controllers
 	svMain=0,
-	svRunAuto=10, svRunAutoSetpoint=13,svRunAutoRamp=17,
+	svRunAuto=10, svRunAutoSetpoint=13,svRunAutoRamp=17,svRunAutoCtrlSel=18,
 	svConfig=20,svConfigController=21,
 	svPidConfig=22,
 	svPidKpiConfig=23,svPidKpdConfig=24,
@@ -33,7 +33,7 @@ enum PidStateValue { //FIXME: to be renamed to something common to two pids cont
 	svPidKdiConfig=28,svPidKddConfig=29,
 	svPidSampleTimeConfig=30,
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43,
-	svConfig_Probe=50,svConfig_ProbeCorrection=52,svConfig_ProbeAssign=54};
+	svConfig_ProbeCorrection=50};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
 enum FsmState {
@@ -64,22 +64,19 @@ private:
 	//last calculated 2020.06.09 KP=35, KI=KP/(deadTime*3.3)=25/(15*3.3)=0,7 (15 secs delay)
 	PID pid;
 
-//	Servo_ESP32 servo;
 
-
-	uint8_t probeAddress;
 	Servo_ESP32* pServo;
+	TemperatureProbe* pProbe;
 public:
 	FsmState fsmState=psIdle;
 	double _kp=50,_ki=0.3,_kd=0;
 	double _setpoint = 25,_dynamicSetpoint=25,_ramp=1;
-	TemperatureProbe probe;
-	void initialize(int servoPin){
+
+	void initialize(int servoPin, int tempProbePin){
 		pServo = new Servo_ESP32();
 		pServo->attach(servoPin);
+		pProbe = new TemperatureProbe(tempProbePin);
 	}
-	void setProbeAddress(uint8_t addr){probeAddress = addr;}
-	uint8_t getProbeAddress(){return probeAddress;}
 
 	float GetKp(){return _kp;}
 	void SetKp(float val){
@@ -127,14 +124,37 @@ public:
 
 
 //	PidStateValue state = svMain;
-	int autoModeOn = false; //true=> auto mode on, false auto mode paused
+	int autoModeOn = false; //true=> auto mode on, false auto mode paused //FIXME: make private
+	void toggleAutoModeOn(){
+		if(autoModeOn==1){
+			autoModeOn = 0;
+		}else{
+			autoModeOn = 1;
+			forcedOutput=0;
+		}
+
+	}
+	void setAutoMode(int value){
+		autoModeOn = value;
+	}
 	int forcedOutput = 0; //0 means automatic, !=0 means forced to value
+	void setForcedOutput(int value){
+		forcedOutput = value;
+		if(forcedOutput<0){
+			forcedOutput=0;
+		}
+		if(forcedOutput>100){
+			forcedOutput=100;
+		}
+	}
 	LCDHelper        *lcdHelper=NULL;
 
 
 
 	double           temperature = 0, lastTemperature=0/*,dTemperature*/;
 	float pidSampleTimeSecs = 5;
+	void incSampleTimeSecs(){pidSampleTimeSecs++;}
+	void decSampleTimeSecs(){pidSampleTimeSecs--;}
 	float lastManualLog = 0;
 //	float lastUdpDataSent = 0;
 
@@ -151,9 +171,34 @@ public:
 //	int expectedReqId = 1; //expected request id
 
 	ServoDirection servoDirection = ServoDirectionCW;
+	void setServoDirection(ServoDirection val){servoDirection=val;}
 	int servoMinValue = 0; //degrees
+	void setServoMinValue(int val){
+		servoMinValue=val;
+		if(servoMinValue<0)servoMinValue=0;
+		if(servoMinValue>=180)servoMinValue=179;
+	}
+	void decServoMinValue(){
+		setServoMinValue(servoMinValue-1);
+	}
+	void incServoMinValue(){
+		if(servoMinValue<servoMaxValue-1)setServoMinValue(servoMinValue+1);
+	}
 	int servoMaxValue = 180; //degrees
+	void setServoMaxValue(int val){
+		servoMaxValue=val;
+		if(servoMaxValue<1)servoMaxValue=1;
+		if(servoMaxValue>=180)servoMaxValue=179;
+	}
+	void decServoMaxValue(){
+		if(servoMaxValue>servoMinValue+1)setServoMaxValue(servoMaxValue-1);
+	}
+	void incServoMaxValue(){
+		setServoMaxValue(servoMaxValue+1);
+	}
 	int temperatureCorrection = 0;//0.1 deg steps: 5=+0.5, -8=-0.8
+	void incTempCorrection(){temperatureCorrection++;}
+	void decTempCorrection(){temperatureCorrection--;}
 
 	Controller();
 

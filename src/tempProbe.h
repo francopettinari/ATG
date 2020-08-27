@@ -23,25 +23,18 @@ private:
 	OneWire* onewire;
 	DallasTemperature* sensors;
 
-	float readTemperature(int index, const uint8_t* deviceAddress);
-public:
 
-	int deviceCount = 0;
+public:
 
 	float lastTempReadMillis = 0;
 	float firArray[firNOfSamples];
 	float filteredValue;
 	int firIdx; //current index of fir array. next value will be stored in fir[firIdx]
 
-	float readTemperatureByIndex(int index);
-	float readTemperatureByAddress(const uint8_t* deviceAddress);
+	float readTemperature();
 	bool isReady(){ return firIdx>=firNOfSamples;}
 
-	int getDeviceCount(){ return sensors->getDeviceCount();}
-
-	TemperatureProbe();
-
-
+	TemperatureProbe(int pin);
 
 	virtual ~TemperatureProbe();
 };

@@ -17,13 +17,15 @@ class Controller;
 class LCDHelper {
     LCDBuffer lcd;
 	void displayRun();
+	void displayRun(int idx,Controller ctrl, bool showCtrlLabel);
+	void displayAutoCtrlSel();
 	void displayManual();
 	void displayTimerValue();
 	void displayConfig();
 	void displayConfigServo();
 	void displayConfigPid();
 	void displayConfigProbe();
-	void displayConfigAssign();
+	void displayConfigProbeCorrection();
 	void displayDefault();
 
 //	int lastDisplayCount = 0;

@@ -48,26 +48,9 @@ void IRAM_ATTR isrAB() {
 }
 
 long int swValue=0;
-bool encoderBtnPressed = false;
-
-void IRAM_ATTR isrRotaryPressed() {
-	portENTER_CRITICAL_ISR(&gpioMux);
-
-	swValue++;
-	encoderBtnPressed = true;
-//	lastPressX = micros();
-//	if(lastPressX-lastPress<500000){ //500ms
-//		dblPress = true;
-//		lastdblPress = lastPressX;
-//	}
-//	lastPress = lastPressX;
-	portEXIT_CRITICAL_ISR(&gpioMux);
-}
-
 void IRAM_ATTR isrRotaryReleased() {
 	portENTER_CRITICAL_ISR(&gpioMux);
 	swValue++;
-	encoderBtnPressed = false;
 	portEXIT_CRITICAL_ISR(&gpioMux);
 }
 
@@ -116,31 +99,31 @@ void parseString(String s){
 		switch (iProperty){
 			case SP:
 
-				atg.pidStates[0].setSetpoint(value.toFloat());
+				atg.getController(0)->setSetpoint(value.toFloat());
 				break;
 			case RP:
-				atg.pidStates[0].setRamp(value.toFloat());
+				atg.getController(0)->setRamp(value.toFloat());
 				break;
 			case ST: {
-				atg.pidStates[0].autoModeOn = value.toInt();
-					if(atg.pidStates[0].autoModeOn){
-						atg.mainMenu.runMenu->switchMenu->Caption=F("Auto");
+				atg.getController(0)->setAutoMode(value.toInt());
+					if(atg.getController(0)->autoModeOn){
+						atg.pMainMenu->runMenu->switchMenu->Caption=F("Auto");
 					}else{
-						atg.mainMenu.runMenu->switchMenu->Caption=F("Manual");
+						atg.pMainMenu->runMenu->switchMenu->Caption=F("Manual");
 					}
 			    }
 				break;
 			case OUT:
-				atg.pidStates[0].forcedOutput = value.toInt();
+				atg.getController(0)->setForcedOutput(value.toInt());
 				break;
 			case KP:
-				atg.pidStates[0].SetKp(value.toFloat());
+				atg.getController(0)->SetKp(value.toFloat());
 				break;
 			case KI:
-				atg.pidStates[0].SetKi(value.toFloat());
+				atg.getController(0)->SetKi(value.toFloat());
 				break;
 			case KD:
-				atg.pidStates[0].SetKd(value.toFloat());
+				atg.getController(0)->SetKd(value.toFloat());
 				break;
 		}
 		atg.savetoEEprom();
@@ -189,19 +172,21 @@ void sendClients(String s){
 }
 
 MenuItem* ATG::decodeCurrentMenu(){
-	MainMenu* pmm = (MainMenu*) &mainMenu;
+	MainMenu* pmm = pMainMenu;
 
 	switch(state){
 		case svMain :
 			return pmm;
 		case svRunAuto :
 			return pmm->runMenu;
+		case svRunAutoCtrlSel :
+			return pmm->runMenu->ctrlSelMenu;
 		case svRunAutoSetpoint :
 			return pmm->runMenu->setpointMenu;
 		case svRunAutoRamp :
 			return pmm->runMenu->rampMenu;
 		case svConfig:
-					return pmm->configMenu;
+			return pmm->configMenu;
 		case svConfigController:
 			return pmm->configMenu->configControllerMenu;
 		case svServo_Config:
@@ -226,20 +211,17 @@ MenuItem* ATG::decodeCurrentMenu(){
 			return pmm->configMenu->pidMenu->kdMenu;
 		case svPidSampleTimeConfig:
 			return pmm->configMenu->pidMenu->sampleTimeMenu;
-		case svConfig_Probe:
-			return pmm->configMenu->probeMenu;
 		case svConfig_ProbeCorrection:
-			return pmm->configMenu->probeMenu->correctionMenu;
-		case svConfig_ProbeAssign:
-			return pmm->configMenu->probeMenu->assignmentMenu;
+			return pmm->configMenu->correctionMenu;
 	}
 	return pmm;
 }
 
 ATG::ATG(){
-	currentMenu = &mainMenu;
-	pidStates[0].initialize(SERVO1_PIN);
-	pidStates[1].initialize(SERVO2_PIN);
+	ctrl0.initialize(SERVO1_PIN,25);
+	ctrl1.initialize(SERVO2_PIN,26);
+	pMainMenu = new MainMenu();
+	currentMenu = pMainMenu;
 }
 
 void ATG::setCurrentMenu(MenuItem *m){
@@ -272,130 +254,105 @@ void ATG::loadFromEEProm(){
 		return;
 	}
 
-	atg.pidStates[0].servoDirection = EEPROM.get(addr, atg.pidStates[0].servoDirection);
+	ctrl0.servoDirection = EEPROM.get(addr, ctrl0.servoDirection);
 	addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed servo dir: "));Serial.println(atg.pidStates[0].servoDirection);
-	if(temp>=07){
-		atg.pidStates[1].servoDirection = EEPROM.get(addr, atg.pidStates[1].servoDirection);
-		addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed servo dir: "));Serial.println(atg.pidStates[1].servoDirection);
-	}
+	Serial.print(F("Readed servo dir: "));Serial.println(ctrl0.servoDirection);
+	ctrl1.servoDirection = EEPROM.get(addr, ctrl1.servoDirection);
+	addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed servo dir: "));Serial.println(ctrl1.servoDirection);
 
-	atg.pidStates[0].servoMinValue = EEPROM.get(addr, atg.pidStates[0].servoMinValue);
-	addr+=sizeof(atg.pidStates[0].servoMinValue);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed servo min: "));Serial.println(atg.pidStates[0].servoMinValue);
-	if(temp>=07){
-		atg.pidStates[1].servoMinValue = EEPROM.get(addr, atg.pidStates[1].servoMinValue);
-		addr+=sizeof(atg.pidStates[1].servoMinValue);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed servo min: "));Serial.println(atg.pidStates[1].servoMinValue);
-	}
+	ctrl0.servoMinValue = EEPROM.get(addr, ctrl0.servoMinValue);
+	addr+=sizeof(ctrl0.servoMinValue);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed servo min: "));Serial.println(ctrl0.servoMinValue);
+	ctrl1.servoMinValue = EEPROM.get(addr, ctrl1.servoMinValue);
+	addr+=sizeof(ctrl1.servoMinValue);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed servo min: "));Serial.println(ctrl1.servoMinValue);
 
-	atg.pidStates[0].servoMaxValue = EEPROM.get(addr, atg.pidStates[0].servoMaxValue);
-	addr+=sizeof(atg.pidStates[0].servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed servo max: "));Serial.println(atg.pidStates[0].servoMaxValue);
-	if(temp>=07){
-		atg.pidStates[1].servoMaxValue = EEPROM.get(addr, atg.pidStates[1].servoMaxValue);
-		addr+=sizeof(atg.pidStates[1].servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed servo max: "));Serial.println(atg.pidStates[1].servoMaxValue);
-	}
+	ctrl0.servoMaxValue = EEPROM.get(addr, ctrl0.servoMaxValue);
+	addr+=sizeof(ctrl0.servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed servo max: "));Serial.println(ctrl0.servoMaxValue);
+	ctrl1.servoMaxValue = EEPROM.get(addr, ctrl1.servoMaxValue);
+	addr+=sizeof(ctrl1.servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed servo max: "));Serial.println(ctrl1.servoMaxValue);
 
-	atg.pidStates[0]._setpoint = EEPROM.get(addr, atg.pidStates[0]._setpoint);
-	addr+=sizeof(atg.pidStates[0]._setpoint);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed setpoint: "));Serial.println(atg.pidStates[0]._setpoint);
-	if(temp>=07){
-		atg.pidStates[1]._setpoint = EEPROM.get(addr, atg.pidStates[1]._setpoint);
-		addr+=sizeof(atg.pidStates[1]._setpoint);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed setpoint: "));Serial.println(atg.pidStates[1]._setpoint);
-	}
+	ctrl0._setpoint = EEPROM.get(addr, ctrl0._setpoint);
+	addr+=sizeof(ctrl0._setpoint);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed setpoint: "));Serial.println(ctrl0._setpoint);
+	ctrl1._setpoint = EEPROM.get(addr, ctrl1._setpoint);
+	addr+=sizeof(ctrl1._setpoint);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed setpoint: "));Serial.println(ctrl1._setpoint);
 
-	atg.pidStates[0]._kp = EEPROM.get(addr, atg.pidStates[0]._kp);
-	addr+=sizeof(atg.pidStates[0]._kp);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed kp: "));Serial.println(atg.pidStates[0]._kp);
-	if(temp>=07){
-		atg.pidStates[1]._kp = EEPROM.get(addr, atg.pidStates[1]._kp);
-		addr+=sizeof(atg.pidStates[1]._kp);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed kp: "));Serial.println(atg.pidStates[1]._kp);
-	}
+	ctrl0._kp = EEPROM.get(addr, ctrl0._kp);
+	addr+=sizeof(ctrl0._kp);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed kp: "));Serial.println(ctrl0._kp);
+	ctrl1._kp = EEPROM.get(addr, ctrl1._kp);
+	addr+=sizeof(ctrl1._kp);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed kp: "));Serial.println(ctrl1._kp);
 
-	atg.pidStates[0]._ki = EEPROM.get(addr, atg.pidStates[0]._ki);
-	addr+=sizeof(atg.pidStates[0]._ki);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed ki: "));Serial.println(atg.pidStates[0]._ki);
-	if(temp>=07){
-		atg.pidStates[1]._ki = EEPROM.get(addr, atg.pidStates[1]._ki);
-		addr+=sizeof(atg.pidStates[1]._ki);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed ki: "));Serial.println(atg.pidStates[1]._ki);
-	}
+	ctrl0._ki = EEPROM.get(addr, ctrl0._ki);
+	addr+=sizeof(ctrl0._ki);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed ki: "));Serial.println(ctrl0._ki);
+	ctrl1._ki = EEPROM.get(addr, ctrl1._ki);
+	addr+=sizeof(ctrl1._ki);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed ki: "));Serial.println(ctrl1._ki);
 
-	atg.pidStates[0]._kd = EEPROM.get(addr, atg.pidStates[0]._kd);
-	addr+=sizeof(atg.pidStates[0]._kd);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed kd: "));Serial.println(atg.pidStates[0]._kd);
-	if(temp>=07){
-		atg.pidStates[1]._kd = EEPROM.get(addr, atg.pidStates[1]._kd);
-		addr+=sizeof(atg.pidStates[1]._kd);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed kd: "));Serial.println(atg.pidStates[1]._kd);
-	}
+	ctrl0._kd = EEPROM.get(addr, ctrl0._kd);
+	addr+=sizeof(ctrl0._kd);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed kd: "));Serial.println(ctrl0._kd);
+	ctrl1._kd = EEPROM.get(addr, ctrl1._kd);
+	addr+=sizeof(ctrl1._kd);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed kd: "));Serial.println(ctrl1._kd);
 
-	atg.pidStates[0].pidSampleTimeSecs = EEPROM.get(addr, atg.pidStates[0].pidSampleTimeSecs);
-	addr+=sizeof(atg.pidStates[0].pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed Sample time secs: "));Serial.println(atg.pidStates[0].pidSampleTimeSecs);
-	if(atg.pidStates[0].pidSampleTimeSecs==NAN)atg.pidStates[0].pidSampleTimeSecs=5;
-	if(temp>=07){
-		atg.pidStates[1].pidSampleTimeSecs = EEPROM.get(addr, atg.pidStates[1].pidSampleTimeSecs);
-		addr+=sizeof(atg.pidStates[1].pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed Sample time secs: "));Serial.println(atg.pidStates[1].pidSampleTimeSecs);
-		if(atg.pidStates[1].pidSampleTimeSecs==NAN)atg.pidStates[1].pidSampleTimeSecs=5;
-	}
+	ctrl0.pidSampleTimeSecs = EEPROM.get(addr, ctrl0.pidSampleTimeSecs);
+	addr+=sizeof(ctrl0.pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed Sample time secs: "));Serial.println(ctrl0.pidSampleTimeSecs);
+	if(ctrl0.pidSampleTimeSecs==NAN)ctrl0.pidSampleTimeSecs=5;
+	ctrl1.pidSampleTimeSecs = EEPROM.get(addr, ctrl1.pidSampleTimeSecs);
+	addr+=sizeof(ctrl1.pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed Sample time secs: "));Serial.println(ctrl1.pidSampleTimeSecs);
+	if(ctrl1.pidSampleTimeSecs==NAN)ctrl1.pidSampleTimeSecs=5;
 
-	if(temp==4){
-		int dummy = 0;
-		dummy = EEPROM.get(addr, dummy);
-		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed Timer secs: "));Serial.println(dummy);
-		if(dummy>60*24)dummy=0;
-		Serial.print(F("Calculated Timer mins: "));Serial.println(dummy);
+//	if(temp==4){
+//		int dummy = 0;
+//		dummy = EEPROM.get(addr, dummy);
+//		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
+//		Serial.print(F("Readed Timer secs: "));Serial.println(dummy);
+//		if(dummy>60*24)dummy=0;
+//		Serial.print(F("Calculated Timer mins: "));Serial.println(dummy);
+//
+//		dummy = EEPROM.get(addr, dummy);
+//		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
+//		Serial.print(F("Readed Timer state: "));Serial.println(dummy);
+//		if(dummy<0||dummy>2)dummy=0;
+//		Serial.print(F("Calculated Timer state: "));Serial.println(dummy);
+//
+//		dummy = EEPROM.get(addr, dummy);
+//		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
+//		Serial.print(F("Readed Timer elapsed secs: "));Serial.println(dummy);
+//		if(dummy>60*60*24)dummy=0;
+//		if(dummy<0)dummy=0;
+//	}
+	ctrl0.autoModeOn = EEPROM.get(addr, ctrl0.autoModeOn);
+	addr+=sizeof(ctrl0.autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed autoModeOn: "));Serial.println(ctrl0.autoModeOn);
+	ctrl1.autoModeOn = EEPROM.get(addr, ctrl1.autoModeOn);
+	addr+=sizeof(ctrl1.autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed autoModeOn: "));Serial.println(ctrl1.autoModeOn);
 
-		dummy = EEPROM.get(addr, dummy);
-		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed Timer state: "));Serial.println(dummy);
-		if(dummy<0||dummy>2)dummy=0;
-		Serial.print(F("Calculated Timer state: "));Serial.println(dummy);
+	ctrl0.forcedOutput = EEPROM.get(addr, ctrl0.forcedOutput);
+	addr+=sizeof(ctrl0.forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed forcedOutput: "));Serial.println(ctrl0.forcedOutput);
+	ctrl1.forcedOutput = EEPROM.get(addr, ctrl1.forcedOutput);
+	addr+=sizeof(ctrl1.forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed forcedOutput: "));Serial.println(ctrl1.forcedOutput);
 
-		dummy = EEPROM.get(addr, dummy);
-		addr+=sizeof(dummy);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed Timer elapsed secs: "));Serial.println(dummy);
-		if(dummy>60*60*24)dummy=0;
-		if(dummy<0)dummy=0;
-	}
-	if(temp>=5){
-		atg.pidStates[0].autoModeOn = EEPROM.get(addr, atg.pidStates[0].autoModeOn);
-		addr+=sizeof(atg.pidStates[0].autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed autoModeOn: "));Serial.println(atg.pidStates[0].autoModeOn);
-		if(temp>=07){
-			atg.pidStates[1].autoModeOn = EEPROM.get(addr, atg.pidStates[1].autoModeOn);
-			addr+=sizeof(atg.pidStates[1].autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
-			Serial.print(F("Readed autoModeOn: "));Serial.println(atg.pidStates[1].autoModeOn);
-		}
+	ctrl0.temperatureCorrection = EEPROM.get(addr, ctrl0.temperatureCorrection);
+	addr+=sizeof(ctrl0.temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed temperatureCorrection: "));Serial.println(ctrl0.temperatureCorrection*0.1);
+	ctrl1.temperatureCorrection = EEPROM.get(addr, ctrl1.temperatureCorrection);
+	addr+=sizeof(ctrl1.temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed temperatureCorrection: "));Serial.println(ctrl1.temperatureCorrection*0.1);
 
-		atg.pidStates[0].forcedOutput = EEPROM.get(addr, atg.pidStates[0].forcedOutput);
-		addr+=sizeof(atg.pidStates[0].forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed forcedOutput: "));Serial.println(atg.pidStates[0].forcedOutput);
-		if(temp>=07){
-			atg.pidStates[1].forcedOutput = EEPROM.get(addr, atg.pidStates[1].forcedOutput);
-			addr+=sizeof(atg.pidStates[1].forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
-			Serial.print(F("Readed forcedOutput: "));Serial.println(atg.pidStates[1].forcedOutput);
-		}
-
-	}
-	if(temp>=6){
-		atg.pidStates[0].temperatureCorrection = EEPROM.get(addr, atg.pidStates[0].temperatureCorrection);
-		addr+=sizeof(atg.pidStates[0].temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
-		Serial.print(F("Readed temperatureCorrection: "));Serial.println(atg.pidStates[0].temperatureCorrection*0.1);
-		if(temp>=07){
-			atg.pidStates[1].temperatureCorrection = EEPROM.get(addr, atg.pidStates[1].temperatureCorrection);
-			addr+=sizeof(atg.pidStates[1].temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
-			Serial.print(F("Readed temperatureCorrection: "));Serial.println(atg.pidStates[1].temperatureCorrection*0.1);
-		}
-	}
 	EEPROM.commit();
 	EEPROM.end();
 }
@@ -412,104 +369,83 @@ void ATG::savetoEEprom(){
 	EEPROM.put(addr, state);
 	addr+=sizeof(PidStateValue);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. servo dir: "));Serial.println(atg.pidStates[0].servoDirection);
-	EEPROM.put(addr, atg.pidStates[0].servoDirection);
+
+	Serial.print(F("EEPROMWriteSettings. servo dir: "));Serial.println(ctrl0.servoDirection);
+	EEPROM.put(addr, ctrl0.servoDirection);
 	addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. servo dir: "));Serial.println(atg.pidStates[1].servoDirection);
-		EEPROM.put(addr, atg.pidStates[1].servoDirection);
-		addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. servo dir: "));Serial.println(ctrl1.servoDirection);
+	EEPROM.put(addr, ctrl1.servoDirection);
+	addr+=sizeof(ServoDirection);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. servo min: "));Serial.println(atg.pidStates[0].servoMinValue);
-	EEPROM.put(addr, atg.pidStates[0].servoMinValue);
+	Serial.print(F("EEPROMWriteSettings. servo min: "));Serial.println(ctrl0.servoMinValue);
+	EEPROM.put(addr, ctrl0.servoMinValue);
 	addr+=sizeof(int);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. servo min: "));Serial.println(atg.pidStates[1].servoMinValue);
-		EEPROM.put(addr, atg.pidStates[1].servoMinValue);
-		addr+=sizeof(int);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. servo min: "));Serial.println(ctrl1.servoMinValue);
+	EEPROM.put(addr, ctrl1.servoMinValue);
+	addr+=sizeof(int);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. servo max: "));Serial.println(atg.pidStates[0].servoMaxValue);
-	EEPROM.put(addr, atg.pidStates[0].servoMaxValue);
-	addr+=sizeof(atg.pidStates[0].servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. servo max: "));Serial.println(atg.pidStates[1].servoMaxValue);
-		EEPROM.put(addr, atg.pidStates[1].servoMaxValue);
-		addr+=sizeof(atg.pidStates[1].servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. servo max: "));Serial.println(ctrl0.servoMaxValue);
+	EEPROM.put(addr, ctrl0.servoMaxValue);
+	addr+=sizeof(ctrl0.servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. servo max: "));Serial.println(ctrl1.servoMaxValue);
+	EEPROM.put(addr, ctrl1.servoMaxValue);
+	addr+=sizeof(ctrl1.servoMaxValue);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(atg.pidStates[0]._setpoint);
-	EEPROM.put(addr, atg.pidStates[0]._setpoint);
-	addr+=sizeof(atg.pidStates[0]._setpoint);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(atg.pidStates[1]._setpoint);
-		EEPROM.put(addr, atg.pidStates[1]._setpoint);
-		addr+=sizeof(atg.pidStates[1]._setpoint);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(ctrl0._setpoint);
+	EEPROM.put(addr, ctrl0._setpoint);
+	addr+=sizeof(ctrl0._setpoint);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. Setpoint: "));Serial.println(ctrl1._setpoint);
+	EEPROM.put(addr, ctrl1._setpoint);
+	addr+=sizeof(ctrl1._setpoint);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. Kp: "));Serial.println(atg.pidStates[0]._kp);
-	EEPROM.put(addr, atg.pidStates[0]._kp);
-	addr+=sizeof(atg.pidStates[0]._kp);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. Kp: "));Serial.println(atg.pidStates[1]._kp);
-		EEPROM.put(addr, atg.pidStates[1]._kp);
-		addr+=sizeof(atg.pidStates[1]._kp);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. Kp: "));Serial.println(ctrl0._kp);
+	EEPROM.put(addr, ctrl0._kp);
+	addr+=sizeof(ctrl0._kp);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. Kp: "));Serial.println(ctrl1._kp);
+	EEPROM.put(addr, ctrl1._kp);
+	addr+=sizeof(ctrl1._kp);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. Ki: "));Serial.println(atg.pidStates[0]._ki);
-	EEPROM.put(addr, atg.pidStates[0]._ki);
-	addr+=sizeof(atg.pidStates[0]._ki);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. Ki: "));Serial.println(atg.pidStates[1]._ki);
-		EEPROM.put(addr, atg.pidStates[1]._ki);
-		addr+=sizeof(atg.pidStates[1]._ki);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. Ki: "));Serial.println(ctrl0._ki);
+	EEPROM.put(addr, ctrl0._ki);
+	addr+=sizeof(ctrl0._ki);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. Ki: "));Serial.println(ctrl1._ki);
+	EEPROM.put(addr, ctrl1._ki);
+	addr+=sizeof(ctrl1._ki);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. Kd: "));Serial.println(atg.pidStates[0]._kd);
-	EEPROM.put(addr, atg.pidStates[0]._kd);
-	addr+=sizeof(atg.pidStates[0]._kd);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. Kd: "));Serial.println(atg.pidStates[1]._kd);
-		EEPROM.put(addr, pidStates[1]._kd);
-		addr+=sizeof(pidStates[1]._kd);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. Kd: "));Serial.println(ctrl0._kd);
+	EEPROM.put(addr, ctrl0._kd);
+	addr+=sizeof(ctrl0._kd);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. Kd: "));Serial.println(ctrl1._kd);
+	EEPROM.put(addr, ctrl1._kd);
+	addr+=sizeof(ctrl1._kd);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. Sample time secs: "));Serial.println(pidStates[0].pidSampleTimeSecs);
-	EEPROM.put(addr, pidStates[0].pidSampleTimeSecs);
-	addr+=sizeof(pidStates[0].pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. Sample time secs: "));Serial.println(pidStates[1].pidSampleTimeSecs);
-		EEPROM.put(addr, pidStates[1].pidSampleTimeSecs);
-		addr+=sizeof(pidStates[1].pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. Sample time secs: "));Serial.println(ctrl0.pidSampleTimeSecs);
+	EEPROM.put(addr, ctrl0.pidSampleTimeSecs);
+	addr+=sizeof(ctrl0.pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. Sample time secs: "));Serial.println(ctrl1.pidSampleTimeSecs);
+	EEPROM.put(addr, ctrl1.pidSampleTimeSecs);
+	addr+=sizeof(ctrl1.pidSampleTimeSecs);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. autoModeOn: "));Serial.println(pidStates[0].autoModeOn);
-	EEPROM.put(addr, pidStates[0].autoModeOn);
-	addr+=sizeof(pidStates[0].autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. autoModeOn: "));Serial.println(pidStates[1].autoModeOn);
-		EEPROM.put(addr, pidStates[1].autoModeOn);
-		addr+=sizeof(pidStates[1].autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. autoModeOn: "));Serial.println(ctrl0.autoModeOn);
+	EEPROM.put(addr, ctrl0.autoModeOn);
+	addr+=sizeof(ctrl0.autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. autoModeOn: "));Serial.println(ctrl1.autoModeOn);
+	EEPROM.put(addr, ctrl1.autoModeOn);
+	addr+=sizeof(ctrl1.autoModeOn);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. forcedOutput: "));Serial.println(pidStates[0].forcedOutput);
-	EEPROM.put(addr, pidStates[0].forcedOutput);
-	addr+=sizeof(pidStates[0].forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. forcedOutput: "));Serial.println(pidStates[1].forcedOutput);
-		EEPROM.put(addr, pidStates[1].forcedOutput);
-		addr+=sizeof(pidStates[1].forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. forcedOutput: "));Serial.println(ctrl0.forcedOutput);
+	EEPROM.put(addr, ctrl0.forcedOutput);
+	addr+=sizeof(ctrl0.forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. forcedOutput: "));Serial.println(ctrl1.forcedOutput);
+	EEPROM.put(addr, ctrl1.forcedOutput);
+	addr+=sizeof(ctrl1.forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. temperatureCorrection: "));Serial.println(pidStates[0].temperatureCorrection*0.1);
-	EEPROM.put(addr, pidStates[0].temperatureCorrection);
-	addr+=sizeof(pidStates[0].temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
-	if(eepromVer>=07){
-		Serial.print(F("EEPROMWriteSettings. temperatureCorrection: "));Serial.println(pidStates[1].temperatureCorrection*0.1);
-		EEPROM.put(addr, pidStates[1].temperatureCorrection);
-		addr+=sizeof(pidStates[1].temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
-	}
+	Serial.print(F("EEPROMWriteSettings. temperatureCorrection: "));Serial.println(ctrl0.temperatureCorrection*0.1);
+	EEPROM.put(addr, ctrl0.temperatureCorrection);
+	addr+=sizeof(ctrl0.temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. temperatureCorrection: "));Serial.println(ctrl1.temperatureCorrection*0.1);
+	EEPROM.put(addr, ctrl1.temperatureCorrection);
+	addr+=sizeof(ctrl1.temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
 
 	EEPROM.commit();
 	EEPROM.end();
@@ -519,25 +455,25 @@ void ATG::savetoEEprom(){
 }
 
 void ATG::sendStatus(){
-	//Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
-	//Serial.print(Setpoint,4);Serial.print(F(" "));
-	//Serial.println(temperature,4);Serial.print(F(" "));
-	//Serial.println(Output);
+//	Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
+//	Serial.print(Setpoint,4);Serial.print(F(" "));
+//	Serial.println(temperature,4);Serial.print(F(" "));
+//	Serial.println(Output);
 	float now = millis();
 	TcpComm->print(F("LOG:")      );TcpComm->print(now,4);
 	TcpComm->print(F(";EXPRQID:") );TcpComm->print((float) expectedReqId,0);
-	TcpComm->print(F(";KP:")   );TcpComm->print((float)pidStates[0].GetKp(),4);
-	TcpComm->print(F(";KI:")   );TcpComm->print((float)pidStates[0].GetKi(),4);
-	TcpComm->print(F(";KD:")   );TcpComm->print((float)pidStates[0].GetKd(),4);
-	TcpComm->print(F(";STATE:")   );TcpComm->print((float)pidStates[0].autoModeOn,0);
-	TcpComm->print(F(";FSM_STATE:")   );TcpComm->print(pidStates[0].fsmState);
-	TcpComm->print(F(";SETP:")    );TcpComm->print(pidStates[0]._setpoint,4);
-	TcpComm->print(F(";RAMP:")    );TcpComm->print(pidStates[0]._ramp,4);
-	TcpComm->print(F(";DSETP:")   );TcpComm->print(pidStates[0]._dynamicSetpoint,4);
-	TcpComm->print(F(";TEMP:")    );TcpComm->print(pidStates[0].temperature,4);
-	TcpComm->print(F(";OUT:")     );TcpComm->print(pidStates[0].Output,4);
-	TcpComm->print(F(";OUTPERC:") );TcpComm->print((float)pidStates[0].getOutPerc(),0);
-	TcpComm->print(F(";SERVOPOS:"));TcpComm->println((float)pidStates[0].servoPosition,0);
+	TcpComm->print(F(";KP:")   );TcpComm->print((float)getController(0)->GetKp(),4);
+	TcpComm->print(F(";KI:")   );TcpComm->print((float)getController(0)->GetKi(),4);
+	TcpComm->print(F(";KD:")   );TcpComm->print((float)getController(0)->GetKd(),4);
+	TcpComm->print(F(";STATE:")   );TcpComm->print((float)getController(0)->autoModeOn,0);
+	TcpComm->print(F(";FSM_STATE:")   );TcpComm->print(getController(0)->fsmState);
+	TcpComm->print(F(";SETP:")    );TcpComm->print(getController(0)->_setpoint,4);
+	TcpComm->print(F(";RAMP:")    );TcpComm->print(getController(0)->_ramp,4);
+	TcpComm->print(F(";DSETP:")   );TcpComm->print(getController(0)->_dynamicSetpoint,4);
+	TcpComm->print(F(";TEMP:")    );TcpComm->print(getController(0)->temperature,4);
+	TcpComm->print(F(";OUT:")     );TcpComm->print(getController(0)->Output,4);
+	TcpComm->print(F(";OUTPERC:") );TcpComm->print((float)getController(0)->getOutPerc(),0);
+	TcpComm->print(F(";SERVOPOS:"));TcpComm->println((float)getController(0)->servoPosition,0);
 
 	lastUdpDataSent = now;
 }
@@ -556,10 +492,10 @@ void setup() {
 	pinMode(ROTARY_PINB, INPUT_PULLUP);
 	pinMode(ROTARY_PINSW, INPUT_PULLUP);
 
+	pinMode(ROTARY_PINSW, INPUT_PULLUP);
 	attachInterrupt(ROTARY_PINA, isrAB, CHANGE);
 	attachInterrupt(ROTARY_PINB, isrAB, CHANGE);
-	attachInterrupt(ROTARY_PINSW, isrRotaryPressed, FALLING);
-	attachInterrupt(ROTARY_PINSW, isrRotaryReleased, RISING);
+	attachInterrupt(ROTARY_PINSW, isrRotaryReleased, FALLING);
 
 	Serial.begin(115200);
 
@@ -576,7 +512,7 @@ void setup() {
 	//pinMode(pushButtonPin, INPUT_PULLUP);
 	//attachInterrupt(pushButtonPin, handleEncPush, CHANGE);
 	atg.loadFromEEProm();
-
+	Serial.print(F("SETUP "));
 //	ESP.wdtDisable();
 //	ESP.wdtEnable(WDTO_8S);
 
@@ -646,10 +582,11 @@ unsigned long lastdblPress = 0;
 long int prevRotValue=0;
 void loop() {
 	EncoderSwStates SwState = EncoderPressNone;
-//	Serial.print(F("swValue: "));Serial.println(swValue);
+
 	unsigned long now = millis();
 
 	if(swValue-prevSwVal>0){
+		Serial.print(F("swValue: "));Serial.println(swValue);
 		if(now-lastPress<500){
 			SwState = EncoderPressDblPressed;
 			lastdblPress = now;
@@ -660,28 +597,21 @@ void loop() {
 		lastPress=now;
 	}
 	prevSwVal = swValue;
-
 //	Serial.print(F("XX :"));Serial.print(now);Serial.print(F(" - "));Serial.println(lastPress);
 
 	bool rotated = rotValue!=prevRotValue;
 	if(rotated) lastRotated = now;
 	prevRotValue = rotValue;
 
-	bool menuActive = now-lastRotated<10000 ||  now-lastPress<10000;//10 secs
+	bool menuActive = now-lastRotated<5000 ||  now-lastPress<5000;//10 secs
 
-
-	bool longPressed = encoderBtnPressed && (now-lastPress)>1000;
-	if(longPressed){
-		SwState = EncoderPressLongPressed;
-		Serial.println(F("EncoderPressLongPressed"));
-	}
 
 	if(SwState == EncoderPressDblPressed){
 		Serial.println(F("EncoderPressDblPressed"));
 	}
 	atg.update(rotValue,SwState);
-	atg.pidStates[0].update();
-	//atg.pidStates[1].update();
+	atg.getController(0)->update();
+	atg.getController(1)->update();
 //	ESP.wdtFeed();
 	lcdHelper.display();
 

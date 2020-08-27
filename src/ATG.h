@@ -22,27 +22,49 @@ private:
 	byte eepromVer = 07;  // eeprom data tracking
 
 	bool _menuActive = false;
+	int  selectedCtrlIdx=0;
+	Controller ctrl0;
+	Controller ctrl1;
 public:
 
 	bool isMenuActive(){return _menuActive;}
-		void setMenuActive(bool val){
-			_menuActive=val;
+	void setMenuActive(bool val){
+		if(val!=_menuActive){
 			Serial.print(F("Menu active: "));Serial.println(val);
 		}
-	Controller pidStates[2];
+		_menuActive=val;
+	}
+
 	MenuItem   *currentMenu=NULL;
 	float lastUdpDataSent = 0;
 	int expectedReqId = 1; //expected request id
-	int  nOfControllers=2,selectedController=0, stateSelection = 0, currMenuStart=0;
+	int  nOfControllers=2, stateSelection = 0, currMenuStart=0;
 	PidStateValue state = svMain;
-	MainMenu   mainMenu;
+	MainMenu*   pMainMenu;
 	MenuItem* decodeCurrentMenu();
 	void setCurrentMenu(MenuItem *m);
 	MenuItem  *getCurrentMenu(){ return currentMenu; }
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
 	ATG();
-
-	Controller getSelectedController(){return pidStates[selectedController];}
+	Controller* getController(int idx){
+		if(idx==0) return &ctrl0;
+		return &ctrl1;
+	}
+	Controller* getSelectedController(){
+		if(selectedCtrlIdx==0) return &ctrl0;
+		return &ctrl1;
+	}
+	int getSelectedControllerIdx(){return selectedCtrlIdx;}
+	void setSelectedController(int idx){
+		Serial.print(F("===>"));Serial.println(idx);
+		if(idx<0)idx=0;
+		if(idx>1)idx=1;
+		selectedCtrlIdx = idx;
+		Serial.print(F("===>"));Serial.println(selectedCtrlIdx);
+		if(selectedCtrlIdx<0){
+			Serial.println(F("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXxxx"));
+		}
+	}
 	void update(int encoderPos, EncoderSwStates encoderPress);
 	void SetState(PidStateValue value, boolean save=true){
 		state = value;

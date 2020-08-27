@@ -12,12 +12,13 @@ class ConfigMenu;
 #include <WString.h>
 #include <vector>
 #include <Arduino.h>
+#include "tempProbe.h"
 
 enum EncoderMovement {EncMoveNone=-1,EncMoveCW=0,EncMoveCCW=1};
 
 //enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1};
 enum EncoderSwStates {EncoderPressNone=0,EncoderPressPressed=1,EncoderPressLongPressed=2,EncoderPressDblPressed=3};
-static const char* EncoderSwStatesNames[] = { "None", "Pressed", "Long Pressed","Doble Pressed" };
+static const char* EncoderSwStatesNames[] = { "None", "Pressed", "Long Pressed","Double Pressed" };
 
 typedef  void (*SelectedInMenuCallback)();
 typedef  void (*EncoderMovementCallback)(EncoderMovement mvmnt);
@@ -161,30 +162,9 @@ public:
 	void HandleEncoderPush(EncoderSwStates pst);
 };
 
-class ProbeAssignmentMenu : public MenuItem {
+class ControllerSelection : public MenuItem{
 public:
-
-	ProbeAssignmentMenu(MenuItem* parent);
-	void OnSelectedInMenu();
-//	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderSwStates pst);
-};
-
-class ConfigProbeMenu : public MenuItem {
-public:
-	ConfigProbeMenu(MenuItem* parent);
-	void OnSelectedInMenu();
-	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderSwStates pst);
-
-	MenuItem* upMenu;
-	ProbeCorrectionMenu* correctionMenu;
-	ProbeAssignmentMenu* assignmentMenu;
-};
-
-class ConfigController : public MenuItem{
-public:
-	ConfigController(MenuItem* parent);
+	ControllerSelection(MenuItem* parent);
 	void OnSelectedInMenu();
 	void HandleEncoderPush(EncoderSwStates pst);
 	void HandleEncoderMovement(EncoderMovement mvmnt);
@@ -196,10 +176,10 @@ public:
 	void OnSelectedInMenu();
 
 	MenuItem* upMenu;
-	ConfigController* configControllerMenu;
+	ControllerSelection* configControllerMenu;
 	ServoConfigMenu* servoMenu;
 	PidConfigMenu* pidMenu;
-	ConfigProbeMenu* probeMenu;
+	ProbeCorrectionMenu* correctionMenu;
 };
 
 class RunAutoSetpointMenu : public MenuItem {
@@ -219,7 +199,14 @@ class RunAutoSwitch : public MenuItem {
 public:
 
 	RunAutoSwitch(MenuItem* parent);
-	void OnLongPress();
+	void OnDoublePress();
+	void OnSelectedInMenu();
+};
+
+class AutoControllerSelection : public MenuItem{
+public:
+	AutoControllerSelection(MenuItem* parent);
+	void OnSelectedInMenu();
 };
 
 class RunAutoMenu : public MenuItem {
@@ -227,9 +214,15 @@ public:
 	RunAutoMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 
+	AutoControllerSelection* ctrlSelMenu;
+
 	RunAutoSetpointMenu* setpointMenu;
 	RunAutoRampMenu* rampMenu;
 	RunAutoSwitch* switchMenu;
+
+//	RunAutoSetpointMenu* setpointMenu;
+//	RunAutoRampMenu* rampMenu;
+//	RunAutoSwitch* switchMenu;
 
 	void HandleEncoderPush(EncoderSwStates pst);
 	void HandleEncoderMovement(EncoderMovement mvmnt);

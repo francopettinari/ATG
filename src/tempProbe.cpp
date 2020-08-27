@@ -9,10 +9,10 @@
 
 #include <Arduino.h>
 #include <DallasTemperature.h>
-#include <gdb.h>
+#include "ATG.h"
 
-RAMFUNC TemperatureProbe::TemperatureProbe() {
-	onewire = new OneWire(25);
+TemperatureProbe::TemperatureProbe(int pin) {
+	onewire = new OneWire(pin);//25);//26
 	sensors = new DallasTemperature(onewire);
 
 	sensors->setWaitForConversion(false);
@@ -26,16 +26,8 @@ RAMFUNC TemperatureProbe::TemperatureProbe() {
 
 }
 
-float TemperatureProbe::readTemperatureByIndex(int index){
-	return readTemperature(index,0);
-}
-
-float TemperatureProbe::readTemperatureByAddress(const uint8_t* deviceAddress){
-	return readTemperature(-1,deviceAddress);
-}
-
 bool tempReadRequested = false;
-float TemperatureProbe::readTemperature(int index, const uint8_t* deviceAddress){
+float TemperatureProbe::readTemperature(){
 	unsigned long now = millis();
 
 	//too early
@@ -51,7 +43,7 @@ float TemperatureProbe::readTemperature(int index, const uint8_t* deviceAddress)
 		tempReadRequested = true;
 		lastTempReadMillis = now;
 	}else if(sensors->isConversionComplete()){
-		float temp = index>=0?sensors->getTempCByIndex(index):sensors->getTempC(deviceAddress);
+		float temp = sensors->getTempCByIndex(0);
 		tempReadRequested = false;
 		firArray[firIdx%firNOfSamples] = temp;
 		firIdx=firIdx+1;
