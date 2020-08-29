@@ -406,7 +406,7 @@ void ConfigMenu::OnSelectedInMenu(){
 	atg.SetState(svConfig,false);
 }
 
-RunAutoSetpointMenu::RunAutoSetpointMenu(MenuItem* parent):MenuItem(parent,svRunAutoSetpoint,F("Setpoint")){
+RunAutoSetpointMenu::RunAutoSetpointMenu(MenuItem* parent,int state, int ctrlIdx):RunAutoBaseMenu(parent,state,F("Setpoint"),ctrlIdx){
 }
 void RunAutoSetpointMenu::OnSelectedInMenu(){
 	Serial.print(F(">>>>>> Push Run Setpoint <<<<<<  "));Serial.println(atg.state);
@@ -415,7 +415,7 @@ void RunAutoSetpointMenu::OnSelectedInMenu(){
 	Serial.println(atg.state);
 }
 
-RunAutoRampMenu::RunAutoRampMenu(MenuItem* parent):MenuItem(parent,svRunAutoRamp,F("Ramp")){
+RunAutoRampMenu::RunAutoRampMenu(MenuItem* parent,int state, int ctrlIdx):RunAutoBaseMenu(parent,state,F("Ramp"), ctrlIdx){
 }
 void RunAutoRampMenu::OnSelectedInMenu(){
 	Serial.print(F(">>>>>> Push Run Ramp <<<<<<  "));Serial.println(atg.state);
@@ -423,15 +423,7 @@ void RunAutoRampMenu::OnSelectedInMenu(){
 	Selected = !Selected;
 }
 
-AutoControllerSelection::AutoControllerSelection(MenuItem* parent):MenuItem(parent,svRunAutoCtrlSel,F("Ctrl sel")){
-}
-
-void AutoControllerSelection::OnSelectedInMenu(){
-	Serial.print(F(">>>>>> Push Ctrl Sel <<<<<<  "));Serial.println(atg.state);
-	Selected = !Selected;
-}
-
-RunAutoSwitch::RunAutoSwitch(MenuItem* parent):MenuItem(parent,svRunAuto,F("")){
+RunAutoSwitch::RunAutoSwitch(MenuItem* parent, int ctrlIdx):RunAutoBaseMenu(parent,svRunAuto,F(""),ctrlIdx){
 	Controller* pCtrl = atg.getSelectedController();
 	if(pCtrl==NULL) return;
 	if(pCtrl->autoModeOn>0){
@@ -463,13 +455,18 @@ void RunAutoSwitch::OnSelectedInMenu(){
 
 
 RunAutoMenu::RunAutoMenu(MenuItem* parent):MenuItem(parent,svRunAuto,F("Auto")){
-	subMenuItems.resize(5);
+	subMenuItems.resize(7);
 	
 	subMenuItems[0] = new UpMenu(this,svMain);
-	subMenuItems[1] = switchMenu = new RunAutoSwitch(this);
-	subMenuItems[2] = setpointMenu = new RunAutoSetpointMenu(this);
-	subMenuItems[3] = rampMenu = new RunAutoRampMenu(this);
-	subMenuItems[4] = ctrlSelMenu = new AutoControllerSelection(this);
+
+	subMenuItems[1] = setpointMenu0 = new RunAutoSetpointMenu(this,svRunAutoSetpoint0,0);
+	subMenuItems[2] = switchMenu0 = new RunAutoSwitch(this,0);
+	subMenuItems[3] = rampMenu0 = new RunAutoRampMenu(this,svRunAutoRamp0,0);
+
+	subMenuItems[4] = setpointMenu1 = new RunAutoSetpointMenu(this,svRunAutoSetpoint1,1);
+	subMenuItems[5] = switchMenu1 = new RunAutoSwitch(this,1);
+	subMenuItems[6] = rampMenu1 = new RunAutoRampMenu(this,svRunAutoRamp1,1);
+
 }
 
 void RunAutoMenu::OnSelectedInMenu(){
@@ -482,42 +479,63 @@ void RunAutoMenu::HandleEncoderPush(EncoderSwStates pst){
 }
 
 void RunAutoMenu::HandleEncoderMovement(EncoderMovement mvmnt){
-	if(!rampMenu->Selected&&!setpointMenu->Selected && !ctrlSelMenu->Selected&& !(atg.getSelectedController()->autoModeOn==0 &&switchMenu->Selected)){
+	Controller* pCtrl0 = atg.getController(0);
+	Controller* pCtrl1 = atg.getController(1);
+	if(!rampMenu0->Selected&&!setpointMenu0->Selected && !(pCtrl0->autoModeOn==0 &&switchMenu0->Selected) &&
+	   !rampMenu1->Selected&&!setpointMenu1->Selected && !(pCtrl1->autoModeOn==0 &&switchMenu1->Selected)){
 		MenuItem::HandleEncoderMovement(mvmnt);
 	}
 
 	//last resort status fix
-	if(atg.getSelectedController()->autoModeOn==1) switchMenu->Selected = false;
+	if(pCtrl0->autoModeOn==1) switchMenu0->Selected = false;
+	if(pCtrl1->autoModeOn==1) switchMenu1->Selected = false;
 
-	if(rampMenu->Selected){
+	if(rampMenu0->Selected){
 		if(mvmnt==EncMoveCCW){
-			atg.getSelectedController()->decRamp();
+			pCtrl0->decRamp();
 		}else if(mvmnt==EncMoveCW){
-			atg.getSelectedController()->incRamp();
+			pCtrl0->incRamp();
 		}
-	}else if(setpointMenu->Selected){
+	}if(rampMenu1->Selected){
 		if(mvmnt==EncMoveCCW){
-			atg.getSelectedController()->decSetpoint();
+			pCtrl1->decRamp();
 		}else if(mvmnt==EncMoveCW){
-			atg.getSelectedController()->incSetpoint();
+			pCtrl1->incRamp();
 		}
-	} else if(atg.getSelectedController()->autoModeOn==0 && switchMenu->Selected){
+	}else if(setpointMenu0->Selected){
+		if(mvmnt==EncMoveCCW){
+			pCtrl0->decSetpoint();
+		}else if(mvmnt==EncMoveCW){
+			pCtrl0->incSetpoint();
+		}
+	} else if(setpointMenu1->Selected){
+		if(mvmnt==EncMoveCCW){
+			pCtrl1->decSetpoint();
+		}else if(mvmnt==EncMoveCW){
+			pCtrl1->incSetpoint();
+		}
+	} else if(pCtrl0->autoModeOn==0 && switchMenu0->Selected){
 		//manual mode. handle output percentage
 
 		if(mvmnt==EncMoveCCW){
-			Serial.print(F(">>>>>> Change forced output to"));Serial.println(atg.getSelectedController()->forcedOutput-1);
-			atg.getSelectedController()->setForcedOutput(atg.getSelectedController()->forcedOutput-1);
+			Serial.print(F(">>>>>> Change forced output 0 to"));Serial.println(pCtrl0->forcedOutput-1);
+			pCtrl0->setForcedOutput(pCtrl0->forcedOutput-1);
 		}else if(mvmnt==EncMoveCW){
-			Serial.print(F(">>>>>> Change forced output to"));Serial.println(atg.getSelectedController()->forcedOutput+1);
-			atg.getSelectedController()->setForcedOutput(atg.getSelectedController()->forcedOutput+1);
+			Serial.print(F(">>>>>> Change forced output 0 to"));Serial.println(pCtrl0->forcedOutput+1);
+			pCtrl0->setForcedOutput(pCtrl0->forcedOutput+1);
 		}
-		atg.getSelectedController()->setOutPerc(atg.getSelectedController()->forcedOutput);
-	} else if(ctrlSelMenu->Selected){
+		pCtrl0->setOutPerc(pCtrl0->forcedOutput);
+	} else if(pCtrl1->autoModeOn==0 && switchMenu1->Selected){
+		//manual mode. handle output percentage
+
 		if(mvmnt==EncMoveCCW){
-			atg.setSelectedController(atg.getSelectedControllerIdx()-1);
+			Serial.print(F(">>>>>> Change forced output 1 to"));Serial.println(pCtrl1->forcedOutput-1);
+			pCtrl1->setForcedOutput(pCtrl1->forcedOutput-1);
 		}else if(mvmnt==EncMoveCW){
-			atg.setSelectedController(atg.getSelectedControllerIdx()+1);
+			Serial.print(F(">>>>>> Change forced output 1 to"));Serial.println(pCtrl1->forcedOutput+1);
+			pCtrl1->setForcedOutput(pCtrl1->forcedOutput+1);
 		}
+		pCtrl1->setOutPerc(pCtrl1->forcedOutput);
 	}
 }
 

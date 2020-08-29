@@ -107,9 +107,9 @@ void parseString(String s){
 			case ST: {
 				atg.getController(0)->setAutoMode(value.toInt());
 					if(atg.getController(0)->autoModeOn){
-						atg.pMainMenu->runMenu->switchMenu->Caption=F("Auto");
+						atg.pMainMenu->runMenu->switchMenu0->Caption=F("Auto");
 					}else{
-						atg.pMainMenu->runMenu->switchMenu->Caption=F("Manual");
+						atg.pMainMenu->runMenu->switchMenu0->Caption=F("Manual");
 					}
 			    }
 				break;
@@ -179,12 +179,14 @@ MenuItem* ATG::decodeCurrentMenu(){
 			return pmm;
 		case svRunAuto :
 			return pmm->runMenu;
-		case svRunAutoCtrlSel :
-			return pmm->runMenu->ctrlSelMenu;
-		case svRunAutoSetpoint :
-			return pmm->runMenu->setpointMenu;
-		case svRunAutoRamp :
-			return pmm->runMenu->rampMenu;
+		case svRunAutoSetpoint0 :
+			return pmm->runMenu->setpointMenu0;
+		case svRunAutoSetpoint1 :
+			return pmm->runMenu->setpointMenu1;
+		case svRunAutoRamp0 :
+			return pmm->runMenu->rampMenu0;
+		case svRunAutoRamp1 :
+			return pmm->runMenu->rampMenu1;
 		case svConfig:
 			return pmm->configMenu;
 		case svConfigController:

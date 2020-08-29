@@ -182,30 +182,34 @@ public:
 	ProbeCorrectionMenu* correctionMenu;
 };
 
-class RunAutoSetpointMenu : public MenuItem {
+class RunAutoBaseMenu : public MenuItem {
+
 public:
-	RunAutoSetpointMenu(MenuItem* parent);
+	int CtrlIdx = 0;
+	RunAutoBaseMenu(MenuItem* parent,int state, String s,int ctrlIdx):MenuItem(parent,state,s){
+		CtrlIdx=ctrlIdx;
+	}
+};
+
+
+class RunAutoSetpointMenu : public RunAutoBaseMenu {
+public:
+	RunAutoSetpointMenu(MenuItem* parent,int state, int ctrlIdx);
 	void OnSelectedInMenu();
 };
 
-class RunAutoRampMenu : public MenuItem {
+class RunAutoRampMenu : public RunAutoBaseMenu {
 public:
 
-	RunAutoRampMenu(MenuItem* parent);
+	RunAutoRampMenu(MenuItem* parent,int state, int ctrlIdx);
 	void OnSelectedInMenu();
 };
 
-class RunAutoSwitch : public MenuItem {
+class RunAutoSwitch : public RunAutoBaseMenu {
 public:
 
-	RunAutoSwitch(MenuItem* parent);
+	RunAutoSwitch(MenuItem* parent, int ctrlIdx);
 	void OnDoublePress();
-	void OnSelectedInMenu();
-};
-
-class AutoControllerSelection : public MenuItem{
-public:
-	AutoControllerSelection(MenuItem* parent);
 	void OnSelectedInMenu();
 };
 
@@ -214,15 +218,13 @@ public:
 	RunAutoMenu(MenuItem* parent);
 	void OnSelectedInMenu();
 
-	AutoControllerSelection* ctrlSelMenu;
+	RunAutoSetpointMenu* setpointMenu0;
+	RunAutoRampMenu* rampMenu0;
+	RunAutoSwitch* switchMenu0;
 
-	RunAutoSetpointMenu* setpointMenu;
-	RunAutoRampMenu* rampMenu;
-	RunAutoSwitch* switchMenu;
-
-//	RunAutoSetpointMenu* setpointMenu;
-//	RunAutoRampMenu* rampMenu;
-//	RunAutoSwitch* switchMenu;
+	RunAutoSetpointMenu* setpointMenu1;
+	RunAutoRampMenu* rampMenu1;
+	RunAutoSwitch* switchMenu1;
 
 	void HandleEncoderPush(EncoderSwStates pst);
 	void HandleEncoderMovement(EncoderMovement mvmnt);

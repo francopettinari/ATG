@@ -53,13 +53,13 @@ void Controller::_writeServo(int value){
 void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log){
 
 	float now = millis();
-	//if(log){
-		Serial.print(F("Current temp state: "));Serial.println(TempState);
-		Serial.print(F("TimeToLastSwitch:"));Serial.print(now-PrevSwitchOnOffMillis);
-		Serial.print(F(" Degree:"));Serial.print(degree);
-		Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
-		Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
-	//}
+//	if(log){
+//		Serial.print(F("Current temp state: "));Serial.println(TempState);
+//		Serial.print(F("TimeToLastSwitch:"));Serial.print(now-PrevSwitchOnOffMillis);
+//		Serial.print(F(" Degree:"));Serial.print(degree);
+//		Serial.print(F(" ServoPosition:"));Serial.print(servoPosition);
+//		Serial.print(F(" ServoMinVal:"));Serial.println(servoMinValue);
+//	}
 	if(degree<servoMinValue || (minValueSwitchOff && degree==servoMinValue)) degree=0; //switch off on minVal
 	switch(TempState){
 		case TempStateUndefined:
@@ -210,7 +210,7 @@ void Controller::updateRamp(){
 }
 
 bool Controller::isAutoState(int state){
-	return state==svRunAuto || state==svRunAutoSetpoint || state==svRunAutoRamp || state==svRunAutoCtrlSel;
+	return state==svRunAuto || state==svRunAutoSetpoint0 || state==svRunAutoRamp0|| state==svRunAutoSetpoint1 || state==svRunAutoRamp1;
 }
 
 
@@ -275,9 +275,10 @@ void Controller::update(){
 			writeServoPosition(0,true);
 		break;
 		case svRunAuto :
-		case svRunAutoSetpoint :
-		case svRunAutoRamp :
-		case svRunAutoCtrlSel : {
+		case svRunAutoSetpoint0 :
+		case svRunAutoRamp0 :
+		case svRunAutoSetpoint1 :
+		case svRunAutoRamp1 : {
 
 			//if autoModeOn is disabled, then force the manual output and return
 			if(autoModeOn==0){

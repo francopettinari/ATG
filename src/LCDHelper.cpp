@@ -47,6 +47,17 @@ uint8_t heatCustomChar[8] = {
 		  B10001
 };
 
+byte manCustomChar[] = {
+  B01110,
+  B10001,
+  B01110,
+  B00100,
+  B11111,
+  B00100,
+  B00100,
+  B11011
+};
+
 uint8_t derivateCustomChar[8] = {
 		  B00001,
 		  B01101,
@@ -85,7 +96,8 @@ static const int TEMPERATURE_CHAR = 0;
 static const int DEGREE_CHAR = 1;
 static const int SETPOINT_CHAR = 2;
 static const int HEAT_CHAR = 3;
-static const int DERIV_CHAR = 4;
+static const int MAN_CHAR = 4;
+//static const int DERIV_CHAR = 4;
 static const int DEGMIN_CHAR = 5;
 static const int TIMER_CHAR = 6;
 
@@ -101,14 +113,22 @@ void LCDHelper::createCustomChars(){
 	this->lcd.getLcd()->createChar(DEGREE_CHAR, degreeCustomChar);
 	this->lcd.getLcd()->createChar(SETPOINT_CHAR, setpointCustomChar);
 	this->lcd.getLcd()->createChar(HEAT_CHAR, heatCustomChar);
-	this->lcd.getLcd()->createChar(DERIV_CHAR, derivateCustomChar);
+	this->lcd.getLcd()->createChar(MAN_CHAR, derivateCustomChar);
+//	this->lcd.getLcd()->createChar(DERIV_CHAR, derivateCustomChar);
 	this->lcd.getLcd()->createChar(DEGMIN_CHAR, degMinChar);
 	this->lcd.getLcd()->createChar(TIMER_CHAR, timerChar);
 }
 void LCDHelper::display(){
 	this->lcd.getLcd()->home();
 	this->lcd.clear();
-	if(atg.isMenuActive()){
+
+	if(atg.getState()!= svRunAuto &&
+	   atg.getState()!= svRunAutoSetpoint0 &&
+	   atg.getState()!= svRunAutoRamp0 &&
+	   atg.getState()!= svRunAutoSetpoint1 &&
+	   atg.getState()!=svRunAutoRamp1 &&
+	   atg.isMenuActive())
+	{
 		lcd.PrintString(0,0,atg.getCurrentMenu()->Caption.c_str());
 		std::vector<MenuItem *> subMenuItems = atg.getCurrentMenu()->subMenuItems;
 		int max = subMenuItems.size()-1;
@@ -137,13 +157,12 @@ void LCDHelper::display(){
 	}
 	switch(atg.getState()) {
 		case svRunAuto:
-
-		case svRunAutoSetpoint:
+		case svRunAutoSetpoint0:
+		case svRunAutoRamp0:
+		case svRunAutoSetpoint1:
+		case svRunAutoRamp1:
 			displayRun();
 			break;
-//		case svRunAutoCtrlSel:
-//			displayAutoCtrlSel();
-//			break;
 		case svConfig:
 			displayConfig();
 			break;
@@ -213,39 +232,139 @@ void LCDHelper::displayConfigPid(){
 	lcd.PrintF(10, 3,F("St"));lcd.PrintDoubleFD(16, 3,ctrl.pidSampleTimeSecs,2,0);
 }
 
-void LCDHelper::displayRun(int idx,Controller ctrl, bool showCtrlLabel){
-	if(showCtrlLabel){
-		if(atg.getSelectedControllerIdx()==0){
-			lcd.PrintF(5, 0, F("Mash"));
-		}else{
-			lcd.PrintF(5, 0, F("Sparge"));
-		}
-	}
+//void LCDHelper::displayRun(int idx,Controller ctrl, int menuPosIdx, bool selected){
+//}
+//
+//void LCDHelper::displayRun(){
+//	lcd.PrintF(1, 0, F("Up"));
+//
+//	lcd.PrintChar(9, 1,(char)TEMPERATURE_CHAR);
+//	lcd.PrintChar(13, 1,(char)SETPOINT_CHAR);
+//	lcd.PrintF   (17, 1,F("%"));
+//	lcd.PrintChar(19, 1,(char)DEGMIN_CHAR);
+//
+//	Controller* pCtrl0 = atg.getController(0);
+//	Controller* pCtrl1 = atg.getController(1);
+//
+//
+//	bool menuSel = false;
+//
+//	if(atg.pMainMenu->runMenu->setpointMenu0->Selected){
+//		menuSel = true;
+//	}else if(atg.pMainMenu->runMenu->switchMenu0->Selected){
+//		menuSel = true;
+//	}else if(atg.pMainMenu->runMenu->rampMenu0->Selected){
+//		menuSel = true;
+//	}
+//
+//	const __FlashStringHelper *charPos0 = menuSel?F("o"):F(">");
+//
+//	lcd.PrintF(0, 2, F("M"));
+//	lcd.PrintF(2, 2, pCtrl0->autoModeOn?F("a"):F("m"));
+//	lcd.PrintDoubleFD( 5, 2,pCtrl0->getTemperature(),3,1);
+//	if(atg.stateSelection==1){
+//		lcd.PrintF(10, 2,charPos0);
+//	}
+//	lcd.PrintDoubleFD(11, 2,pCtrl0->setpoint(),2,0);
+//	if(atg.stateSelection==2){
+//		lcd.PrintF(15, 2,charPos0);
+//	}
+//	lcd.PrintDoubleFD(15, 2,pCtrl0->getOutPerc(),2,0);
+//	if(atg.stateSelection==3){
+//		lcd.PrintF(18, 2,charPos0);
+//	}
+//	lcd.PrintDoubleD (16, 2,pCtrl0->ramp(),0);
+//
+//
+//	menuSel = false;
+//	if(atg.pMainMenu->runMenu->setpointMenu1->Selected){
+//		menuSel = true;
+//	}else if(atg.pMainMenu->runMenu->switchMenu1->Selected){
+//		menuSel = true;
+//	}else if(atg.pMainMenu->runMenu->rampMenu1->Selected){
+//		menuSel = true;
+//	}
+//	const __FlashStringHelper *charPos1 = menuSel?F("o"):F(">");
+//	lcd.PrintF(0, 3, F("S"));
+//	lcd.PrintF(2, 3, pCtrl0->autoModeOn?F("a"):F("m"));
+//	lcd.PrintDoubleFD( 5, 3, pCtrl1->getTemperature(),3,1);
+//	if(atg.stateSelection==4){
+//		lcd.PrintF(10, 3,charPos1);
+//	}
+//	lcd.PrintDoubleFD(11, 3, pCtrl1->setpoint(),2,0);
+//	if(atg.stateSelection==5){
+//		lcd.PrintF(14, 3,charPos1);
+//	}
+//	lcd.PrintDoubleFD(15, 3, pCtrl1->getOutPerc(),2,0);
+//	if(atg.stateSelection==6){
+//		lcd.PrintF(18, 3,charPos1);
+//	}
+//	lcd.PrintDoubleD (16, 3, pCtrl1->ramp(),0);
+//}
+
+void LCDHelper::displayRun(int idx,Controller ctrl, int menuPosIdx, bool selected){
 	int base =idx*10;
 	int spPos = ctrl.setpoint()<100?base+7:base+6;
 	int tPos = ctrl.getTemperature()<100?spPos-5:spPos-6;
-	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,ctrl.getTemperature(),2,1);lcd.PrintChar(spPos-1, 0,'/'); lcd.PrintDoubleFD(spPos, 0,ctrl.setpoint(),2,0);lcd.PrintChar(base+9, 0,(char)DEGREE_CHAR);
+	const __FlashStringHelper *charPos = selected?F("o"):F(">");
+	if(menuPosIdx==0){
+		lcd.PrintF(base, 1,charPos);
+	}
+	lcd.PrintDoubleFD(tPos, 1,ctrl.getTemperature(),2,1);lcd.PrintChar(spPos-1, 1,'/'); lcd.PrintDoubleFD(spPos, 1,ctrl.setpoint(),2,0);lcd.PrintChar(base+9, 1,(char)DEGREE_CHAR);
 	int o = ctrl.getOutPerc();
-	/*lcd.PrintChar(13, 1,(char)HEAT_CHAR);*/ lcd.PrintDoubleD(base+5, 1,o,0); 	lcd.PrintF(base+9, 1,F("%"));
-	/*lcd.PrintF(13, 2,F("/"));*/ lcd.PrintDoubleD(base+5, 2,ctrl.ramp(),0);lcd.PrintChar(base+9, 2,(char)DEGMIN_CHAR);
+	if(menuPosIdx==1){
+		lcd.PrintF(base, 2,charPos);
+	}
+	if(ctrl.autoModeOn){
+		lcd.PrintF(base+2, 2,F("Aut"));
+	}else{
+		lcd.PrintF(base+2, 2,F("Man"));
+	}
+
+	lcd.PrintDoubleD(base+6, 2,o,0); 	lcd.PrintF(base+9, 2,F("%"));
+	if(menuPosIdx==2){
+		lcd.PrintF(base, 3,charPos);
+	}
+	lcd.PrintDoubleD(base+6, 3,ctrl.ramp(),0);lcd.PrintChar(base+9, 3,(char)DEGMIN_CHAR);
 }
 
 void LCDHelper::displayRun(){
-	if(atg.isMenuActive()){
-		displayRun(1,*atg.getSelectedController(),true);
-	}else{
-		displayRun(0,*atg.getController(0),false);
-		displayRun(1,*atg.getController(1),false);
+	if(atg.stateSelection==0){
+		lcd.PrintF(0, 0,F(">"));
 	}
-}
+	lcd.PrintF(1, 0, F("Up"));
 
-//void LCDHelper::displayAutoCtrlSel(){
-//	if(atg.getSelectedControllerIdx()==0){
-//		lcd.PrintF(10, 0,F("Ctrl 1"));
-//	}else{
-//		lcd.PrintF(10, 0,F("Ctrl 2"));
-//	}
-//}
+	lcd.PrintF(6, 0, F("Mash"));
+	bool menuSel = false;
+	int menuPosIdx = -1;
+	if (atg.stateSelection>=1 && atg.stateSelection<=3){
+		menuPosIdx = atg.stateSelection-1;
+	}
+
+	if(atg.pMainMenu->runMenu->setpointMenu0->Selected){
+		menuSel = true;
+	}else if(atg.pMainMenu->runMenu->switchMenu0->Selected){
+		menuSel = true;
+	}else if(atg.pMainMenu->runMenu->rampMenu0->Selected){
+		menuSel = true;
+	}
+	displayRun(0,*atg.getController(0),menuPosIdx,menuSel);
+
+	lcd.PrintF(14, 0, F("Sparge"));
+	menuSel = false;
+	menuPosIdx = -1;
+	if (atg.stateSelection>=4 && atg.stateSelection<=6){
+		menuPosIdx = atg.stateSelection-4;
+	}
+	if(atg.pMainMenu->runMenu->setpointMenu1->Selected){
+		menuSel = true;
+	}else if(atg.pMainMenu->runMenu->switchMenu1->Selected){
+		menuSel = true;
+	}else if(atg.pMainMenu->runMenu->rampMenu1->Selected){
+		menuSel = true;
+	}
+	displayRun(1,*atg.getController(1),menuPosIdx,menuSel);
+}
 
 void LCDHelper::displayConfigServo(){
 	Controller ctrl = *atg.getSelectedController();

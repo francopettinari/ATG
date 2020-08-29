@@ -25,7 +25,7 @@ class MenuItem;
 
 enum PidStateValue { //FIXME: to be renamed to something common to two pids controllers
 	svMain=0,
-	svRunAuto=10, svRunAutoSetpoint=13,svRunAutoRamp=17,svRunAutoCtrlSel=18,
+	svRunAuto=10, svRunAutoSetpoint0=13,svRunAutoRamp0=14,svRunAutoSetpoint1=15,svRunAutoRamp1=16,
 	svConfig=20,svConfigController=21,
 	svPidConfig=22,
 	svPidKpiConfig=23,svPidKpdConfig=24,
@@ -119,7 +119,7 @@ public:
 
 	double ramp(){ return _ramp; }
 	void setRamp(double value){ _ramp=value; }
-	void incRamp(){ _ramp++; }
+	void incRamp(){ _ramp++;  if(_ramp>9)_ramp=9;}
 	void decRamp(){ _ramp--; if(_ramp<0)_ramp=0; }
 
 

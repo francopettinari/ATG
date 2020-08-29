@@ -17,7 +17,7 @@ class Controller;
 class LCDHelper {
     LCDBuffer lcd;
 	void displayRun();
-	void displayRun(int idx,Controller ctrl, bool showCtrlLabel);
+	void displayRun(int idx,Controller ctrl,int menuPosIdx, bool selected);
 	void displayAutoCtrlSel();
 	void displayManual();
 	void displayTimerValue();
