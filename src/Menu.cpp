@@ -17,15 +17,9 @@ MenuItem::MenuItem(MenuItem* parent,int state, String s){
 //}
 
 void MenuItem::OnSelectedInMenu(){
-	Serial.print(F(">>>>>> Press <<<<<<  "));Serial.println(Caption);
 }
 
 void MenuItem::OnLongPress(){
-	Serial.print(F(">>>>>> Long press <<<<<<  "));Serial.println(Caption);
-}
-
-void MenuItem::OnDoublePress(){
-	Serial.print(F(">>>>>> Double press <<<<<<  "));Serial.println(Caption);
 }
 
 void MenuItem::HandleEncoderMovement(EncoderMovement mvmnt){
@@ -64,24 +58,16 @@ void MenuItem::HandleEncoderMovement(EncoderMovement mvmnt){
 }
 
 void MenuItem::HandleEncoderPush(EncoderSwStates pst){
-	Serial.print(F("Menu    :"));Serial.println(atg.getCurrentMenu()->Caption);
-	Serial.print(F("Menu len:"));Serial.println(atg.getCurrentMenu()->subMenuItemsLen());
 	MenuItem* selMI = atg.currentMenu->subMenuItems[atg.stateSelection];
 	switch(pst){
 	case EncoderPressPressed:
-		Serial.print(F(">>>>>> Push <<<<<<  "));Serial.println(atg.stateSelection);
 		selMI->OnSelectedInMenu();
 		break;
 	case EncoderPressLongPressed:
-		Serial.print(F(">>>>>> LongPush <<<<<<  "));Serial.println(atg.stateSelection);
 		selMI->OnLongPress();
 		break;
-	case EncoderPressDblPressed:
-		Serial.print(F(">>>>>> DblPress <<<<<<  "));Serial.println(atg.stateSelection);
-		selMI->OnDoublePress();
-		break;
 	case EncoderPressNone:
-			break;
+		break;
 	}
 }
 
@@ -110,13 +96,14 @@ void CallbackMenuItem::HandleEncoderPush(EncoderSwStates pst){
 	}
 }
 
-UpMenu::UpMenu(MenuItem* parent,int state):MenuItem(parent,-1,F("Up")){
+UpMenu::UpMenu(MenuItem* parent,int state, bool saveOnUp):MenuItem(parent,-1,F("Up")){
 	upState=state;
+	this->saveOnUp=saveOnUp;
 }
 
 void UpMenu::OnSelectedInMenu(){
 	Serial.print(F("Up to "));Serial.println(upState);
-	atg.SetState((PidStateValue)upState);
+	atg.SetState((PidStateValue)upState, saveOnUp);
 }
 
 //////////////   ServoConfigDirMenu
@@ -424,8 +411,7 @@ void RunAutoRampMenu::OnSelectedInMenu(){
 }
 
 RunAutoSwitch::RunAutoSwitch(MenuItem* parent, int ctrlIdx):RunAutoBaseMenu(parent,svRunAuto,F(""),ctrlIdx){
-	Controller* pCtrl = atg.getSelectedController();
-	if(pCtrl==NULL) return;
+	Controller* pCtrl = atg.getController(CtrlIdx);
 	if(pCtrl->autoModeOn>0){
 		Caption=F("Auto");
 	}else{
@@ -433,12 +419,11 @@ RunAutoSwitch::RunAutoSwitch(MenuItem* parent, int ctrlIdx):RunAutoBaseMenu(pare
 	}
 }
 
-void RunAutoSwitch::OnDoublePress(){
-    Serial.print(F(">>>>>> Auto Switch dbl press <<<<<<  "));Serial.println(atg.getSelectedController()->autoModeOn);
-
-	atg.getSelectedController()->toggleAutoModeOn();
-	atg.savetoEEprom();
-	if(atg.getSelectedController()->autoModeOn>0){
+void RunAutoSwitch::OnLongPress(){
+	Controller* pCtrl = atg.getController(CtrlIdx);
+    Serial.print(F(">>>>>> Auto Switch long press <<<<<<  "));Serial.println(pCtrl->autoModeOn);
+    pCtrl->toggleAutoModeOn();
+	if(pCtrl->autoModeOn>0){
 		Caption=F("Auto");
 	}else{
 		Caption=F("Manual");
@@ -446,18 +431,19 @@ void RunAutoSwitch::OnDoublePress(){
 }
 
 void RunAutoSwitch::OnSelectedInMenu(){
-	Serial.print(F(">>>>>> Select Auto <<<<<<  "));Serial.println(atg.state);
-	Serial.println(atg.state);
-	if(Selected)atg.savetoEEprom();
-	Selected = !Selected;
+	Controller* pCtrl = atg.getController(CtrlIdx);
+	if (!pCtrl->autoModeOn){
+		Serial.print(F(">>>>>> Select Auto <<<<<<  "));Serial.println(atg.state);
+		Serial.println(atg.state);
+		if(Selected)atg.savetoEEprom();
+		Selected = !Selected;
+	}
 }
-
-
 
 RunAutoMenu::RunAutoMenu(MenuItem* parent):MenuItem(parent,svRunAuto,F("Auto")){
 	subMenuItems.resize(7);
 	
-	subMenuItems[0] = new UpMenu(this,svMain);
+	subMenuItems[0] = new UpMenu(this,svMain,false);
 
 	subMenuItems[1] = setpointMenu0 = new RunAutoSetpointMenu(this,svRunAutoSetpoint0,0);
 	subMenuItems[2] = switchMenu0 = new RunAutoSwitch(this,0);
@@ -470,8 +456,7 @@ RunAutoMenu::RunAutoMenu(MenuItem* parent):MenuItem(parent,svRunAuto,F("Auto")){
 }
 
 void RunAutoMenu::OnSelectedInMenu(){
-	atg.setSelectedController(0);
-	atg.SetState(svRunAuto);
+	atg.SetState(svRunAuto,false);
 }
 
 void RunAutoMenu::HandleEncoderPush(EncoderSwStates pst){
@@ -516,24 +501,22 @@ void RunAutoMenu::HandleEncoderMovement(EncoderMovement mvmnt){
 		}
 	} else if(pCtrl0->autoModeOn==0 && switchMenu0->Selected){
 		//manual mode. handle output percentage
-
 		if(mvmnt==EncMoveCCW){
-			Serial.print(F(">>>>>> Change forced output 0 to"));Serial.println(pCtrl0->forcedOutput-1);
-			pCtrl0->setForcedOutput(pCtrl0->forcedOutput-1);
+			Serial.print(F(">>>>>> Change forced output 0 to"));Serial.println(pCtrl0->forcedOutput-10);
+			pCtrl0->setForcedOutput(pCtrl0->forcedOutput-10);
 		}else if(mvmnt==EncMoveCW){
-			Serial.print(F(">>>>>> Change forced output 0 to"));Serial.println(pCtrl0->forcedOutput+1);
-			pCtrl0->setForcedOutput(pCtrl0->forcedOutput+1);
+			Serial.print(F(">>>>>> Change forced output 0 to"));Serial.println(pCtrl0->forcedOutput+10);
+			pCtrl0->setForcedOutput(pCtrl0->forcedOutput+10);
 		}
 		pCtrl0->setOutPerc(pCtrl0->forcedOutput);
 	} else if(pCtrl1->autoModeOn==0 && switchMenu1->Selected){
 		//manual mode. handle output percentage
-
 		if(mvmnt==EncMoveCCW){
-			Serial.print(F(">>>>>> Change forced output 1 to"));Serial.println(pCtrl1->forcedOutput-1);
-			pCtrl1->setForcedOutput(pCtrl1->forcedOutput-1);
+			Serial.print(F(">>>>>> Change forced output 1 to"));Serial.println(pCtrl1->forcedOutput-10);
+			pCtrl1->setForcedOutput(pCtrl1->forcedOutput-10);
 		}else if(mvmnt==EncMoveCW){
-			Serial.print(F(">>>>>> Change forced output 1 to"));Serial.println(pCtrl1->forcedOutput+1);
-			pCtrl1->setForcedOutput(pCtrl1->forcedOutput+1);
+			Serial.print(F(">>>>>> Change forced output 1 to"));Serial.println(pCtrl1->forcedOutput+10);
+			pCtrl1->setForcedOutput(pCtrl1->forcedOutput+10);
 		}
 		pCtrl1->setOutPerc(pCtrl1->forcedOutput);
 	}

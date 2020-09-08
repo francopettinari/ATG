@@ -48,9 +48,13 @@ void IRAM_ATTR isrAB() {
 }
 
 long int swValue=0;
-void IRAM_ATTR isrRotaryReleased() {
+unsigned long lastSwRead = 0;
+void IRAM_ATTR isrRotaryPress() {
 	portENTER_CRITICAL_ISR(&gpioMux);
-	swValue++;
+	unsigned long now = millis();
+	if(now-lastSwRead>250){
+		swValue++;
+	}
 	portEXIT_CRITICAL_ISR(&gpioMux);
 }
 
@@ -102,7 +106,7 @@ void parseString(String s){
 				atg.getController(0)->setSetpoint(value.toFloat());
 				break;
 			case RP:
-				atg.getController(0)->setRamp(value.toFloat());
+				atg.getController(0)->ramp = value.toFloat();
 				break;
 			case ST: {
 				atg.getController(0)->setAutoMode(value.toInt());
@@ -248,6 +252,7 @@ void ATG::loadFromEEProm(){
 //	}
 
 	state=EEPROM.get(addr, state);
+	state=svMain; //I now need to alwys start from main
 	addr+=sizeof(PidStateValue);Serial.print(F("Size: "));Serial.println(addr);
 	Serial.print(F("Readed state: "));Serial.println(state);
 	if(state<0 || state>100){
@@ -355,6 +360,13 @@ void ATG::loadFromEEProm(){
 	addr+=sizeof(ctrl1.temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
 	Serial.print(F("Readed temperatureCorrection: "));Serial.println(ctrl1.temperatureCorrection*0.1);
 
+	ctrl0.ramp = EEPROM.get(addr, ctrl0.ramp);
+	addr+=sizeof(ctrl0.ramp);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed ramp0: "));Serial.println(ctrl0.ramp);
+	ctrl1.ramp = EEPROM.get(addr, ctrl1.ramp);
+	addr+=sizeof(ctrl1.ramp);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed ramp1: "));Serial.println(ctrl1.ramp);
+
 	EEPROM.commit();
 	EEPROM.end();
 }
@@ -449,6 +461,13 @@ void ATG::savetoEEprom(){
 	EEPROM.put(addr, ctrl1.temperatureCorrection);
 	addr+=sizeof(ctrl1.temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
 
+	Serial.print(F("EEPROMWriteSettings. ramp0: "));Serial.println(ctrl0.ramp);
+	EEPROM.put(addr, ctrl0.ramp);
+	addr+=sizeof(ctrl0.ramp);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. ramp1: "));Serial.println(ctrl1.ramp);
+	EEPROM.put(addr, ctrl1.ramp);
+	addr+=sizeof(ctrl1.ramp);Serial.print(F("Size: "));Serial.println(addr);
+
 	EEPROM.commit();
 	EEPROM.end();
 
@@ -470,7 +489,7 @@ void ATG::sendStatus(){
 	TcpComm->print(F(";STATE:")   );TcpComm->print((float)getController(0)->autoModeOn,0);
 	TcpComm->print(F(";FSM_STATE:")   );TcpComm->print(getController(0)->fsmState);
 	TcpComm->print(F(";SETP:")    );TcpComm->print(getController(0)->_setpoint,4);
-	TcpComm->print(F(";RAMP:")    );TcpComm->print(getController(0)->_ramp,4);
+	TcpComm->print(F(";RAMP:")    );TcpComm->print(getController(0)->ramp,4);
 	TcpComm->print(F(";DSETP:")   );TcpComm->print(getController(0)->_dynamicSetpoint,4);
 	TcpComm->print(F(";TEMP:")    );TcpComm->print(getController(0)->temperature,4);
 	TcpComm->print(F(";OUT:")     );TcpComm->print(getController(0)->Output,4);
@@ -494,10 +513,9 @@ void setup() {
 	pinMode(ROTARY_PINB, INPUT_PULLUP);
 	pinMode(ROTARY_PINSW, INPUT_PULLUP);
 
-	pinMode(ROTARY_PINSW, INPUT_PULLUP);
 	attachInterrupt(ROTARY_PINA, isrAB, CHANGE);
 	attachInterrupt(ROTARY_PINB, isrAB, CHANGE);
-	attachInterrupt(ROTARY_PINSW, isrRotaryReleased, FALLING);
+	attachInterrupt(ROTARY_PINSW, isrRotaryPress, FALLING);
 
 	Serial.begin(115200);
 
@@ -546,7 +564,15 @@ void ATG::update(int encoderPos, EncoderSwStates encoderPress){
 	//Serial.print(F("Encoder push: "));Serial.println(encoderPushButtonState);
 //	ESP.wdtFeed();
 	setCurrentMenu(decodeCurrentMenu());
+	if(encMovement!=EncMoveNone || encoderPress!=EncoderPressNone){
+		Serial.print(F("oooo "));Serial.print(EncoderSwStatesNames[encoderPress]);Serial.print(F(" oooo  "));Serial.println(stateSelection);
+		Serial.print(F("Menu     :"));Serial.println(getCurrentMenu()->Caption);
+		Serial.print(F("Menu  len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
 
+		if(getCurrentMenu()->subMenuItemsLen()>0){
+			Serial.print(F("Sel menu:"));Serial.println(getCurrentMenu()->subMenuItems[stateSelection]->Caption);
+		}
+	}
 	if(encMovement!=EncMoveNone){
 		Serial.print(F(">>>>>> Enc mov <<<<<<  "));
 		if(encMovement==EncMoveCW){
@@ -554,63 +580,48 @@ void ATG::update(int encoderPos, EncoderSwStates encoderPress){
 		}else{
 			Serial.println(F(" CCW "));
 		}
-		Serial.print(F("Menu    :"));Serial.println(getCurrentMenu()->Caption);
-		Serial.print(F("Menu len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
-		if(getCurrentMenu()->subMenuItemsLen()>0){
-			Serial.print(F("Sel menu:"));Serial.println(getCurrentMenu()->subMenuItems[stateSelection]->Caption);
-		}
-		Serial.print(F("Selected :"));Serial.println(stateSelection);
+		Serial.print(F("Selected idx:"));Serial.println(stateSelection);
 		getCurrentMenu()->HandleEncoderMovement(encMovement);
 		if(getCurrentMenu()->subMenuItemsLen()>0){
 			Serial.print(F("New Sel menu:"));Serial.println(getCurrentMenu()->subMenuItems[stateSelection]->Caption);
 		}
-		Serial.print(F("New Selected :"));Serial.println(stateSelection);
+		Serial.print(F("New Selected idx:"));Serial.println(stateSelection);
 	}
 	if(encoderPress!=EncoderPressNone) {
-		Serial.print(F(">>>>>> "));Serial.print(EncoderSwStatesNames[encoderPress]);Serial.print(F(" <<<<<<  "));Serial.println(stateSelection);
-		Serial.print(F("Menu     :"));Serial.println(getCurrentMenu()->Caption);
-		Serial.print(F("Menu  len:"));Serial.println(getCurrentMenu()->subMenuItemsLen());
-		if(getCurrentMenu()->subMenuItemsLen()>0){
-			Serial.print(F("Sel menu:"));Serial.println(getCurrentMenu()->subMenuItems[stateSelection]->Caption);
-		}
 		getCurrentMenu()->HandleEncoderPush(encoderPress);
 	}
 }
 
 long int prevSwVal = 0;
 
-unsigned long lastPress = 0, lastRotated=0;
+unsigned long lastPress = 0,lastRotated=0;
 unsigned long lastdblPress = 0;
 long int prevRotValue=0;
+EncoderSwStates LastSwState = EncoderPressNone;
 void loop() {
-	EncoderSwStates SwState = EncoderPressNone;
-
 	unsigned long now = millis();
 
+	EncoderSwStates SwState = EncoderPressNone;
+
+	//Serial.print(F("PRESS: "));Serial.print(!digitalRead(ROTARY_PINSW));Serial.print(F(" SW: "));Serial.print(swValue);Serial.print(F(" ROT: "));Serial.println(rotValue);
+
 	if(swValue-prevSwVal>0){
-		Serial.print(F("swValue: "));Serial.println(swValue);
-		if(now-lastPress<500){
-			SwState = EncoderPressDblPressed;
-			lastdblPress = now;
-		}else{
-			SwState = EncoderPressPressed;
-			Serial.println(F("EncoderPressPressed"));
-		}
+		SwState = EncoderPressPressed;
 		lastPress=now;
+	} else if(!digitalRead(ROTARY_PINSW)){ //press
+		if(now-lastPress>2000) {
+			SwState = EncoderPressLongPressed;
+			lastPress=now; //at next loop avoid reapeat longPress
+		}
 	}
 	prevSwVal = swValue;
-//	Serial.print(F("XX :"));Serial.print(now);Serial.print(F(" - "));Serial.println(lastPress);
 
 	bool rotated = rotValue!=prevRotValue;
 	if(rotated) lastRotated = now;
 	prevRotValue = rotValue;
 
-	bool menuActive = now-lastRotated<5000 ||  now-lastPress<5000;//10 secs
+	// menuActive = now-lastRotated<10000 ||  now-lastPress<10000;//10 secs
 
-
-	if(SwState == EncoderPressDblPressed){
-		Serial.println(F("EncoderPressDblPressed"));
-	}
 	atg.update(rotValue,SwState);
 	atg.getController(0)->update();
 	atg.getController(1)->update();
@@ -619,6 +630,7 @@ void loop() {
 
 	handleClients();
 
-	atg.setMenuActive(menuActive);
+	//atg.setMenuActive(menuActive);
+
 }
 

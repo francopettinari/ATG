@@ -68,6 +68,12 @@ bool PID::Compute()
       double dInput = (input - lastInput);
       outputSum+= (ki * error);
 
+      Serial.println(F("...PID Compute..."));
+      Serial.print(F("Input: "));Serial.println(input);
+      Serial.print(F("DInpout: "));Serial.println(dInput);
+      Serial.print(F("OUT SUM: "));Serial.println(outputSum);
+      Serial.print(F("Output: "));Serial.print(*myOutput);Serial.print(F(" - OutMax: "));Serial.println(outMax);
+
       /*Add Proportional on Measurement, if P_ON_M is specified*/
       if(!pOnE) outputSum-= kp * dInput;
 

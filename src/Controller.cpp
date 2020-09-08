@@ -174,7 +174,7 @@ void Controller::updateRamp(){
 	float deltaMillis = now-lastDynSetpointCalcMillis;
 	if(deltaMillis>5000){
 
-		float   currRamp = _ramp;
+		float   currRamp = ramp;
 		float   currStartMillis = approacingStartMillis;
 		double  currStartTemp = approacingStartTemp;
 		if(_setpoint-_dynamicSetpoint<2){
@@ -209,12 +209,6 @@ void Controller::updateRamp(){
 	}
 }
 
-bool Controller::isAutoState(int state){
-	return state==svRunAuto || state==svRunAutoSetpoint0 || state==svRunAutoRamp0|| state==svRunAutoSetpoint1 || state==svRunAutoRamp1;
-}
-
-
-
 int Controller::getOutPerc(){
 	int o = 0;
 	double outRange = servoMaxValue-servoMinValue;
@@ -236,28 +230,23 @@ void Controller::update(){
 	double tempp = pProbe->readTemperature();
 
 	setTemperature(tempp);
+	if(!isAutoState(atg.state)){
+		autoModeOn = false;
+		Output=0;
+		forcedOutput=0;
+		writeServoPosition(Output,true,false);
+	}
 
 	//force to manual when:
 	//- not in auto
 	//- not configuring
-	if(pid.GetMode()!=MANUAL && !isAutoState(atg.state) &&
-			atg.state!=svConfig_ServoDirection && atg.state!=svConfig_ServoMin&&atg.state!=svConfig_ServoMax)
-	{
-		pid.SetMode(MANUAL);
-
-	}
-
-	//in each case, also if in auto, but automode is disabled, then force pid in manual
-	if(autoModeOn==0){
+	//- automode is disabled
+	bool autoOrConfig = isAutoState(atg.state) || isConfigState(atg.state);
+	if(autoModeOn==0 ||(pid.GetMode()!=AUTOMATIC && !autoOrConfig)){
 		pid.SetMode(MANUAL);
 	}
 
-
-	//this is not clear!
-	//when in Auto, but automode==0, then it shuts down.... ???
-	if(!isAutoState(atg.state) &&
-			atg.state!=svConfig_ServoDirection && atg.state!=svConfig_ServoMin&&atg.state!=svConfig_ServoMax)
-	{
+	if(!autoOrConfig) {
 		Output=0;
 		writeServoPosition(Output,true,false);
 	}
@@ -299,7 +288,7 @@ void Controller::update(){
 			}
 
 			//FIXME: move to startRamp/updateRamp ?
-			if(_ramp<=0){
+			if(ramp<=0){
 				if(fsmState!=psSoak){
 					SetFsmState(psSoak);
 				}
@@ -313,11 +302,11 @@ void Controller::update(){
 				startRamp();
 				break;
 			case psWaitDelay:
-				//ramp is started, but we also must wait that also temperature starts to move.
+				//ramp is started, but we also must wait that temperature starts to move.
 				//we detect that temperature has started to move if
-				//it is at least 0.2 degrees more that initial value
+				//it is at least 0.2 degrees more than initial value
 				if(rampStarted()){
-					//ramp start has been detected: temp >= initialRampTemp+0.2
+					//ramp start has been detected: temp >= initialRampTemp+0.1
 					//change state, reset pid and recalculate ramp start so that we adjust delays
 					SetFsmState(psRampimg);
 					//pid.Reset(); //avoiding reset can avoid heat jumps. at this point some windup is present, but can be soon smoothedfrom temperature increasing
@@ -325,15 +314,22 @@ void Controller::update(){
 					break;
 				}
 				//if ramp not yet started we must anyway continue to update the ramp value so that
-				//heat output is step by step increased and head change can be detected.
-				//for this reason breack is missing.
+				//heat output is step by step increased and heat change can be detected.
+				//for this reason break is missing.
 			case psRampimg:
 				updateRamp(); //ramp until setpoint. it's the most graceful way to approach to setpoint
+
+				if(ramp<=0 && pid.GetKi()==_ki){
+					pid.SetTunings(_kp,_ki/3,_kd,P_ON_E);
+				} else if(ramp>0 && pid.GetKi()!=_ki){
+					pid.SetTunings(_kp,_ki,_kd,P_ON_E);
+				}
 
 				if(temperature>_setpoint){
 					SetFsmState(psSoak);
 					_dynamicSetpoint=_setpoint;
 					pid.Reset();//avoid delay in switching off
+					pid.SetTunings(_kp,_ki,_kd);
 				}
 				break;
 			case psSoak:
@@ -353,17 +349,7 @@ void Controller::update(){
 //				}
 				break;
 			}
-			bool computed = pid.Compute();
-//			if(temperature >_dynamicSetpoint){
-//				//force output to 0
-//				//Output = 0;
-//				//writeServoPosition(Output,true);
-//				//pid.Reset();
-//			}else if((_dynamicSetpoint - temperature)>7){
-//				//too far from _dynamicSetpoint: max fire applied
-//				Output = servoMaxValue;
-//				pid.Reset();
-//			}
+			pid.Compute();
 			writeServoPosition(Output,true);
 
 			break;

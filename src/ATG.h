@@ -21,7 +21,7 @@ private:
 
 	byte eepromVer = 07;  // eeprom data tracking
 
-	bool _menuActive = false;
+	bool _menuActive = true;
 	int  selectedCtrlIdx=0;
 	Controller ctrl0;
 	Controller ctrl1;

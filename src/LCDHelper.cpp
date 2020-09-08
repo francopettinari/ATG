@@ -307,6 +307,7 @@ void LCDHelper::displayRun(int idx,Controller ctrl, int menuPosIdx, bool selecte
 	int spPos = ctrl.setpoint()<100?base+7:base+6;
 	int tPos = ctrl.getTemperature()<100?spPos-5:spPos-6;
 	const __FlashStringHelper *charPos = selected?F("o"):F(">");
+	//for(int i=1;i<4;i++)lcd.PrintF(base, i,F("|"));
 	if(menuPosIdx==0){
 		lcd.PrintF(base, 1,charPos);
 	}
@@ -320,12 +321,34 @@ void LCDHelper::displayRun(int idx,Controller ctrl, int menuPosIdx, bool selecte
 	}else{
 		lcd.PrintF(base+2, 2,F("Man"));
 	}
-
+//    if(!ctrl.autoModeOn){
+//    	switch(ctrl.TempState){
+//    	case TempStateUndefined:
+//    		lcd.PrintF(base+5, 2,F("?"));
+//		break;
+//    	case TempStateOff:
+//    		lcd.PrintF(base+5, 2,F("-"));
+//		break;
+//    	case TempStateOn:
+//    		lcd.PrintChar(base+5, 2,(char)HEAT_CHAR);
+//		break;
+//    	case TempStateSwitchingOn:
+//    		lcd.PrintF(base+5, 2,F("^"));
+//		break;
+//    	case TempStateSwitchingOff:
+//    		lcd.PrintF(base+5, 2,F("x"));
+//		break;
+//    	}
+//    }
 	lcd.PrintDoubleD(base+6, 2,o,0); 	lcd.PrintF(base+9, 2,F("%"));
 	if(menuPosIdx==2){
 		lcd.PrintF(base, 3,charPos);
 	}
-	lcd.PrintDoubleD(base+6, 3,ctrl.ramp(),0);lcd.PrintChar(base+9, 3,(char)DEGMIN_CHAR);
+	if(ctrl.ramp<=0){
+		lcd.PrintF(base+3, 3,F("No ramp"));
+	}else{
+		lcd.PrintDoubleD(base+6, 3,ctrl.ramp,0);lcd.PrintChar(base+9, 3,(char)DEGMIN_CHAR);
+	}
 }
 
 void LCDHelper::displayRun(){

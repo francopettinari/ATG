@@ -49,13 +49,18 @@ enum TemperatureTransitionState {TempStateUndefined=0,TempStateOff=10,TempStateO
 class Controller {
 private:
 
-	TemperatureTransitionState TempState = TempStateUndefined;
+
 //	EncoderPushButtonState decodeEncoderPushBtnState (boolean encoderPress);
 	boolean IsEncoderPressed(boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
 	void _writeServo(int degree);
 
-	bool isAutoState(int state);
+	bool isAutoState(int state){
+		return state>=svRunAuto && state<=svRunAutoRamp1; //state==svRunAuto || state==svRunAutoSetpoint0 || state==svRunAutoRamp0|| state==svRunAutoSetpoint1 || state==svRunAutoRamp1;
+	}
+	bool isConfigState(int state){
+		return !(state >= svConfig_ServoDirection && state <= svConfig_ServoMax);//state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax;
+	}
 //	byte eepromVer = 06;  // eeprom data tracking
 
 
@@ -68,9 +73,10 @@ private:
 	Servo_ESP32* pServo;
 	TemperatureProbe* pProbe;
 public:
+	TemperatureTransitionState TempState = TempStateUndefined;
 	FsmState fsmState=psIdle;
 	double _kp=50,_ki=0.3,_kd=0;
-	double _setpoint = 25,_dynamicSetpoint=25,_ramp=1;
+	double _setpoint = 25,_dynamicSetpoint=25,ramp=1;
 
 	void initialize(int servoPin, int tempProbePin){
 		pServo = new Servo_ESP32();
@@ -117,10 +123,8 @@ public:
 	double dynamicSetpoint(){ return _dynamicSetpoint; }
 	void setDynamicSetpoint(double value){ _dynamicSetpoint=value; }
 
-	double ramp(){ return _ramp; }
-	void setRamp(double value){ _ramp=value; }
-	void incRamp(){ _ramp++;  if(_ramp>9)_ramp=9;}
-	void decRamp(){ _ramp--; if(_ramp<0)_ramp=0; }
+	void incRamp(){ ramp++;  if(ramp>9)ramp=9;}
+	void decRamp(){ ramp--; if(ramp<0)ramp=0; }
 
 
 //	PidStateValue state = svMain;

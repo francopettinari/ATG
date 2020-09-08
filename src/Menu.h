@@ -17,8 +17,8 @@ class ConfigMenu;
 enum EncoderMovement {EncMoveNone=-1,EncMoveCW=0,EncMoveCCW=1};
 
 //enum EncoderPushButtonState {EncoderPushButtonNone=0, EncoderPushButtonPressed=1};
-enum EncoderSwStates {EncoderPressNone=0,EncoderPressPressed=1,EncoderPressLongPressed=2,EncoderPressDblPressed=3};
-static const char* EncoderSwStatesNames[] = { "None", "Pressed", "Long Pressed","Double Pressed" };
+enum EncoderSwStates {EncoderPressNone=0,EncoderPressPressed=1,EncoderPressLongPressed=2};
+static const char* EncoderSwStatesNames[] = { "None", "Pressed", "Long Pressed"};
 
 typedef  void (*SelectedInMenuCallback)();
 typedef  void (*EncoderMovementCallback)(EncoderMovement mvmnt);
@@ -50,7 +50,6 @@ public:
 
 	virtual void OnSelectedInMenu();
 	virtual void OnLongPress();
-	virtual void OnDoublePress();
 	virtual void HandleEncoderMovement(EncoderMovement mvmnt);
 	virtual void HandleEncoderPush(EncoderSwStates pst);
 };
@@ -73,7 +72,8 @@ public:
 class UpMenu : public MenuItem {
 public:
 	int upState=-1;
-	UpMenu(MenuItem* parent,int upstate);
+	bool saveOnUp = true;
+	UpMenu(MenuItem* parent,int upstate, bool saveOnUp=true);
 	void OnSelectedInMenu();
 };
 
@@ -209,7 +209,7 @@ class RunAutoSwitch : public RunAutoBaseMenu {
 public:
 
 	RunAutoSwitch(MenuItem* parent, int ctrlIdx);
-	void OnDoublePress();
+	void OnLongPress();
 	void OnSelectedInMenu();
 };
 
