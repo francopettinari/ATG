@@ -123,8 +123,8 @@ public:
 	double dynamicSetpoint(){ return _dynamicSetpoint; }
 	void setDynamicSetpoint(double value){ _dynamicSetpoint=value; }
 
-	void incRamp(){ ramp++;  if(ramp>9)ramp=9;}
-	void decRamp(){ ramp--; if(ramp<0)ramp=0; }
+	void incRamp(){ ramp+=0.5; if(ramp>9)ramp=9;}
+	void decRamp(){ ramp-=0.5; if(ramp<0)ramp=0; }
 
 
 //	PidStateValue state = svMain;

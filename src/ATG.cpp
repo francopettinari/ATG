@@ -499,12 +499,7 @@ void ATG::sendStatus(){
 	lastUdpDataSent = now;
 }
 
-int angle =0;
-int angleStep = 5;
 
-int angleMin =0;
-int angleMax = 180;
-int dir = 1;
 
 void setup() {
 	lcdHelper.createCustomChars();
@@ -593,12 +588,12 @@ void ATG::update(int encoderPos, EncoderSwStates encoderPress){
 }
 
 long int prevSwVal = 0;
-
 unsigned long lastPress = 0,lastRotated=0;
 unsigned long lastdblPress = 0;
 long int prevRotValue=0;
 EncoderSwStates LastSwState = EncoderPressNone;
 void loop() {
+	//Serial.print("Task1 running on core "); Serial.println(xPortGetCoreID());
 	unsigned long now = millis();
 
 	EncoderSwStates SwState = EncoderPressNone;
