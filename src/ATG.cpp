@@ -246,10 +246,10 @@ void ATG::loadFromEEProm(){
 	temp = EEPROM.get(addr, temp);
 	addr+=1;Serial.print(F("Size: "));Serial.println(addr);
 
-//	if(temp!=eepromVer && temp!=eepromVer-1){
-//		Serial.print(F(">>>>>>>> WRONG EPROM VERSION expected "));Serial.print(eepromVer);Serial.print(F("FOUND "));Serial.println(temp);
-//		return;
-//	}
+	if(temp!=eepromVer && temp!=eepromVer-1){
+		Serial.print(F(">>>>>>>> WRONG EPROM VERSION expected "));Serial.print(eepromVer);Serial.print(F("FOUND "));Serial.println(temp);
+		return;
+	}
 
 	state=EEPROM.get(addr, state);
 	state=svMain; //I now need to alwys start from main

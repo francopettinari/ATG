@@ -25,7 +25,7 @@ private:
 
 
 public:
-
+	bool tempReadRequested = false;
 	float lastTempReadMillis = 0;
 	float firArray[firNOfSamples];
 	float filteredValue;

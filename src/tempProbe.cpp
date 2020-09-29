@@ -26,7 +26,7 @@ TemperatureProbe::TemperatureProbe(int pin) {
 
 }
 
-bool tempReadRequested = false;
+
 float TemperatureProbe::readTemperature(){
 	unsigned long now = millis();
 
@@ -45,6 +45,8 @@ float TemperatureProbe::readTemperature(){
 	}else if(sensors->isConversionComplete()){
 		float temp = sensors->getTempCByIndex(0);
 		tempReadRequested = false;
+		if(temp<=0) return filteredValue;
+
 		firArray[firIdx%firNOfSamples] = temp;
 		firIdx=firIdx+1;
 		if(firIdx>firIdxMax)
