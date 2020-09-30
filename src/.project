@@ -59,7 +59,7 @@
 		<link>
 			<name>libraries/OneWire</name>
 			<type>2</type>
-			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/OneWire/2.3.0</locationURI>
+			<location>E:/ProgramFiles/sloeber/arduinoPlugin/libraries/OneWire/2.3.0</location>
 		</link>
 		<link>
 			<name>libraries/SimpleBLE</name>

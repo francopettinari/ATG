@@ -18,14 +18,14 @@ private:
 	static const int firIdxMax = firNOfSamples*10;//max idx after which firIdx will be reset to start
 	int readIntervalMs=1000*windowSecs/firNOfSamples;
 
-	int sensorsDelms = 50000; //fake default val
+//	int sensorsDelms = 50000; //fake default val
 
 	OneWire* onewire;
 	DallasTemperature* sensors;
 
 
 public:
-	bool tempReadRequested = false;
+//	bool tempReadRequested = false;
 	float lastTempReadMillis = 0;
 	float firArray[firNOfSamples];
 	float filteredValue;

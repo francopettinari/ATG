@@ -501,40 +501,7 @@ void ATG::sendStatus(){
 
 
 
-void setup() {
-	lcdHelper.createCustomChars();
-	//encoder setup
-	pinMode(ROTARY_PINA, INPUT_PULLUP);
-	pinMode(ROTARY_PINB, INPUT_PULLUP);
-	pinMode(ROTARY_PINSW, INPUT_PULLUP);
 
-	attachInterrupt(ROTARY_PINA, isrAB, CHANGE);
-	attachInterrupt(ROTARY_PINB, isrAB, CHANGE);
-	attachInterrupt(ROTARY_PINSW, isrRotaryPress, FALLING);
-
-	Serial.begin(115200);
-
-	WiFi.disconnect(true);
-	WiFi.mode(WIFI_AP);
-	WiFi.softAP(ssid, password);
-
-	Serial.print(F("IP ADDRESS: "));Serial.println(WiFi.localIP());
-	Serial.println(F("Initialized"));
-
-	server.begin();
-    server.setNoDelay(true);
-
-	//pinMode(pushButtonPin, INPUT_PULLUP);
-	//attachInterrupt(pushButtonPin, handleEncPush, CHANGE);
-	atg.loadFromEEProm();
-	Serial.print(F("SETUP "));
-//	ESP.wdtDisable();
-//	ESP.wdtEnable(WDTO_8S);
-
-
-	Serial.println(F("Initialized from EEProm"));
-
-}
 
 EncoderMovement ATG::decodeEncoderMoveDirection(int encoderPos){
 	prevEncoderPos = currEncoderPos;
@@ -587,45 +554,119 @@ void ATG::update(int encoderPos, EncoderSwStates encoderPress){
 	}
 }
 
+void loop() {
+
+}
+
 long int prevSwVal = 0;
 unsigned long lastPress = 0,lastRotated=0;
 unsigned long lastdblPress = 0;
 long int prevRotValue=0;
 EncoderSwStates LastSwState = EncoderPressNone;
-void loop() {
+void TaskInputLoop( void * pvParameters ){
+	Serial.print("TaskInputLoop running on core "); Serial.println(xPortGetCoreID());
+
+	lcdHelper.createCustomChars();
+		//encoder setup
+	pinMode(ROTARY_PINA, INPUT_PULLUP);
+	pinMode(ROTARY_PINB, INPUT_PULLUP);
+	pinMode(ROTARY_PINSW, INPUT_PULLUP);
+
+	attachInterrupt(ROTARY_PINA, isrAB, CHANGE);
+	attachInterrupt(ROTARY_PINB, isrAB, CHANGE);
+	attachInterrupt(ROTARY_PINSW, isrRotaryPress, FALLING);
+
+	for(;;){
 	//Serial.print("Task1 running on core "); Serial.println(xPortGetCoreID());
-	unsigned long now = millis();
+		unsigned long now = millis();
 
-	EncoderSwStates SwState = EncoderPressNone;
+		EncoderSwStates SwState = EncoderPressNone;
 
-	//Serial.print(F("PRESS: "));Serial.print(!digitalRead(ROTARY_PINSW));Serial.print(F(" SW: "));Serial.print(swValue);Serial.print(F(" ROT: "));Serial.println(rotValue);
+		//Serial.print(F("PRESS: "));Serial.print(!digitalRead(ROTARY_PINSW));Serial.print(F(" SW: "));Serial.print(swValue);Serial.print(F(" ROT: "));Serial.println(rotValue);
 
-	if(swValue-prevSwVal>0){
-		SwState = EncoderPressPressed;
-		lastPress=now;
-	} else if(!digitalRead(ROTARY_PINSW)){ //press
-		if(now-lastPress>2000) {
-			SwState = EncoderPressLongPressed;
-			lastPress=now; //at next loop avoid reapeat longPress
+		if(swValue-prevSwVal>0){
+			SwState = EncoderPressPressed;
+			lastPress=now;
+		} else if(!digitalRead(ROTARY_PINSW)){ //press
+			if(now-lastPress>2000) {
+				SwState = EncoderPressLongPressed;
+				lastPress=now; //at next loop avoid reapeat longPress
+			}
 		}
+		prevSwVal = swValue;
+
+		bool rotated = rotValue!=prevRotValue;
+		if(rotated) lastRotated = now;
+		prevRotValue = rotValue;
+
+		// menuActive = now-lastRotated<10000 ||  now-lastPress<10000;//10 secs
+
+		atg.update(rotValue,SwState);
+		lcdHelper.display();
+
+		handleClients();
+
+		//atg.setMenuActive(menuActive);
+
+
+//		delay(1);
 	}
-	prevSwVal = swValue;
+}
 
-	bool rotated = rotValue!=prevRotValue;
-	if(rotated) lastRotated = now;
-	prevRotValue = rotValue;
+void TaskControllerLoop( void * pvParameters ){
+	Serial.print("TaskControllerLoop running on core "); Serial.println(xPortGetCoreID());
 
-	// menuActive = now-lastRotated<10000 ||  now-lastPress<10000;//10 secs
+	atg.loadFromEEProm();
+	Serial.println(F("Initialized from EEProm"));
 
-	atg.update(rotValue,SwState);
-	atg.getController(0)->update();
-	atg.getController(1)->update();
-//	ESP.wdtFeed();
-	lcdHelper.display();
+	for(;;){
+		atg.getController(0)->update();
+		atg.getController(1)->update();
+		delay(100);
+	}
+}
 
-	handleClients();
+void setup() {
 
-	//atg.setMenuActive(menuActive);
+
+	Serial.begin(115200);
+
+	WiFi.disconnect(true);
+	WiFi.mode(WIFI_AP);
+	WiFi.softAP(ssid, password);
+
+	Serial.print(F("IP ADDRESS: "));Serial.println(WiFi.localIP());
+	Serial.println(F("Initialized"));
+
+	server.begin();
+    server.setNoDelay(true);
+
+	Serial.println(F("Initialized from EEProm"));
+
+	enableCore0WDT();
+//	enableCore1WDT();
+
+	xTaskCreatePinnedToCore(
+		TaskInputLoop,   /* Task function. */
+		"TaskInputLoop",     /* name of task. */
+		10000,       /* Stack size of task */
+		NULL,        /* parameter of the task */
+		1,           /* priority of the task */
+		NULL,      /* Task handle to keep track of created task */
+		1);          /* pin task to core 1 */
+
+	delay(500);
+
+	xTaskCreatePinnedToCore(
+		TaskControllerLoop,   /* Task function. */
+		"TaskControllerLoop",     /* name of task. */
+		10000,       /* Stack size of task */
+		NULL,        /* parameter of the task */
+		1,           /* priority of the task */
+		NULL,      /* Task handle to keep track of created task */
+		0);          /* pin task to core 1 */
+
+	delay(500);
 
 }
 
