@@ -18,7 +18,6 @@ TemperatureProbe::TemperatureProbe(int pin) {
 	sensors->setWaitForConversion(false);
 	sensors->begin();
 	sensors->setResolution(10); // (9, 10, 11, or 12 bits) => f 0.5°C, 0.25°C, 0.125°C, or 0.0625°C
-//	sensorsDelms = sensors->millisToWaitForConversion(10);
 
 	firIdx = 0;
 	filteredValue = 0;

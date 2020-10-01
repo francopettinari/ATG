@@ -21,19 +21,10 @@ private:
 
 	byte eepromVer = 9;  // eeprom data tracking
 
-	bool _menuActive = true;
 	int  selectedCtrlIdx=0;
 	Controller ctrl0;
 	Controller ctrl1;
 public:
-
-	bool isMenuActive(){return _menuActive;}
-	void setMenuActive(bool val){
-		if(val!=_menuActive){
-			Serial.print(F("Menu active: "));Serial.println(val);
-		}
-		_menuActive=val;
-	}
 
 	MenuItem   *currentMenu=NULL;
 	float lastUdpDataSent = 0;

@@ -252,7 +252,6 @@ void Controller::update(){
 	}
 
 	float now = millis();
-//	ESP.wdtFeed();
 
 	//fsm idle in case not automatic
 	if(autoModeOn==0 || !isAutoState(atg.state)){

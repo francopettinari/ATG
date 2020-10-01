@@ -126,8 +126,7 @@ void LCDHelper::display(){
 	   atg.getState()!= svRunAutoSetpoint0 &&
 	   atg.getState()!= svRunAutoRamp0 &&
 	   atg.getState()!= svRunAutoSetpoint1 &&
-	   atg.getState()!=svRunAutoRamp1 &&
-	   atg.isMenuActive())
+	   atg.getState()!=svRunAutoRamp1)
 	{
 		lcd.PrintString(0,0,atg.getCurrentMenu()->Caption.c_str());
 		std::vector<MenuItem *> subMenuItems = atg.getCurrentMenu()->subMenuItems;

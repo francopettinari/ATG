@@ -15,7 +15,6 @@
 
 LiquidCrystal_I2C lcdx(0x27, 20,4); // @suppress("Abstract class cannot be instantiated")
 
-LCDHelper lcdHelper(lcdx);
 ATG atg;
 
 
@@ -515,16 +514,11 @@ EncoderMovement ATG::decodeEncoderMoveDirection(int encoderPos){
 }
 
 void ATG::update(int encoderPos, EncoderSwStates encoderPress){
-	if(!isMenuActive()) return;
 	//encoder position
 	EncoderMovement encMovement = decodeEncoderMoveDirection(encoderPos);
 
-	//encoder push button
-//	EncoderPushButtonState encoderPushButtonState = decodeEncoderPushBtnState(encoderPress);
-
 	//Serial.print(F("State selection: "));Serial.println(stateSelection);
 	//Serial.print(F("Encoder push: "));Serial.println(encoderPushButtonState);
-//	ESP.wdtFeed();
 	setCurrentMenu(decodeCurrentMenu());
 	if(encMovement!=EncMoveNone || encoderPress!=EncoderPressNone){
 		Serial.print(F("oooo "));Serial.print(EncoderSwStatesNames[encoderPress]);Serial.print(F(" oooo  "));Serial.println(stateSelection);
@@ -555,7 +549,25 @@ void ATG::update(int encoderPos, EncoderSwStates encoderPress){
 }
 
 void loop() {
+	delay(1000);
+}
 
+void TaskWebClinetsLoop( void * pvParameters ){
+	WiFi.disconnect(true);
+	WiFi.mode(WIFI_AP);
+	WiFi.softAP(ssid, password);
+
+	Serial.print(F("IP ADDRESS: "));Serial.println(WiFi.localIP());
+	Serial.println(F("Initialized"));
+
+	server.begin();
+	server.setNoDelay(true);
+
+
+	while(true){
+		handleClients();
+		delay(50);
+	}
 }
 
 long int prevSwVal = 0;
@@ -565,7 +577,7 @@ long int prevRotValue=0;
 EncoderSwStates LastSwState = EncoderPressNone;
 void TaskInputLoop( void * pvParameters ){
 	Serial.print("TaskInputLoop running on core "); Serial.println(xPortGetCoreID());
-
+	LCDHelper lcdHelper(lcdx);
 	lcdHelper.createCustomChars();
 		//encoder setup
 	pinMode(ROTARY_PINA, INPUT_PULLUP);
@@ -599,17 +611,10 @@ void TaskInputLoop( void * pvParameters ){
 		if(rotated) lastRotated = now;
 		prevRotValue = rotValue;
 
-		// menuActive = now-lastRotated<10000 ||  now-lastPress<10000;//10 secs
-
 		atg.update(rotValue,SwState);
 		lcdHelper.display();
 
-		handleClients();
-
-		//atg.setMenuActive(menuActive);
-
-
-//		delay(1);
+		delay(1);
 	}
 }
 
@@ -622,26 +627,35 @@ void TaskControllerLoop( void * pvParameters ){
 	for(;;){
 		atg.getController(0)->update();
 		atg.getController(1)->update();
-		delay(100);
+		delay(TemperatureProbe::readIntervalMs);
 	}
 }
 
+//SemaphoreHandle_t syncSemaphore1;
+//SemaphoreHandle_t syncSemaphore2;
+//hw_timer_t * probe1Timer;
+//hw_timer_t * probe2Timer;
+//
+//void IRAM_ATTR onProbeTimer1() {
+//  xSemaphoreGiveFromISR(syncSemaphore1, NULL);
+//}
+//
+//void IRAM_ATTR onProbeTimer2() {
+//  xSemaphoreGiveFromISR(syncSemaphore2, NULL);
+//}
+
 void setup() {
-
-
 	Serial.begin(115200);
 
-	WiFi.disconnect(true);
-	WiFi.mode(WIFI_AP);
-	WiFi.softAP(ssid, password);
-
-	Serial.print(F("IP ADDRESS: "));Serial.println(WiFi.localIP());
-	Serial.println(F("Initialized"));
-
-	server.begin();
-    server.setNoDelay(true);
-
-	Serial.println(F("Initialized from EEProm"));
+//	probe1Timer = timerBegin(0, 80, true);
+//	timerAttachInterrupt(probe1Timer, &onProbeTimer1, true);
+//	timerAlarmWrite(probe1Timer, 700000, true);
+//	timerAlarmEnable(probe1Timer);
+//
+//	probe2Timer = timerBegin(0, 80, true);
+//	timerAttachInterrupt(probe2Timer, &onProbeTimer2, true);
+//	timerAlarmWrite(probe2Timer, 700000, true);
+//	timerAlarmEnable(probe2Timer);
 
 	enableCore0WDT();
 //	enableCore1WDT();
@@ -651,7 +665,7 @@ void setup() {
 		"TaskInputLoop",     /* name of task. */
 		10000,       /* Stack size of task */
 		NULL,        /* parameter of the task */
-		1,           /* priority of the task */
+		5,           /* priority of the task */
 		NULL,      /* Task handle to keep track of created task */
 		1);          /* pin task to core 1 */
 
@@ -662,11 +676,21 @@ void setup() {
 		"TaskControllerLoop",     /* name of task. */
 		10000,       /* Stack size of task */
 		NULL,        /* parameter of the task */
-		1,           /* priority of the task */
+		5,           /* priority of the task */
 		NULL,      /* Task handle to keep track of created task */
-		0);          /* pin task to core 1 */
+		0);          /* pin task to core 0 */
 
 	delay(500);
 
+	xTaskCreatePinnedToCore(
+		TaskWebClinetsLoop,   /* Task function. */
+		"TaskWebClinetsLoop",     /* name of task. */
+		10000,       /* Stack size of task */
+		NULL,        /* parameter of the task */
+		1,           /* priority of the task */
+		NULL,      /* Task handle to keep track of created task */
+		0);          /* pin task to core 0 */
+
+	delay(500);
 }
 

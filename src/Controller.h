@@ -48,9 +48,6 @@ enum TemperatureTransitionState {TempStateUndefined=0,TempStateOff=10,TempStateO
 
 class Controller {
 private:
-
-
-//	EncoderPushButtonState decodeEncoderPushBtnState (boolean encoderPress);
 	boolean IsEncoderPressed(boolean encoderPress);
 	EncoderMovement decodeEncoderMoveDirection(int encoderPos);
 	void _writeServo(int degree);
@@ -61,8 +58,6 @@ private:
 	bool isConfigState(int state){
 		return !(state >= svConfig_ServoDirection && state <= svConfig_ServoMax);//state!=svConfig_ServoDirection && state!=svConfig_ServoMin&&state!=svConfig_ServoMax;
 	}
-//	byte eepromVer = 06;  // eeprom data tracking
-
 
 	//last used KP=50, ki=0.15
 	//good resolution(75, 0.4, 0)
@@ -126,8 +121,6 @@ public:
 	void incRamp(){ ramp+=0.5; if(ramp>9)ramp=9;}
 	void decRamp(){ ramp-=0.5; if(ramp<0)ramp=0; }
 
-
-//	PidStateValue state = svMain;
 	int autoModeOn = false; //true=> auto mode on, false auto mode paused //FIXME: make private
 	void toggleAutoModeOn(){
 		if(autoModeOn==1){
@@ -151,16 +144,12 @@ public:
 			forcedOutput=100;
 		}
 	}
-	LCDHelper        *lcdHelper=NULL;
-
-
 
 	double           temperature = 0, lastTemperature=0/*,dTemperature*/;
 	float pidSampleTimeSecs = 5;
 	void incSampleTimeSecs(){pidSampleTimeSecs++;}
 	void decSampleTimeSecs(){pidSampleTimeSecs--;}
 	float lastManualLog = 0;
-//	float lastUdpDataSent = 0;
 
 	float approacingStartMillis,lastDynSetpointCalcMillis = 0;
 	float approacingEnd1Millis=0,approacingEnd2Millis=0; //two intermediate points before end target
@@ -171,8 +160,6 @@ public:
 	int servoPosition=0;
 
 	void writeServoPosition(int degree, bool minValueSwitchOff,bool log=true);
-
-//	int expectedReqId = 1; //expected request id
 
 	ServoDirection servoDirection = ServoDirectionCW;
 	void setServoDirection(ServoDirection val){servoDirection=val;}
@@ -206,34 +193,17 @@ public:
 
 	Controller();
 
-//	PidStateValue getState(){ return state; }
-//	void SetState(PidStateValue value, boolean save=true){
-//		state = value;
-//		if(save)savetoEEprom();
-//		stateSelection=0;
-//		setCurrentMenu(decodeCurrentMenu());
-//	}
-
 	int getOutPerc();
 	void setOutPerc(double val);
 
 	float getTemperature(){ return temperature; }
 	void setTemperature(double value){ temperature = value; }
 
-
-
 	void update();
 	void SetFsmState(FsmState value);
-//	void updatePidStatus();
 	void startRamp();
 	bool rampStarted();
 	void updateRamp();
-//	void sendStatus();
-
-//	void loadFromEEProm();
-//	void savetoEEprom();
-//	void saveSetPointTotoEEprom();
-//	void saveServoDirToEEprom();
 
 };
 
