@@ -572,9 +572,7 @@ void TaskWebClinetsLoop( void * pvParameters ){
 
 long int prevSwVal = 0;
 unsigned long lastPress = 0,lastRotated=0;
-unsigned long lastdblPress = 0;
 long int prevRotValue=0;
-EncoderSwStates LastSwState = EncoderPressNone;
 void TaskInputLoop( void * pvParameters ){
 	Serial.print("TaskInputLoop running on core "); Serial.println(xPortGetCoreID());
 	LCDHelper lcdHelper(lcdx);
@@ -597,10 +595,12 @@ void TaskInputLoop( void * pvParameters ){
 		//Serial.print(F("PRESS: "));Serial.print(!digitalRead(ROTARY_PINSW));Serial.print(F(" SW: "));Serial.print(swValue);Serial.print(F(" ROT: "));Serial.println(rotValue);
 
 		if(swValue-prevSwVal>0){
-			SwState = EncoderPressPressed;
-			lastPress=now;
+			if(now-lastPress>300){
+				SwState = EncoderPressPressed;
+				lastPress=now;
+			}
 		} else if(!digitalRead(ROTARY_PINSW)){ //press
-			if(now-lastPress>2000) {
+			if(now-lastPress>1500) {
 				SwState = EncoderPressLongPressed;
 				lastPress=now; //at next loop avoid reapeat longPress
 			}

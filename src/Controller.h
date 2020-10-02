@@ -65,8 +65,8 @@ private:
 	PID pid;
 
 
-	Servo_ESP32* pServo;
-	TemperatureProbe* pProbe;
+	Servo_ESP32* pServo = NULL;
+	TemperatureProbe* pProbe = NULL;
 public:
 	TemperatureTransitionState TempState = TempStateUndefined;
 	FsmState fsmState=psIdle;
