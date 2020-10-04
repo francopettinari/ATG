@@ -106,6 +106,10 @@ LCDHelper::LCDHelper(LiquidCrystal_I2C& l):lcd(l,20,4) {
 
 }
 
+void LCDHelper::begin(){
+	createCustomChars();
+}
+
 void LCDHelper::createCustomChars(){
 	this->lcd.getLcd()->begin();
 	this->lcd.getLcd()->backlight();
@@ -346,7 +350,7 @@ void LCDHelper::displayRun(int idx,Controller ctrl, int menuPosIdx, bool selecte
 	if(ctrl.ramp<=0){
 		lcd.PrintF(base+3, 3,F("No ramp"));
 	}else{
-		lcd.PrintDoubleD(base+6, 3,ctrl.ramp,0);lcd.PrintChar(base+9, 3,(char)DEGMIN_CHAR);
+		lcd.PrintDoubleD(base+4, 3,ctrl.ramp,1);lcd.PrintChar(base+9, 3,(char)DEGMIN_CHAR);
 	}
 }
 

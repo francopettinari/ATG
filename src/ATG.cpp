@@ -571,7 +571,7 @@ void TaskWebClinetsLoop( void * pvParameters ){
 }
 
 long int prevSwVal = 0;
-unsigned long lastPress = 0,lastRotated=0;
+unsigned long lastPress = 0,lastRotated=0, lastCheck=0;
 long int prevRotValue=0;
 void TaskInputLoop( void * pvParameters ){
 	Serial.print("TaskInputLoop running on core "); Serial.println(xPortGetCoreID());
@@ -589,6 +589,11 @@ void TaskInputLoop( void * pvParameters ){
 	for(;;){
 	//Serial.print("Task1 running on core "); Serial.println(xPortGetCoreID());
 		unsigned long now = millis();
+
+		if(now-lastCheck>10000){
+			lcdHelper.begin();
+			lastCheck = millis();
+		}
 
 		EncoderSwStates SwState = EncoderPressNone;
 
@@ -614,7 +619,7 @@ void TaskInputLoop( void * pvParameters ){
 		atg.update(rotValue,SwState);
 		lcdHelper.display();
 
-		delay(1);
+		delay(100);
 	}
 }
 
@@ -659,6 +664,8 @@ void setup() {
 
 	enableCore0WDT();
 //	enableCore1WDT();
+
+	lastCheck = millis();
 
 	xTaskCreatePinnedToCore(
 		TaskInputLoop,   /* Task function. */

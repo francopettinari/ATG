@@ -31,6 +31,7 @@ class LCDHelper {
 //	int lastDisplayCount = 0;
 //	double lastDisplayMillis = 0;
 public:
+	void begin();
 	void createCustomChars();
 	void display();
 //	void print(byte col, byte row, int val);
