@@ -148,14 +148,20 @@ void Controller::SetFsmState(FsmState value){
 	fsmState = value;
 }
 
-void Controller::startRamp(){
+void Controller::startRamp(bool changeDynamicSetpoint){
 	approacingStartMillis = millis();
 	approacingEnd1Millis = 0;
 	approacingEnd2Millis = 0;
 	approacingStartTemp = temperature;
 	approacingEnd1Temp=0;
 	approacingEnd2Temp=0;
-	_dynamicSetpoint=temperature; //ramp start from current temperature
+	if(changeDynamicSetpoint){
+		_dynamicSetpoint=temperature; //ramp start from current temperature
+//		if(_setpoint - temperature> 1){
+//			_dynamicSetpoint+=1; //ramp start from current temperature
+//		}
+
+	}
 	if(_dynamicSetpoint>_setpoint){
 		_dynamicSetpoint=_setpoint;
 	}
@@ -163,9 +169,6 @@ void Controller::startRamp(){
 }
 
 //detect that heating has begun active if temperature has increased at least 0.1 deegres
-bool Controller::rampStarted(){
-	return temperature>=approacingStartTemp+0.1;
-}
 void Controller::updateRamp(){
 	//if(fsmState!=psRampimg) return;
 	float now = millis();
@@ -184,7 +187,7 @@ void Controller::updateRamp(){
 			}
 			currStartMillis = approacingEnd1Millis;
 			currStartTemp = approacingEnd1Temp;
-			currRamp=currRamp/1.5;
+			currRamp=currRamp*0.75;
 		}
 		if(_setpoint-_dynamicSetpoint<1){
 			if(approacingEnd2Millis==0){
@@ -193,13 +196,13 @@ void Controller::updateRamp(){
 			}
 			currStartMillis = approacingEnd2Millis;
 			currStartTemp = approacingEnd2Temp;
-			currRamp=currRamp/1.5;
+			currRamp=currRamp*0.75;
 		}
 		float elapsedSecs = (now-currStartMillis)/1000.0f;
 		float elapsedDeltaTemp = currRamp/60.0f*elapsedSecs; //delta temp after elapsedSecs from start
 
 		_dynamicSetpoint = currStartTemp + elapsedDeltaTemp; //calc new setpoint according to ramp
-		if(fsmState==psWaitDelay || _dynamicSetpoint>_setpoint){ //target is Setpoint: do not exeed it!
+		if(_dynamicSetpoint>_setpoint){ //target is Setpoint: do not exeed it!
 			_dynamicSetpoint = _setpoint;
 		}
 
@@ -297,24 +300,9 @@ void Controller::update(){
 			/*Handle fsm state, ramp and DynamicSetpoint*/
 			switch(fsmState){
 			case psIdle:
-				SetFsmState(psWaitDelay);
-				startRamp();
+				SetFsmState(psRampimg);
+				startRamp(true);
 				break;
-			case psWaitDelay:
-				//ramp is started, but we also must wait that temperature starts to move.
-				//we detect that temperature has started to move if
-				//it is at least 0.2 degrees more than initial value
-				if(rampStarted()){
-					//ramp start has been detected: temp >= initialRampTemp+0.1
-					//change state, reset pid and recalculate ramp start so that we adjust delays
-					SetFsmState(psRampimg);
-					//pid.Reset(); //avoiding reset can avoid heat jumps. at this point some windup is present, but can be soon smoothedfrom temperature increasing
-					startRamp();
-					break;
-				}
-				//if ramp not yet started we must anyway continue to update the ramp value so that
-				//heat output is step by step increased and heat change can be detected.
-				//for this reason break is missing.
 			case psRampimg:
 				updateRamp(); //ramp until setpoint. it's the most graceful way to approach to setpoint
 
@@ -323,13 +311,11 @@ void Controller::update(){
 				} else if(ramp>0 && pid.GetKi()!=_ki){
 					pid.SetTunings(_kp,_ki,_kd,P_ON_E);
 				}
-
 				if(temperature>_setpoint){
 					SetFsmState(psSoak);
 					_dynamicSetpoint=_setpoint;
-					pid.Reset();//avoid delay in switching off
-					pid.SetTunings(_kp,_ki,_kd);
 				}
+
 				break;
 			case psSoak:
 				//arrived to target temperature. now let's keep it stable
@@ -347,6 +333,9 @@ void Controller::update(){
 //					_dynamicSetpoint=_setpoint;
 //				}
 				break;
+			}
+			if(fsmState!=psIdle && temperature>_setpoint){
+				pid.Reset();//avoid delay in switching off
 			}
 			pid.Compute();
 			writeServoPosition(Output,true);

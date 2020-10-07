@@ -38,7 +38,6 @@ enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
 enum FsmState {
 	psIdle=0,      //initial state
-	psWaitDelay=5, //wait initial response after head has been applied
 	psRampimg=10,  //temperature ramping has started. dynSetpoint is calculated so that ramp is calculated
 	               //ramp is activated if temperature is more thasn 3°C far from setpoint
 	psSoak=30};//setpoint has been reached. now temperature must be kept stable
@@ -97,29 +96,36 @@ public:
 	double setpoint(){ return _setpoint; }
 	void setSetpoint(double value){
 		_setpoint=value;
-		if(fsmState==psSoak){
-			SetFsmState(psIdle);
+		if(fsmState!=psIdle){
+			updateRamp();
 		}
 		updateRamp();
 	}
 	void incSetpoint(){
 		_setpoint++; if(_setpoint>=120)_setpoint=120;
-		if(fsmState==psRampimg){
-			updateRamp();
+		if(fsmState!=psIdle){
+			startRamp(false);
 		}
 	}
 	void decSetpoint(){
 		_setpoint--; if(_setpoint<0)_setpoint=0;
-		if(fsmState==psRampimg){
-			updateRamp();
+		if(fsmState!=psIdle){
+			startRamp(false);
 		}
 	}
 
 	double dynamicSetpoint(){ return _dynamicSetpoint; }
 	void setDynamicSetpoint(double value){ _dynamicSetpoint=value; }
 
-	void incRamp(){ ramp+=0.5; if(ramp>9)ramp=9;}
-	void decRamp(){ ramp-=0.5; if(ramp<0)ramp=0; }
+	void incRamp(){
+		if(ramp==0){
+			ramp=1;
+			return;
+		}
+		ramp+=0.5;
+		if(ramp>5)ramp=5;
+	}
+	void decRamp(){ ramp-=0.5; if(ramp<1)ramp=0; }
 
 	int autoModeOn = false; //true=> auto mode on, false auto mode paused //FIXME: make private
 	void toggleAutoModeOn(){
@@ -201,7 +207,7 @@ public:
 
 	void update();
 	void SetFsmState(FsmState value);
-	void startRamp();
+	void startRamp(bool changeDynamicSetpoint);
 	bool rampStarted();
 	void updateRamp();
 

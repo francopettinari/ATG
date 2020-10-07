@@ -48,7 +48,6 @@ PID::PID(double* Input, double* Output, double* Setpoint,
 
 }
 
-
 /* Compute() **********************************************************************
  *     This, as they say, is where the magic happens.  this function should be called
  *   every time "void loop()" executes.  the function will decide for itself whether a new
@@ -66,32 +65,47 @@ bool PID::Compute()
       double input = *myInput;
       double error = *mySetpoint - input;
       double dInput = (input - lastInput);
-      outputSum+= (ki * error);
+
+      double pTerm_pOnE = kp * error;
+      double pTerm_pOnM = kp * dInput;
+      double iTerm      = ki * error;
+      //in case of P_ON_E if kp is enought to make output greather than outMax then avoid to add iTerm
+      //so that we can minimize the windup
+      bool pTermExeed = pTerm_pOnE>outMax;//(error>0 && pTerm_pOnE>outMax) || (error<0 && pTerm_pOnE<outMin);
+      if(!pOnE || !pTermExeed){
+    	  outputSum += iTerm;
+      }else{
+    	  outputSum = 0;//no need to windup iTerm
+      }
 
       Serial.println(F("...PID Compute..."));
-      Serial.print(F("Setpoint: "));Serial.println(*mySetpoint);
-      Serial.print(F("Input: "));Serial.println(input);
-      Serial.print(F("dInput: "));Serial.println(dInput);
-      Serial.print(F("error: "));Serial.println(error);
+      Serial.print(F("Setpoint : "));Serial.println(*mySetpoint);
+      Serial.print(F("Input    : "));Serial.println(input);
+      Serial.print(F("dInput   : "));Serial.println(dInput);
+      Serial.print(F("error    : "));Serial.println(error);
 
-      Serial.print(F("P_ON_M dKi: "));Serial.println(ki * error);
-      Serial.print(F("P_ON_M dKp: "));Serial.println(-kp * dInput);
+      if(!pOnE){
+    	  Serial.println(F("P_ON_M"));
+    	  Serial.print(F("dKp: "));Serial.println(-pTerm_pOnM);
+    	  Serial.print(F("dKi: "));Serial.println(iTerm);
+      }else{
+    	  Serial.println(F("P_ON_E"));
+    	  Serial.print(F("dKp: "));Serial.println(pTerm_pOnE);
+    	  Serial.print(F("dKi: "));Serial.println(iTerm);
+      }
+
 
       /*Add Proportional on Measurement, if P_ON_M is specified*/
       if(!pOnE) outputSum-= kp * dInput;
 
-
-
-
       if(outputSum > outMax) outputSum= outMax;
       else if(outputSum < outMin) outputSum= outMin;
 
-      Serial.print(F("outputSum: "));Serial.println(outputSum);
-	  Serial.print(F("Output: "));Serial.print(*myOutput);Serial.print(F(" - OutMax: "));Serial.println(outMax);
+
 
       /*Add Proportional on Error, if P_ON_E is specified*/
 	   double output;
-      if(pOnE) output = kp * error;
+      if(pOnE) output = pTerm_pOnE;
       else output = 0;
 
       /*Compute Rest of PID Output*/
@@ -100,6 +114,10 @@ bool PID::Compute()
 	  if(output > outMax) output = outMax;
       else if(output < outMin) output = outMin;
 	  *myOutput = output;
+
+	  Serial.print(F("outputSum: "));Serial.println(outputSum);
+	  Serial.print(F("Output   : "));Serial.println(*myOutput);
+
 
       /*Remember some variables for next time*/
       lastInput = input;
