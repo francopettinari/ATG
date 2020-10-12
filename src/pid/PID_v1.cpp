@@ -78,22 +78,38 @@ bool PID::Compute()
     	  outputSum = 0;//no need to windup iTerm
       }
 
-      Serial.println(F("...PID Compute..."));
-      Serial.print(F("Setpoint : "));Serial.println(*mySetpoint);
-      Serial.print(F("Input    : "));Serial.println(input);
-      Serial.print(F("dInput   : "));Serial.println(dInput);
-      Serial.print(F("error    : "));Serial.println(error);
+      //Serial.println(F("...PID Compute..."));
+      Serial.print(*mySetpoint);
+      Serial.print(F(", "));
+      Serial.print(input);
+      Serial.print(F(", "));
+      Serial.print(error);
+      Serial.print(F(", "));
+      Serial.print(dInput);
+      Serial.print(F(", "));
+
+//      Serial.print(F("Setpoint : "));Serial.println(*mySetpoint);
+//      Serial.print(F("Input    : "));Serial.println(input);
+//      Serial.print(F("dInput   : "));Serial.println(dInput);
+//      Serial.print(F("error    : "));Serial.println(error);
 
       if(!pOnE){
-    	  Serial.println(F("P_ON_M"));
-    	  Serial.print(F("dKp: "));Serial.println(-pTerm_pOnM);
-    	  Serial.print(F("dKi: "));Serial.println(iTerm);
+    	  //Serial.println(F("P_ON_M"));
+    	  Serial.print(-pTerm_pOnM);
+    	  Serial.print(F(", "));
+    	  Serial.print(iTerm);
+    	  Serial.print(F(", "));
+//    	  Serial.print(F("dKp: "));Serial.println(-pTerm_pOnM);
+//		  Serial.print(F("dKi: "));Serial.println(iTerm);
       }else{
-    	  Serial.println(F("P_ON_E"));
-    	  Serial.print(F("dKp: "));Serial.println(pTerm_pOnE);
-    	  Serial.print(F("dKi: "));Serial.println(iTerm);
+    	  //Serial.println(F("P_ON_E"));
+    	  Serial.print(pTerm_pOnE);
+    	  Serial.print(F(", "));
+    	  Serial.print(iTerm);
+    	  Serial.print(F(", "));
+//    	  Serial.print(F("dKp: "));Serial.println(pTerm_pOnE);
+//    	  Serial.print(F("dKi: "));Serial.println(iTerm);
       }
-
 
       /*Add Proportional on Measurement, if P_ON_M is specified*/
       if(!pOnE) outputSum-= kp * dInput;
@@ -115,8 +131,13 @@ bool PID::Compute()
       else if(output < outMin) output = outMin;
 	  *myOutput = output;
 
-	  Serial.print(F("outputSum: "));Serial.println(outputSum);
-	  Serial.print(F("Output   : "));Serial.println(*myOutput);
+	  Serial.print(outputSum);
+	  Serial.print(F(", "));
+	  Serial.println(*myOutput);
+
+//	  Serial.print(F("outputSum: "));Serial.println(outputSum);
+//	  Serial.println(F(", "));
+//	  Serial.print(F("Output   : "));Serial.println(*myOutput);
 
 
       /*Remember some variables for next time*/
