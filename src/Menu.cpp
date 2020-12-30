@@ -343,20 +343,46 @@ void PidConfigMenu::OnSelectedInMenu(){
 	atg.SetState(svPidConfig);
 }
 
+BoilCorrectionMenu::BoilCorrectionMenu(MenuItem* parent):MenuItem(parent,svConfig_ProbeBoilCorrection, F("Boil correction")){
+}
+void BoilCorrectionMenu::OnSelectedInMenu(){
+	atg.SetState(svConfig_ProbeBoilCorrection);
+}
+void BoilCorrectionMenu::HandleEncoderMovement(EncoderMovement mvmnt){
+	if(mvmnt==EncMoveCCW){
+		atg.getSelectedController()->decBTempCorrection();
+	}else if(mvmnt==EncMoveCW){
+		atg.getSelectedController()->incBTempCorrection();
+	}
+}
+void BoilCorrectionMenu::HandleEncoderPush(EncoderSwStates pst){
+	atg.SetState(svConfig_ProbeCorrection, true);
+}
+
+ZeroCorrectionMenu::ZeroCorrectionMenu(MenuItem* parent):MenuItem(parent,svConfig_ProbeZeroCorrection, F("Zero correction")){
+}
+void ZeroCorrectionMenu::OnSelectedInMenu(){
+	atg.SetState(svConfig_ProbeZeroCorrection);
+}
+void ZeroCorrectionMenu::HandleEncoderMovement(EncoderMovement mvmnt){
+	if(mvmnt==EncMoveCCW){
+		atg.getSelectedController()->decZTempCorrection();
+	}else if(mvmnt==EncMoveCW){
+		atg.getSelectedController()->incZTempCorrection();
+	}
+}
+void ZeroCorrectionMenu::HandleEncoderPush(EncoderSwStates pst){
+	atg.SetState(svConfig_ProbeCorrection, true);
+}
+
 ProbeCorrectionMenu::ProbeCorrectionMenu(MenuItem* parent):MenuItem(parent,svConfig_ProbeCorrection, F("Temp correction")){
+	subMenuItems.resize(3);
+	subMenuItems[0] = upMenu = new UpMenu(this,svConfig);
+	subMenuItems[1] = zeroCorrectionMenu = new ZeroCorrectionMenu(this);
+	subMenuItems[2] = boilCorrectionMenu = new BoilCorrectionMenu(this);
 }
 void ProbeCorrectionMenu::OnSelectedInMenu(){
 	atg.SetState(svConfig_ProbeCorrection);
-}
-void ProbeCorrectionMenu::HandleEncoderMovement(EncoderMovement mvmnt){
-	if(mvmnt==EncMoveCCW){
-		atg.getSelectedController()->decTempCorrection();
-	}else if(mvmnt==EncMoveCW){
-		atg.getSelectedController()->incTempCorrection();
-	}
-}
-void ProbeCorrectionMenu::HandleEncoderPush(EncoderSwStates pst){
-	atg.SetState(svConfigController, true);
 }
 
 ControllerSelection::ControllerSelection(MenuItem* parent):MenuItem(parent,svConfigController,F("Ctrl sel")){

@@ -218,6 +218,10 @@ MenuItem* ATG::decodeCurrentMenu(){
 			return pmm->configMenu->pidMenu->sampleTimeMenu;
 		case svConfig_ProbeCorrection:
 			return pmm->configMenu->correctionMenu;
+		case svConfig_ProbeZeroCorrection:
+			return pmm->configMenu->correctionMenu->zeroCorrectionMenu;
+		case svConfig_ProbeBoilCorrection:
+			return pmm->configMenu->correctionMenu->boilCorrectionMenu;
 	}
 	return pmm;
 }
@@ -352,12 +356,20 @@ void ATG::loadFromEEProm(){
 	addr+=sizeof(ctrl1.forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
 	Serial.print(F("Readed forcedOutput: "));Serial.println(ctrl1.forcedOutput);
 
-	ctrl0.temperatureCorrection = EEPROM.get(addr, ctrl0.temperatureCorrection);
-	addr+=sizeof(ctrl0.temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed temperatureCorrection: "));Serial.println(ctrl0.temperatureCorrection*0.1);
-	ctrl1.temperatureCorrection = EEPROM.get(addr, ctrl1.temperatureCorrection);
-	addr+=sizeof(ctrl1.temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("Readed temperatureCorrection: "));Serial.println(ctrl1.temperatureCorrection*0.1);
+
+	ctrl0.zeroTemperatureCorrection = EEPROM.get(addr, ctrl0.zeroTemperatureCorrection);
+	addr+=sizeof(ctrl0.zeroTemperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed zero temperatureCorrection: "));Serial.println(ctrl0.zeroTemperatureCorrection);
+	ctrl1.zeroTemperatureCorrection = EEPROM.get(addr, ctrl1.zeroTemperatureCorrection);
+	addr+=sizeof(ctrl1.zeroTemperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed zero temperatureCorrection: "));Serial.println(ctrl1.zeroTemperatureCorrection);
+
+	ctrl0.boilTemperatureCorrection = EEPROM.get(addr, ctrl0.boilTemperatureCorrection);
+	addr+=sizeof(ctrl0.boilTemperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed boil temperatureCorrection: "));Serial.println(ctrl0.boilTemperatureCorrection);
+	ctrl1.boilTemperatureCorrection = EEPROM.get(addr, ctrl1.boilTemperatureCorrection);
+	addr+=sizeof(ctrl1.boilTemperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("Readed boil temperatureCorrection: "));Serial.println(ctrl1.boilTemperatureCorrection);
 
 	ctrl0.ramp = EEPROM.get(addr, ctrl0.ramp);
 	addr+=sizeof(ctrl0.ramp);Serial.print(F("Size: "));Serial.println(addr);
@@ -365,6 +377,8 @@ void ATG::loadFromEEProm(){
 	ctrl1.ramp = EEPROM.get(addr, ctrl1.ramp);
 	addr+=sizeof(ctrl1.ramp);Serial.print(F("Size: "));Serial.println(addr);
 	Serial.print(F("Readed ramp1: "));Serial.println(ctrl1.ramp);
+
+
 
 	EEPROM.commit();
 	EEPROM.end();
@@ -453,12 +467,21 @@ void ATG::savetoEEprom(){
 	EEPROM.put(addr, ctrl1.forcedOutput);
 	addr+=sizeof(ctrl1.forcedOutput);Serial.print(F("Size: "));Serial.println(addr);
 
-	Serial.print(F("EEPROMWriteSettings. temperatureCorrection: "));Serial.println(ctrl0.temperatureCorrection*0.1);
-	EEPROM.put(addr, ctrl0.temperatureCorrection);
-	addr+=sizeof(ctrl0.temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
-	Serial.print(F("EEPROMWriteSettings. temperatureCorrection: "));Serial.println(ctrl1.temperatureCorrection*0.1);
-	EEPROM.put(addr, ctrl1.temperatureCorrection);
-	addr+=sizeof(ctrl1.temperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. zero temperatureCorrection: "));Serial.println(ctrl0.zeroTemperatureCorrection);
+	EEPROM.put(addr, ctrl0.zeroTemperatureCorrection);
+	addr+=sizeof(ctrl0.zeroTemperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. zero temperatureCorrection: "));Serial.println(ctrl1.zeroTemperatureCorrection);
+	EEPROM.put(addr, ctrl1.zeroTemperatureCorrection);
+	addr+=sizeof(ctrl1.zeroTemperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+
+
+	Serial.print(F("EEPROMWriteSettings. boil temperatureCorrection: "));Serial.println(ctrl0.boilTemperatureCorrection);
+	EEPROM.put(addr, ctrl0.boilTemperatureCorrection);
+	addr+=sizeof(ctrl0.boilTemperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+	Serial.print(F("EEPROMWriteSettings. boil temperatureCorrection: "));Serial.println(ctrl1.boilTemperatureCorrection);
+	EEPROM.put(addr, ctrl1.boilTemperatureCorrection);
+	addr+=sizeof(ctrl1.boilTemperatureCorrection);Serial.print(F("Size: "));Serial.println(addr);
+
 
 	Serial.print(F("EEPROMWriteSettings. ramp0: "));Serial.println(ctrl0.ramp);
 	EEPROM.put(addr, ctrl0.ramp);
@@ -466,6 +489,7 @@ void ATG::savetoEEprom(){
 	Serial.print(F("EEPROMWriteSettings. ramp1: "));Serial.println(ctrl1.ramp);
 	EEPROM.put(addr, ctrl1.ramp);
 	addr+=sizeof(ctrl1.ramp);Serial.print(F("Size: "));Serial.println(addr);
+
 
 	EEPROM.commit();
 	EEPROM.end();

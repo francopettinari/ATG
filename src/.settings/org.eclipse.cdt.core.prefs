@@ -6296,6 +6296,9 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.CPREP
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.ELF2HEX.EXTRA_FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.ELF2HEX.EXTRA_FLAGS/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.ELF2HEX.EXTRA_FLAGS/value=
+environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.LIBRARIES.LDFLAGS/delimiter=;
+environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.LIBRARIES.LDFLAGS/operation=replace
+environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.LIBRARIES.LDFLAGS/value=
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.OBJCOPY.EEP.EXTRA_FLAGS/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.OBJCOPY.EEP.EXTRA_FLAGS/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.COMPILER.OBJCOPY.EEP.EXTRA_FLAGS/value=
@@ -6358,7 +6361,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATT
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.AR.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.AR.CMD}" ${A.COMPILER.AR.FLAGS} ${A.COMPILER.AR.EXTRA_FLAGS} "${A.ARCHIVE_FILE_PATH}" "${A.OBJECT_FILE}"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.1/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.1/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.C.ELF.CMD}" ${A.COMPILER.C.ELF.FLAGS} ${A.COMPILER.C.ELF.EXTRA_FLAGS} -Wl,--start-group 
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.C.ELF.CMD}" ${A.COMPILER.C.ELF.FLAGS} ${A.COMPILER.C.ELF.EXTRA_FLAGS} ${A.COMPILER.LIBRARIES.LDFLAGS} -Wl,--start-group 
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.2/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.2/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.2/value=\ 
@@ -6367,7 +6370,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBI
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN.3/value=\ ${A.COMPILER.C.ELF.LIBS} -Wl,--end-group -Wl,-EL -o "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.C.ELF.CMD}" ${A.COMPILER.C.ELF.FLAGS} ${A.COMPILER.C.ELF.EXTRA_FLAGS} -Wl,--start-group ${A.OBJECT_FILES} "${A.ARCHIVE_FILE_PATH}" ${A.COMPILER.C.ELF.LIBS} -Wl,--end-group -Wl,-EL -o "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf"
+environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.COMBINE.PATTERN/value="${A.COMPILER.PATH}${A.COMPILER.C.ELF.CMD}" ${A.COMPILER.C.ELF.FLAGS} ${A.COMPILER.C.ELF.EXTRA_FLAGS} ${A.COMPILER.LIBRARIES.LDFLAGS} -Wl,--start-group ${A.OBJECT_FILES} "${A.ARCHIVE_FILE_PATH}" ${A.COMPILER.C.ELF.LIBS} -Wl,--end-group -Wl,-EL -o "${A.BUILD.PATH}/${A.BUILD.PROJECT_NAME}.elf"
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.1/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.1/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/A.RECIPE.C.O.PATTERN.1/value="${A.COMPILER.PATH}${A.COMPILER.C.CMD}" ${A.COMPILER.CPREPROCESSOR.FLAGS} ${A.COMPILER.C.FLAGS} -DF_CPU\=${A.BUILD.F_CPU} -DARDUINO\=${A.RUNTIME.IDE.VERSION} -DARDUINO_${A.BUILD.BOARD} -DARDUINO_ARCH_${A.BUILD.ARCH} -DARDUINO_BOARD\="${A.BUILD.BOARD}" -DARDUINO_VARIANT\="${A.BUILD.VARIANT}" ${A.COMPILER.C.EXTRA_FLAGS} ${A.BUILD.EXTRA_FLAGS} ${A.INCLUDES} 
@@ -6592,7 +6595,7 @@ environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARD_NAM
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.BOARD_NAME/value=ESP32 Dev Module
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/operation=replace
-environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/value=COM3
+environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.COM_PORT/value=COM9
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ECLIPSE_LOCATION/delimiter=;
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ECLIPSE_LOCATION/operation=replace
 environment/project/io.sloeber.core.toolChain.release.708503083/JANTJE.ECLIPSE_LOCATION/value=E\:\\ProgramFiles\\sloeber\\

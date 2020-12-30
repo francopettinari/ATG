@@ -26,7 +26,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/DallasTemperature}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/gdb}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/LiquidCrystal_I2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/MD_REncoder/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/WiFi/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Wire/src}&quot;"/>
@@ -45,7 +44,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/DallasTemperature}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/gdb}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/LiquidCrystal_I2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/MD_REncoder/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/WiFi/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Wire/src}&quot;"/>
@@ -64,7 +62,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/DallasTemperature}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/gdb}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/LiquidCrystal_I2C}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/MD_REncoder/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/WiFi/src}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ATG/libraries/Wire/src}&quot;"/>

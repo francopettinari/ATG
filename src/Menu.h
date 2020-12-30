@@ -154,12 +154,30 @@ public:
 	SampleTimePidConfigMenu* sampleTimeMenu;
 };
 
+class BoilCorrectionMenu : public MenuItem {
+public:
+	BoilCorrectionMenu(MenuItem* parent);
+	void OnSelectedInMenu();
+	void HandleEncoderMovement(EncoderMovement mvmnt);
+	void HandleEncoderPush(EncoderSwStates pst);
+};
+
+class ZeroCorrectionMenu : public MenuItem {
+public:
+	ZeroCorrectionMenu(MenuItem* parent);
+	void OnSelectedInMenu();
+	void HandleEncoderMovement(EncoderMovement mvmnt);
+	void HandleEncoderPush(EncoderSwStates pst);
+};
+
 class ProbeCorrectionMenu : public MenuItem {
 public:
 	ProbeCorrectionMenu(MenuItem* parent);
 	void OnSelectedInMenu();
-	void HandleEncoderMovement(EncoderMovement mvmnt);
-	void HandleEncoderPush(EncoderSwStates pst);
+
+	MenuItem* upMenu;
+	ZeroCorrectionMenu* zeroCorrectionMenu;
+	BoilCorrectionMenu* boilCorrectionMenu;
 };
 
 class ControllerSelection : public MenuItem{

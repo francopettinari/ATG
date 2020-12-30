@@ -33,7 +33,7 @@ enum PidStateValue { //FIXME: to be renamed to something common to two pids cont
 	svPidKdiConfig=28,svPidKddConfig=29,
 	svPidSampleTimeConfig=30,
 	svServo_Config=40, svConfig_ServoDirection=41, svConfig_ServoMin=42,svConfig_ServoMax=43,
-	svConfig_ProbeCorrection=50};
+	svConfig_ProbeCorrection=50, svConfig_ProbeZeroCorrection=51, svConfig_ProbeBoilCorrection=52};
 enum ServoDirection {ServoDirectionCW=0,ServoDirectionCCW=1};
 
 enum FsmState {
@@ -193,9 +193,16 @@ public:
 	void incServoMaxValue(){
 		setServoMaxValue(servoMaxValue+1);
 	}
-	int temperatureCorrection = 0;//0.1 deg steps: 5=+0.5, -8=-0.8
-	void incTempCorrection(){temperatureCorrection++;}
-	void decTempCorrection(){temperatureCorrection--;}
+	float zeroTemperatureCorrection = 0.0, boilTemperatureCorrection = 0.0;//
+	void incZTempCorrection(){zeroTemperatureCorrection += 0.1;}
+	void decZTempCorrection(){zeroTemperatureCorrection -= 0.1;}
+	void incBTempCorrection(){boilTemperatureCorrection += 0.1;}
+	void decBTempCorrection(){boilTemperatureCorrection -= 0.1;}
+
+	float tCorrection(float t){
+		//t/100*c100+(100-t)/100*c0
+		return t/100.0f*boilTemperatureCorrection+(100.0f-t)/100.0f*zeroTemperatureCorrection;
+	}
 
 	Controller();
 

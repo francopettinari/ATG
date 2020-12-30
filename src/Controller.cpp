@@ -232,6 +232,8 @@ void Controller::update(){
 
 	double tempp = pProbe->readTemperature();
 
+	tempp += tCorrection(tempp);
+
 	setTemperature(tempp);
 	if(!isAutoState(atg.state)){
 		autoModeOn = false;
@@ -306,11 +308,11 @@ void Controller::update(){
 			case psRampimg:
 				updateRamp(); //ramp until setpoint. it's the most graceful way to approach to setpoint
 
-				if(ramp<=0 && pid.GetKi()==_ki){
-					pid.SetTunings(_kp,_ki/3,_kd,P_ON_E);
-				} else if(ramp>0 && pid.GetKi()!=_ki){
-					pid.SetTunings(_kp,_ki,_kd,P_ON_E);
-				}
+//				if(ramp<=0 && pid.GetKi()==_ki){
+//					pid.SetTunings(_kp,_ki/3,_kd,P_ON_E);
+//				} else if(ramp>0 && pid.GetKi()!=_ki){
+//					pid.SetTunings(_kp,_ki,_kd,P_ON_E);
+//				}
 				if(temperature>_setpoint){
 					SetFsmState(psSoak);
 					_dynamicSetpoint=_setpoint;

@@ -189,8 +189,11 @@ void LCDHelper::display(){
 		case svConfig_ServoMax:
 			displayConfigServo();
 			break;
-		case svConfig_ProbeCorrection:
-			displayConfigProbeCorrection();
+		case svConfig_ProbeZeroCorrection:
+			displayConfigZeroProbeCorrection();
+			break;
+		case svConfig_ProbeBoilCorrection:
+			displayConfigBoilProbeCorrection();
 			break;
 		default:
 			displayDefault();
@@ -403,10 +406,17 @@ void LCDHelper::displayConfigServo(){
 	lcd.PrintF(11, 2,F("Max "));lcd.PrintDoubleFD(15, 2,ctrl.servoMaxValue,3,0);
 }
 
-void LCDHelper::displayConfigProbeCorrection(){
+void LCDHelper::displayConfigZeroProbeCorrection(){
 	Controller ctrl = *atg.getSelectedController();
-	lcd.PrintF(5, 0,F("Temp correction"));
-	lcd.PrintDoubleFD(15, 2,ctrl.temperatureCorrection,3,0);
+	//lcd.PrintF(5, 0,F("Temp zero correction"));
+	lcd.PrintF(0, 2,F("Temperature: "));lcd.PrintDoubleFD(12, 2,ctrl.getTemperature(),2,1);
+	lcd.PrintF(0, 2,F("Correction : "));lcd.PrintDoubleFD(12, 3,ctrl.zeroTemperatureCorrection,2,1);
+}
+void LCDHelper::displayConfigBoilProbeCorrection(){
+	Controller ctrl = *atg.getSelectedController();
+	//lcd.PrintF(5, 0,F("Temp boil correction"));
+	lcd.PrintF(0, 2,F("Temperature: "));lcd.PrintDoubleFD(12, 2,ctrl.getTemperature(),2,1);
+	lcd.PrintF(0, 2,F("Correction : "));lcd.PrintDoubleFD(12, 3,ctrl.boilTemperatureCorrection,2,1);
 }
 
 void LCDHelper::print(byte col, byte row,  __FlashStringHelper *ifsh){

@@ -25,7 +25,8 @@ class LCDHelper {
 	void displayConfigServo();
 	void displayConfigPid();
 	void displayConfigProbe();
-	void displayConfigProbeCorrection();
+	void displayConfigZeroProbeCorrection();
+	void displayConfigBoilProbeCorrection();
 	void displayDefault();
 
 //	int lastDisplayCount = 0;

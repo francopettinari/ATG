@@ -19,7 +19,7 @@ class ATG {
 private:
 	int              currEncoderPos=0,prevEncoderPos=0;    // a counter for the rotary encoder dial
 
-	byte eepromVer = 9;  // eeprom data tracking
+	byte eepromVer = 10;  // eeprom data tracking
 
 	int  selectedCtrlIdx=0;
 	Controller ctrl0;
