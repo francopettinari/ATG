@@ -66,7 +66,6 @@ public:
 	PidStateValue getState(){ return state; }
 	void loadFromEEProm();
 	void savetoEEprom();
-	void sendStatus();
 };
 
 extern ATG atg;

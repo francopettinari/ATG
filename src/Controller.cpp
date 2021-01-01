@@ -8,8 +8,6 @@
 #include "Controller.h"
 
 #include <EEPROM.h>
-#include <gdb.h>
-#include "TCPComm.h"
 #include "ATG.h"
 
 Controller::Controller() : pid(&temperature, &Output, &_dynamicSetpoint, _kp, _ki, _kd,P_ON_E, DIRECT){
@@ -89,8 +87,7 @@ void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log)
 					return;
 				}else{
 					//skip and wait
-					Serial.println(F("Switch on: wait 5 seconds..."));
-					TcpComm->println(F("Switch on: wait 5 seconds..."));
+					println(F("Switch on: wait 5 seconds..."));
 					return;
 				}
 			}
@@ -110,8 +107,7 @@ void Controller::writeServoPosition(int degree, bool minValueSwitchOff,bool log)
 					return;
 				}else{
 					//skip and wait
-					Serial.println(F("Switch off: wait 5 seconds..."));
-					TcpComm->println(F("Switch off: wait 5 seconds..."));
+					println(F("Switch off: wait 5 seconds..."));
 					return;
 				}
 			}
@@ -348,9 +344,9 @@ void Controller::update(){
 		default:
 		  break;
 	}
-	if(now-atg.lastUdpDataSent>1000){
-		atg.sendStatus();
-	}
+//	if(now-atg.lastUdpDataSent>1000){
+//		atg.sendStatus();
+//	}
 }
 
 //void Controller::saveSetPointTotoEEprom(){

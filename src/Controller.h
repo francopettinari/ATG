@@ -217,7 +217,10 @@ public:
 	void startRamp(bool changeDynamicSetpoint);
 	bool rampStarted();
 	void updateRamp();
-
+	void println(const __FlashStringHelper *ifsh){
+		Serial.println(ifsh);
+//		TcpComm->println(ifsh);
+	}
 };
 
 

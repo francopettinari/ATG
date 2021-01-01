@@ -52,34 +52,9 @@
 			<location>E:/sloeber_workspace/arduino-esp32/libraries/EEPROM</location>
 		</link>
 		<link>
-			<name>libraries/MD_REncoder</name>
-			<type>2</type>
-			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/MD_REncoder/1.0.1</locationURI>
-		</link>
-		<link>
-			<name>libraries/OneWire</name>
-			<type>2</type>
-			<location>E:/ProgramFiles/sloeber/arduinoPlugin/libraries/OneWire/2.3.0</location>
-		</link>
-		<link>
-			<name>libraries/SimpleBLE</name>
-			<type>2</type>
-			<location>E:/sloeber_workspace/arduino-esp32/libraries/SimpleBLE</location>
-		</link>
-		<link>
-			<name>libraries/WiFi</name>
-			<type>2</type>
-			<location>E:/sloeber_workspace/arduino-esp32/libraries/WiFi</location>
-		</link>
-		<link>
 			<name>libraries/Wire</name>
 			<type>2</type>
 			<location>E:/sloeber_workspace/arduino-esp32/libraries/Wire</location>
-		</link>
-		<link>
-			<name>libraries/gdb</name>
-			<type>2</type>
-			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/gdb/1.0.0</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

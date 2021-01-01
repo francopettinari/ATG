@@ -1,15 +1,9 @@
 #include "ATG.H"
-#include <WiFi.h>
-#include <WiFiUdp.h>
 #include <WString.h>
 #include <Arduino.h>
 #include "LCDHelper.h"
-#include <MD_REncoder.h>
-#include <WiFiUdp.h>
 
-#include "TCPComm.h"
 #include "Controller.h"
-#include "gdb.h"
 #include "LiquidCrystal-I2C/LiquidCrystal_I2C.h"
 #include <EEPROM.h>
 
@@ -55,123 +49,6 @@ void IRAM_ATTR isrRotaryPress() {
 		swValue++;
 	}
 	portEXIT_CRITICAL_ISR(&gpioMux);
-}
-
-
-
-const char *ssid = "ATG";
-const char *password = "log4fape@ATG";
-
-#define MAX_SRV_CLIENTS 3
-WiFiServer server(8266); // @suppress("Abstract class cannot be instantiated")
-WiFiClient serverClients[MAX_SRV_CLIENTS]; // @suppress("Abstract class cannot be instantiated")
-
-
-
-#define SP 1
-#define RP 2
-#define ST 3
-#define OUT 4
-#define KP 5
-#define KI 6
-#define KD 7
-
-char parOpenChar = '(';
-char separator = ':';
-char parClosedChar = ')';
-void parseString(String s){
-	Serial.println(s);
-	if(s.startsWith(F("SET("), 0)){
-		int parOpenIdx = s.indexOf(parOpenChar);
-		int semicolIdx1 = s.indexOf(separator);
-		int semicolIdx2 = s.indexOf(separator,semicolIdx1+1);
-		int parClosedIdx = s.indexOf(parClosedChar);
-		String property = s.substring(parOpenIdx+1,semicolIdx1);
-		int iProperty   = property.toInt();
-		String cReqId   = s.substring(semicolIdx1+1,semicolIdx2);
-		String value    = s.substring(semicolIdx2+1,parClosedIdx);
-		int iReqId = cReqId.toInt();
-		if(iReqId<atg.expectedReqId){
-			Serial.print(F("Received reqId: "));Serial.print(cReqId);Serial.print(F(". Expected: "));Serial.print(atg.expectedReqId);
-			return;
-		}
-		if(iReqId>atg.expectedReqId){
-			Serial.print(F("Received reqId: "));Serial.print(cReqId);Serial.print(F(". Expected: "));Serial.print(atg.expectedReqId);
-			atg.expectedReqId=iReqId;
-		}
-		switch (iProperty){
-			case SP:
-
-				atg.getController(0)->setSetpoint(value.toFloat());
-				break;
-			case RP:
-				atg.getController(0)->ramp = value.toFloat();
-				break;
-			case ST: {
-				atg.getController(0)->setAutoMode(value.toInt());
-					if(atg.getController(0)->autoModeOn){
-						atg.pMainMenu->runMenu->switchMenu0->Caption=F("Auto");
-					}else{
-						atg.pMainMenu->runMenu->switchMenu0->Caption=F("Manual");
-					}
-			    }
-				break;
-			case OUT:
-				atg.getController(0)->setForcedOutput(value.toInt());
-				break;
-			case KP:
-				atg.getController(0)->SetKp(value.toFloat());
-				break;
-			case KI:
-				atg.getController(0)->SetKi(value.toFloat());
-				break;
-			case KD:
-				atg.getController(0)->SetKd(value.toFloat());
-				break;
-		}
-		atg.savetoEEprom();
-		atg.sendStatus();
-		TcpComm->Log(F("RESP:"));
-		TcpComm->Log(cReqId);
-		TcpComm->Log(F("\n"));
-	}
-
-}
-
-void handleClients(){
-	uint8_t i;
-	if (server.hasClient()){
-		for(i = 0; i < MAX_SRV_CLIENTS; i++){
-		  if (!serverClients[i] || !serverClients[i].connected()){
-			if(serverClients[i]) serverClients[i].stop();
-			serverClients[i] = server.available();
-			continue;
-		  }
-		}
-		//no free spot
-		WiFiClient serverClient = server.available(); // @suppress("Abstract class cannot be instantiated")
-		serverClient.stop();
-	}
-	for(i = 0; i < MAX_SRV_CLIENTS; i++){
-		if (serverClients[i] && serverClients[i].connected()){
-		  if(serverClients[i].available()){
-			while(serverClients[i].available()) {
-				String msg = serverClients[i].readStringUntil('\0');
-				Serial.println(serverClients[i].read());
-				parseString(msg);
-			}
-		  }
-		}
-	}
-}
-
-void sendClients(String s){
-	for(int i = 0; i < MAX_SRV_CLIENTS; i++){
-		if (serverClients[i] && serverClients[i].connected()){
-		  serverClients[i].print(s);
-//		  serverClients[i].flush();
-		}
-	}
 }
 
 MenuItem* ATG::decodeCurrentMenu(){
@@ -498,34 +375,6 @@ void ATG::savetoEEprom(){
 
 }
 
-void ATG::sendStatus(){
-//	Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
-//	Serial.print(Setpoint,4);Serial.print(F(" "));
-//	Serial.println(temperature,4);Serial.print(F(" "));
-//	Serial.println(Output);
-	float now = millis();
-	TcpComm->print(F("LOG:")      );TcpComm->print(now,4);
-	TcpComm->print(F(";EXPRQID:") );TcpComm->print((float) expectedReqId,0);
-	TcpComm->print(F(";KP:")   );TcpComm->print((float)getController(0)->GetKp(),4);
-	TcpComm->print(F(";KI:")   );TcpComm->print((float)getController(0)->GetKi(),4);
-	TcpComm->print(F(";KD:")   );TcpComm->print((float)getController(0)->GetKd(),4);
-	TcpComm->print(F(";STATE:")   );TcpComm->print((float)getController(0)->autoModeOn,0);
-	TcpComm->print(F(";FSM_STATE:")   );TcpComm->print(getController(0)->fsmState);
-	TcpComm->print(F(";SETP:")    );TcpComm->print(getController(0)->_setpoint,4);
-	TcpComm->print(F(";RAMP:")    );TcpComm->print(getController(0)->ramp,4);
-	TcpComm->print(F(";DSETP:")   );TcpComm->print(getController(0)->_dynamicSetpoint,4);
-	TcpComm->print(F(";TEMP:")    );TcpComm->print(getController(0)->temperature,4);
-	TcpComm->print(F(";OUT:")     );TcpComm->print(getController(0)->Output,4);
-	TcpComm->print(F(";OUTPERC:") );TcpComm->print((float)getController(0)->getOutPerc(),0);
-	TcpComm->print(F(";SERVOPOS:"));TcpComm->println((float)getController(0)->servoPosition,0);
-
-	lastUdpDataSent = now;
-}
-
-
-
-
-
 EncoderMovement ATG::decodeEncoderMoveDirection(int encoderPos){
 	prevEncoderPos = currEncoderPos;
 	currEncoderPos = encoderPos/4;
@@ -574,24 +423,6 @@ void ATG::update(int encoderPos, EncoderSwStates encoderPress){
 
 void loop() {
 	delay(1000);
-}
-
-void TaskWebClinetsLoop( void * pvParameters ){
-	WiFi.disconnect(true);
-	WiFi.mode(WIFI_AP);
-	WiFi.softAP(ssid, password);
-
-	Serial.print(F("IP ADDRESS: "));Serial.println(WiFi.localIP());
-	Serial.println(F("Initialized"));
-
-	server.begin();
-	server.setNoDelay(true);
-
-
-	while(true){
-		handleClients();
-		delay(50);
-	}
 }
 
 long int prevSwVal = 0;
@@ -708,17 +539,6 @@ void setup() {
 		10000,       /* Stack size of task */
 		NULL,        /* parameter of the task */
 		5,           /* priority of the task */
-		NULL,      /* Task handle to keep track of created task */
-		0);          /* pin task to core 0 */
-
-	delay(500);
-
-	xTaskCreatePinnedToCore(
-		TaskWebClinetsLoop,   /* Task function. */
-		"TaskWebClinetsLoop",     /* name of task. */
-		10000,       /* Stack size of task */
-		NULL,        /* parameter of the task */
-		1,           /* priority of the task */
 		NULL,      /* Task handle to keep track of created task */
 		0);          /* pin task to core 0 */
 
