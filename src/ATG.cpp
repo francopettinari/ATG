@@ -7,10 +7,15 @@
 #include "LiquidCrystal-I2C/LiquidCrystal_I2C.h"
 #include <EEPROM.h>
 
+#include "BluetoothSerial.h"
+
+BluetoothSerial SerialBT;
+
 LiquidCrystal_I2C lcdx(0x27, 20,4); // @suppress("Abstract class cannot be instantiated")
 
 ATG atg;
 
+portMUX_TYPE mutex = portMUX_INITIALIZER_UNLOCKED;
 
 long int rotValue=0;
 uint8_t state=0;
@@ -40,7 +45,7 @@ void IRAM_ATTR isrAB() {
 
 }
 
-long int swValue=0;
+long int swValue=-1;
 unsigned long lastSwRead = 0;
 void IRAM_ATTR isrRotaryPress() {
 	portENTER_CRITICAL_ISR(&gpioMux);
@@ -421,18 +426,41 @@ void ATG::update(int encoderPos, EncoderSwStates encoderPress){
 	}
 }
 
+LCDHelper lcdHelper(lcdx);
+long int prevSwVal = 0;
+unsigned long lastPress = 0,lastRotated=0, lastCtrlUpdate;
+long int prevRotValue=0;
+//bool rotUpdated = false;
+int lastCtrlUpdated = -1;
 void loop() {
-	delay(1000);
+
+	unsigned long now = millis();
+
+//	bool updated = false;
+	if(now-lastCtrlUpdate>TemperatureProbe::readIntervalMsDiv2){
+		lastCtrlUpdated++;
+		if(lastCtrlUpdated>1)lastCtrlUpdated=0;
+		if(lastCtrlUpdated==0){
+			atg.getController(0)->update();
+		}else if(lastCtrlUpdated==1){
+			atg.getController(1)->update();
+		}
+		lastCtrlUpdate = millis();
+//		updated = true;
+	}
+
+//	vTaskEnterCritical(&mutex);
+//	if(updated || rotUpdated){
+		lcdHelper.display();
+//	}
+//	rotUpdated = false;
+//	vTaskExitCritical(&mutex);
+
 }
 
-long int prevSwVal = 0;
-unsigned long lastPress = 0,lastRotated=0, lastCheck=0;
-long int prevRotValue=0;
 void TaskInputLoop( void * pvParameters ){
 	Serial.print("TaskInputLoop running on core "); Serial.println(xPortGetCoreID());
-	LCDHelper lcdHelper(lcdx);
-	lcdHelper.createCustomChars();
-		//encoder setup
+	//encoder setup
 	pinMode(ROTARY_PINA, INPUT_PULLUP);
 	pinMode(ROTARY_PINB, INPUT_PULLUP);
 	pinMode(ROTARY_PINSW, INPUT_PULLUP);
@@ -442,106 +470,73 @@ void TaskInputLoop( void * pvParameters ){
 	attachInterrupt(ROTARY_PINSW, isrRotaryPress, FALLING);
 
 	for(;;){
-	//Serial.print("Task1 running on core "); Serial.println(xPortGetCoreID());
 		unsigned long now = millis();
 
-		if(now-lastCheck>10000){
-			lcdHelper.begin();
-			lastCheck = millis();
-		}
+		bool updated = false;
+//		if(now-lastCtrlUpdate>TemperatureProbe::readIntervalMs){
+//			atg.getController(0)->update();
+//			atg.getController(1)->update();
+//			lastCtrlUpdate = millis();
+//			updated = true;
+//		}
 
+		now = millis();
 		EncoderSwStates SwState = EncoderPressNone;
-
 		//Serial.print(F("PRESS: "));Serial.print(!digitalRead(ROTARY_PINSW));Serial.print(F(" SW: "));Serial.print(swValue);Serial.print(F(" ROT: "));Serial.println(rotValue);
-
 		if(swValue-prevSwVal>0){
 			if(now-lastPress>300){
 				SwState = EncoderPressPressed;
 				lastPress=now;
+				updated = true;
 			}
 		} else if(!digitalRead(ROTARY_PINSW)){ //press
 			if(now-lastPress>1500) {
 				SwState = EncoderPressLongPressed;
 				lastPress=now; //at next loop avoid reapeat longPress
+				updated = true;
 			}
 		}
 		prevSwVal = swValue;
 
 		bool rotated = rotValue!=prevRotValue;
-		if(rotated) lastRotated = now;
+		if(rotated) {
+			lastRotated = now;
+			updated = true;
+		}
 		prevRotValue = rotValue;
 
-		atg.update(rotValue,SwState);
-		lcdHelper.display();
 
+		if(updated){
+//			vTaskEnterCritical(&mutex);
+			atg.update(rotValue,SwState);
+//			rotUpdated = true;
+//			vTaskExitCritical(&mutex);
+		}
+
+		while (SerialBT.available()) {
+		  Serial.write(SerialBT.read());
+		}
 		delay(100);
 	}
 }
 
-void TaskControllerLoop( void * pvParameters ){
-	Serial.print("TaskControllerLoop running on core "); Serial.println(xPortGetCoreID());
+void setup() {
+	Serial.begin(115200);
+
+	SerialBT.begin("ATG"); //Bluetooth device name
+
+	lcdHelper.createCustomChars();
 
 	atg.loadFromEEProm();
 	Serial.println(F("Initialized from EEProm"));
 
-	for(;;){
-		atg.getController(0)->update();
-		atg.getController(1)->update();
-		delay(TemperatureProbe::readIntervalMs);
-	}
-}
-
-//SemaphoreHandle_t syncSemaphore1;
-//SemaphoreHandle_t syncSemaphore2;
-//hw_timer_t * probe1Timer;
-//hw_timer_t * probe2Timer;
-//
-//void IRAM_ATTR onProbeTimer1() {
-//  xSemaphoreGiveFromISR(syncSemaphore1, NULL);
-//}
-//
-//void IRAM_ATTR onProbeTimer2() {
-//  xSemaphoreGiveFromISR(syncSemaphore2, NULL);
-//}
-
-void setup() {
-	Serial.begin(115200);
-
-//	probe1Timer = timerBegin(0, 80, true);
-//	timerAttachInterrupt(probe1Timer, &onProbeTimer1, true);
-//	timerAlarmWrite(probe1Timer, 700000, true);
-//	timerAlarmEnable(probe1Timer);
-//
-//	probe2Timer = timerBegin(0, 80, true);
-//	timerAttachInterrupt(probe2Timer, &onProbeTimer2, true);
-//	timerAlarmWrite(probe2Timer, 700000, true);
-//	timerAlarmEnable(probe2Timer);
-
-	enableCore0WDT();
-//	enableCore1WDT();
-
-	lastCheck = millis();
-
 	xTaskCreatePinnedToCore(
-		TaskInputLoop,   /* Task function. */
-		"TaskInputLoop",     /* name of task. */
-		10000,       /* Stack size of task */
-		NULL,        /* parameter of the task */
-		5,           /* priority of the task */
-		NULL,      /* Task handle to keep track of created task */
-		1);          /* pin task to core 1 */
-
-	delay(500);
-
-	xTaskCreatePinnedToCore(
-		TaskControllerLoop,   /* Task function. */
-		"TaskControllerLoop",     /* name of task. */
-		10000,       /* Stack size of task */
-		NULL,        /* parameter of the task */
-		5,           /* priority of the task */
-		NULL,      /* Task handle to keep track of created task */
-		0);          /* pin task to core 0 */
-
-	delay(500);
+			TaskInputLoop,   /* Task function. */
+			"TaskInputLoop",     /* name of task. */
+			10000,       /* Stack size of task */
+			NULL,        /* parameter of the task */
+			1,           /* priority of the task */
+			NULL,      /* Task handle to keep track of created task */
+			0);          /* pin task to core 1 */
 }
 

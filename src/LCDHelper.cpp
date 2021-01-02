@@ -209,10 +209,10 @@ void LCDHelper::displayDefault(){
 	float t0 = atg.getController(0)->getTemperature();
 	float t1 = atg.getController(1)->getTemperature();
 
-	int tPos = t0<100?14:13;
+	int tPos = t0<100?16:15;
 	if(t0<0)tPos--;
 	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,t0,2,1);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
-	tPos = t1<100?14:13;
+	tPos = t1<100?16:15;
 	if(t1<0)tPos--;
 	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 1,t1,2,1);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
 }

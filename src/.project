@@ -42,6 +42,11 @@
 			<location>E:/sloeber_workspace/arduino-esp32/variants/esp32</location>
 		</link>
 		<link>
+			<name>libraries/BluetoothSerial</name>
+			<type>2</type>
+			<location>E:/sloeber_workspace/arduino-esp32/libraries/BluetoothSerial</location>
+		</link>
+		<link>
 			<name>libraries/DallasTemperature</name>
 			<type>2</type>
 			<locationURI>ECLIPSE_HOME/arduinoPlugin/libraries/DallasTemperature/3.8.0</locationURI>

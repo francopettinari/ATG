@@ -21,7 +21,7 @@ private:
 	DallasTemperature* sensors;
 public:
 	static const int readIntervalMs=1000*windowSecs/firNOfSamples;
-
+	static const int readIntervalMsDiv2=readIntervalMs/2;
 	float lastTempReadMillis = 0;
 	float firArray[firNOfSamples];
 	float filteredValue;
