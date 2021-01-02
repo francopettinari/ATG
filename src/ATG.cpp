@@ -430,13 +430,11 @@ LCDHelper lcdHelper(lcdx);
 long int prevSwVal = 0;
 unsigned long lastPress = 0,lastRotated=0, lastCtrlUpdate;
 long int prevRotValue=0;
-//bool rotUpdated = false;
 int lastCtrlUpdated = -1;
 void loop() {
 
 	unsigned long now = millis();
 
-//	bool updated = false;
 	if(now-lastCtrlUpdate>TemperatureProbe::readIntervalMsDiv2){
 		lastCtrlUpdated++;
 		if(lastCtrlUpdated>1)lastCtrlUpdated=0;
@@ -446,15 +444,9 @@ void loop() {
 			atg.getController(1)->update();
 		}
 		lastCtrlUpdate = millis();
-//		updated = true;
 	}
 
-//	vTaskEnterCritical(&mutex);
-//	if(updated || rotUpdated){
-		lcdHelper.display();
-//	}
-//	rotUpdated = false;
-//	vTaskExitCritical(&mutex);
+	lcdHelper.display();
 
 }
 
@@ -473,12 +465,6 @@ void TaskInputLoop( void * pvParameters ){
 		unsigned long now = millis();
 
 		bool updated = false;
-//		if(now-lastCtrlUpdate>TemperatureProbe::readIntervalMs){
-//			atg.getController(0)->update();
-//			atg.getController(1)->update();
-//			lastCtrlUpdate = millis();
-//			updated = true;
-//		}
 
 		now = millis();
 		EncoderSwStates SwState = EncoderPressNone;
@@ -507,10 +493,7 @@ void TaskInputLoop( void * pvParameters ){
 
 
 		if(updated){
-//			vTaskEnterCritical(&mutex);
 			atg.update(rotValue,SwState);
-//			rotUpdated = true;
-//			vTaskExitCritical(&mutex);
 		}
 
 		while (SerialBT.available()) {
