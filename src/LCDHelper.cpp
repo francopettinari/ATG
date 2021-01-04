@@ -199,10 +199,15 @@ void LCDHelper::display(){
 			displayDefault();
 			break;
 	}
+	if(atg.OTAActive){
+			lcd.PrintString(20-5, 3, F("OTA"));
+		}
 	lcd.render();
 //	lcd.setCursor(0, 3);lcd.print(pstate.currEncoderPos);
 //	lcd.setCursor(10, 3);lcd.print(pstate.stateSelection);
 //	Serial.println(F(" "));
+
+
 }
 
 void LCDHelper::displayDefault(){
@@ -215,6 +220,8 @@ void LCDHelper::displayDefault(){
 	tPos = t1<100?16:15;
 	if(t1<0)tPos--;
 	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 1,t1,2,1);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
+
+
 }
 
 void LCDHelper::displayConfig(){

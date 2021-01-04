@@ -7,9 +7,15 @@
 #include "LiquidCrystal-I2C/LiquidCrystal_I2C.h"
 #include <EEPROM.h>
 
-#include "BluetoothSerial.h"
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <ESPmDNS.h>
+#include <Update.h>
+#include <ArduinoOTA.h>
 
-BluetoothSerial SerialBT;
+//#include "BluetoothSerial.h"
+
+//BluetoothSerial SerialBT;
 
 LiquidCrystal_I2C lcdx(0x27, 20,4); // @suppress("Abstract class cannot be instantiated")
 
@@ -54,6 +60,80 @@ void IRAM_ATTR isrRotaryPress() {
 		swValue++;
 	}
 	portEXIT_CRITICAL_ISR(&gpioMux);
+}
+
+#define SP "SETPOINT"
+#define RP "RAMP"
+#define ST "STATE"
+#define OUT "OUT"
+#define KP "KP"
+#define KI "KI"
+#define KD "KD"
+#define READ "READ"
+
+//format: SET(<CMD>:<ctrl>:<value>)
+//SET(SETPOINT:0:55)
+//SET(STATE:0:1)
+//SET(OUT:0:50)
+char parOpenChar = '(';
+char separator = ':';
+char parClosedChar = ')';
+void parseCommand(String s){
+	Serial.println(s);
+	if(s.startsWith(F("SET("), 0)){
+		int parOpenIdx = s.indexOf(parOpenChar);
+		int semicolIdx1 = s.indexOf(separator);
+		int semicolIdx2 = s.indexOf(separator,semicolIdx1+1);
+		int parClosedIdx = s.indexOf(parClosedChar);
+		String command = s.substring(parOpenIdx+1,semicolIdx1);
+		String ctrl   = s.substring(semicolIdx1+1,semicolIdx2);
+		int iCtrl = ctrl.toInt();
+		String value    = s.substring(semicolIdx2+1,parClosedIdx);
+		Serial.println(command);
+		Serial.println(ctrl);
+		Serial.println(value);
+		if(command==SP){
+			atg.getController(iCtrl)->setSetpoint(value.toFloat());
+		} else if (command==RP){
+			atg.getController(iCtrl)->ramp = value.toFloat();
+		} else if (command==ST){
+			atg.getController(iCtrl)->setAutoMode(value.toInt());
+			if(atg.getController(iCtrl)->autoModeOn){
+				atg.pMainMenu->runMenu->switchMenu0->Caption=F("Auto");
+			}else{
+				atg.pMainMenu->runMenu->switchMenu0->Caption=F("Manual");
+			}
+		} else if (command==OUT){
+			atg.getController(iCtrl)->setForcedOutput(value.toInt());
+		} else if (command==KP){
+			atg.getController(iCtrl)->SetKp(value.toFloat());
+		} else if (command==KI){
+			atg.getController(iCtrl)->SetKi(value.toFloat());
+		} else if (command==KD){
+			atg.getController(iCtrl)->SetKd(value.toFloat());
+		}
+		atg.savetoEEprom();
+	}
+	if(s.startsWith(F("READ("), 0)){
+		String str = F("[{");
+		str += String(atg.getController(0)->setpoint(),1);
+		str += F(":");
+		str += (atg.getController(0)->autoModeOn?F("1"):F("0"));
+		str += F(":");
+		str += String(atg.getController(0)->Output);
+		str += F(":");
+		str += String(atg.getController(0)->ramp,1);
+		str += F("},{");
+		str += String(atg.getController(1)->setpoint(),1);
+		str += F(":");
+		str += (atg.getController(1)->autoModeOn?F("1"):F("0"));
+		str += F(":");
+		str += String(atg.getController(1)->Output);
+		str += F(":");
+		str += String(atg.getController(1)->ramp,1);
+		str += F("}]");
+//		SerialBT.print(str);
+	}
 }
 
 MenuItem* ATG::decodeCurrentMenu(){
@@ -428,7 +508,7 @@ void ATG::update(int encoderPos, EncoderSwStates encoderPress){
 
 LCDHelper lcdHelper(lcdx);
 long int prevSwVal = 0;
-unsigned long lastPress = 0,lastRotated=0, lastCtrlUpdate;
+unsigned long lastPress = 0,lastOTAPress=0,lastRotated=0, lastCtrlUpdate;
 long int prevRotValue=0;
 int lastCtrlUpdated = -1;
 void loop() {
@@ -448,6 +528,64 @@ void loop() {
 
 	lcdHelper.display();
 
+	ArduinoOTA.handle();
+}
+
+const char* ssid = "ATG";
+const char* password = "giuliaepippo";
+const char* host = "ATG";
+
+void startWiFiOTA(){
+	WiFi.mode(WIFI_OFF);
+
+	WiFi.mode(WIFI_AP);
+	if(!WiFi.softAPConfig(IPAddress(192, 168, 4, 1), IPAddress(192, 168, 4, 1), IPAddress(255, 255, 255, 0))){
+		  Serial.println("AP Config Failed");
+	  }
+	WiFi.softAP(ssid);
+
+	Serial.println(F(""));
+	Serial.print(F("WiFI AP "));
+	Serial.println(ssid);
+	Serial.print(F("IP address: "));
+	Serial.println(WiFi.softAPIP());
+
+	if (!MDNS.begin(host)) { //http://esp32.local
+		Serial.println(F("Error setting up MDNS responder!"));
+		while (1) {
+		  delay(1000);
+		}
+	  }
+
+	ArduinoOTA.setPort(8266);
+	ArduinoOTA.setHostname(host);
+	ArduinoOTA
+		.onStart([]() {
+		  String type;
+		  if (ArduinoOTA.getCommand() == U_FLASH)
+			type = "sketch";
+		  else // U_SPIFFS
+			type = "filesystem";
+
+		  // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+		  Serial.println("Start updating " + type);
+		})
+		.onEnd([]() {
+		  Serial.println("\nEnd");
+		})
+		.onProgress([](unsigned int progress, unsigned int total) {
+		  Serial.printf("Progress: %u%%\n\r", (progress / (total / 100)));
+		})
+		.onError([](ota_error_t error) {
+		  Serial.printf("Error[%u]: ", error);
+		  if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+		  else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+		  else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+		  else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+		  else if (error == OTA_END_ERROR) Serial.println("End Failed");
+		});
+
+	  ArduinoOTA.begin();
 }
 
 void TaskInputLoop( void * pvParameters ){
@@ -461,6 +599,8 @@ void TaskInputLoop( void * pvParameters ){
 	attachInterrupt(ROTARY_PINB, isrAB, CHANGE);
 	attachInterrupt(ROTARY_PINSW, isrRotaryPress, FALLING);
 
+	char endCmd='#';
+
 	for(;;){
 		unsigned long now = millis();
 
@@ -473,6 +613,7 @@ void TaskInputLoop( void * pvParameters ){
 			if(now-lastPress>300){
 				SwState = EncoderPressPressed;
 				lastPress=now;
+				lastOTAPress=now;
 				updated = true;
 			}
 		} else if(!digitalRead(ROTARY_PINSW)){ //press
@@ -480,6 +621,10 @@ void TaskInputLoop( void * pvParameters ){
 				SwState = EncoderPressLongPressed;
 				lastPress=now; //at next loop avoid reapeat longPress
 				updated = true;
+			}
+			if(now-lastOTAPress>10000) {
+				atg.OTAActive = true;
+				startWiFiOTA();
 			}
 		}
 		prevSwVal = swValue;
@@ -496,22 +641,28 @@ void TaskInputLoop( void * pvParameters ){
 			atg.update(rotValue,SwState);
 		}
 
-		while (SerialBT.available()) {
-		  Serial.write(SerialBT.read());
-		}
+//		while (SerialBT.available()) {
+//		  parseCommand(SerialBT.readStringUntil(endCmd));
+//		}
+
+
+
 		delay(100);
 	}
 }
 
+
 void setup() {
 	Serial.begin(115200);
 
-	SerialBT.begin("ATG"); //Bluetooth device name
+//	SerialBT.begin("ATG"); //Bluetooth device name
 
 	lcdHelper.createCustomChars();
 
 	atg.loadFromEEProm();
 	Serial.println(F("Initialized from EEProm"));
+
+
 
 	xTaskCreatePinnedToCore(
 			TaskInputLoop,   /* Task function. */

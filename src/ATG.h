@@ -25,7 +25,7 @@ private:
 	Controller ctrl0;
 	Controller ctrl1;
 public:
-
+	bool OTAActive = false;
 	MenuItem   *currentMenu=NULL;
 	float lastUdpDataSent = 0;
 	int expectedReqId = 1; //expected request id

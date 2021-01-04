@@ -42,6 +42,11 @@
 			<location>E:/sloeber_workspace/arduino-esp32/variants/esp32</location>
 		</link>
 		<link>
+			<name>libraries/ArduinoOTA</name>
+			<type>2</type>
+			<location>E:/sloeber_workspace/arduino-esp32/libraries/ArduinoOTA</location>
+		</link>
+		<link>
 			<name>libraries/BluetoothSerial</name>
 			<type>2</type>
 			<location>E:/sloeber_workspace/arduino-esp32/libraries/BluetoothSerial</location>
@@ -55,6 +60,26 @@
 			<name>libraries/EEPROM</name>
 			<type>2</type>
 			<location>E:/sloeber_workspace/arduino-esp32/libraries/EEPROM</location>
+		</link>
+		<link>
+			<name>libraries/ESPmDNS</name>
+			<type>2</type>
+			<location>E:/sloeber_workspace/arduino-esp32/libraries/ESPmDNS</location>
+		</link>
+		<link>
+			<name>libraries/FS</name>
+			<type>2</type>
+			<location>E:/sloeber_workspace/arduino-esp32/libraries/FS</location>
+		</link>
+		<link>
+			<name>libraries/Update</name>
+			<type>2</type>
+			<location>E:/sloeber_workspace/arduino-esp32/libraries/Update</location>
+		</link>
+		<link>
+			<name>libraries/WiFi</name>
+			<type>2</type>
+			<location>E:/sloeber_workspace/arduino-esp32/libraries/WiFi</location>
 		</link>
 		<link>
 			<name>libraries/Wire</name>
