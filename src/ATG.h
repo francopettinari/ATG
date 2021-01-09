@@ -27,7 +27,7 @@ private:
 public:
 	bool OTAActive = false;
 	MenuItem   *currentMenu=NULL;
-	float lastUdpDataSent = 0;
+
 	int expectedReqId = 1; //expected request id
 	int  nOfControllers=2, stateSelection = 0, currMenuStart=0;
 	PidStateValue state = svMain;
@@ -56,6 +56,7 @@ public:
 			Serial.println(F("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXxxx"));
 		}
 	}
+	void sendStatus(int ctrlIdx);
 	void update(int encoderPos, EncoderSwStates encoderPress);
 	void SetState(PidStateValue value, boolean save=true){
 		state = value;

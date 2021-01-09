@@ -344,9 +344,7 @@ void Controller::update(){
 		default:
 		  break;
 	}
-//	if(now-atg.lastUdpDataSent>1000){
-//		atg.sendStatus();
-//	}
+
 }
 
 //void Controller::saveSetPointTotoEEprom(){

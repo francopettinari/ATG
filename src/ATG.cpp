@@ -13,9 +13,9 @@
 #include <Update.h>
 #include <ArduinoOTA.h>
 
-//#include "BluetoothSerial.h"
+#include "BluetoothSerial.h"
 
-//BluetoothSerial SerialBT;
+BluetoothSerial SerialBT;
 
 LiquidCrystal_I2C lcdx(0x27, 20,4); // @suppress("Abstract class cannot be instantiated")
 
@@ -114,27 +114,53 @@ void parseCommand(String s){
 		}
 		atg.savetoEEprom();
 	}
-	if(s.startsWith(F("READ("), 0)){
-		String str = F("[{");
-		str += String(atg.getController(0)->setpoint(),1);
-		str += F(":");
-		str += (atg.getController(0)->autoModeOn?F("1"):F("0"));
-		str += F(":");
-		str += String(atg.getController(0)->Output);
-		str += F(":");
-		str += String(atg.getController(0)->ramp,1);
-		str += F("},{");
-		str += String(atg.getController(1)->setpoint(),1);
-		str += F(":");
-		str += (atg.getController(1)->autoModeOn?F("1"):F("0"));
-		str += F(":");
-		str += String(atg.getController(1)->Output);
-		str += F(":");
-		str += String(atg.getController(1)->ramp,1);
-		str += F("}]");
+//	if(s.startsWith(F("READ("), 0)){
+//		String str = F("[{");
+//		str += String(atg.getController(0)->setpoint(),1);
+//		str += F(":");
+//		str += (atg.getController(0)->autoModeOn?F("1"):F("0"));
+//		str += F(":");
+//		str += String(atg.getController(0)->Output);
+//		str += F(":");
+//		str += String(atg.getController(0)->ramp,1);
+//		str += F("},{");
+//		str += String(atg.getController(1)->setpoint(),1);
+//		str += F(":");
+//		str += (atg.getController(1)->autoModeOn?F("1"):F("0"));
+//		str += F(":");
+//		str += String(atg.getController(1)->Output);
+//		str += F(":");
+//		str += String(atg.getController(1)->ramp,1);
+//		str += F("}]");
+//		Serial.println(str);
 //		SerialBT.print(str);
-	}
+//	}
 }
+
+void ATG::sendStatus(int ctrlIdx){
+//	Serial.print(DynamicSetpoint,4);Serial.print(F(" "));
+//	Serial.print(Setpoint,4);Serial.print(F(" "));
+//	Serial.println(temperature,4);Serial.print(F(" "));
+//	Serial.println(Output);
+	Controller* pCtrl = getController(ctrlIdx);
+	float now = millis();
+	String str = F("LOG:"); str += String(now);
+	str += F(";CTRL:");    str += String(ctrlIdx);
+	str += F(";KP:");       str += String((float)pCtrl->GetKp(),4);
+	str += F(";KI:");       str += String((float)pCtrl->GetKi(),4);
+	str += F(";KD:");       str += String((float)pCtrl->GetKd(),4);
+	str += F(";STATE:");    str += String((float)pCtrl->autoModeOn,0);
+	str += F(";FSM_STATE:");str += String(pCtrl->fsmState);
+	str += F(";SETP:");     str += String(pCtrl->_setpoint,4);
+	str += F(";RAMP:");     str += String(pCtrl->ramp,4);
+	str += F(";DSETP:");    str += String(pCtrl->_dynamicSetpoint,4);
+	str += F(";TEMP:");     str += String(pCtrl->temperature,4);
+	str += F(";OUT:");      str += String(pCtrl->Output,4);
+	str += F(";OUTPERC:");  str += String((float)pCtrl->getOutPerc(),0);
+	str += F(";SERVOPOS:"); str += String((float)pCtrl->servoPosition,0);
+	SerialBT.println(str);
+}
+
 
 MenuItem* ATG::decodeCurrentMenu(){
 	MainMenu* pmm = pMainMenu;
@@ -518,10 +544,19 @@ void loop() {
 	if(now-lastCtrlUpdate>TemperatureProbe::readIntervalMsDiv2){
 		lastCtrlUpdated++;
 		if(lastCtrlUpdated>1)lastCtrlUpdated=0;
+		int ctrlIdx = -1;
 		if(lastCtrlUpdated==0){
-			atg.getController(0)->update();
+			ctrlIdx = 0;
 		}else if(lastCtrlUpdated==1){
-			atg.getController(1)->update();
+			ctrlIdx = 1;
+		}
+		if(ctrlIdx==0||ctrlIdx==1){
+			Controller* ctrl = atg.getController(ctrlIdx);
+			ctrl->update();
+			if(now-ctrl->lastUdpDataSent>1000){
+				atg.sendStatus(ctrlIdx);
+				ctrl->lastUdpDataSent = now;
+			}
 		}
 		lastCtrlUpdate = millis();
 	}
@@ -531,9 +566,8 @@ void loop() {
 	ArduinoOTA.handle();
 }
 
-const char* ssid = "ATG";
-const char* password = "giuliaepippo";
-const char* host = "ATG";
+const char* ssid = "ATGWiFi";
+const char* host = "ATGWiFi";
 
 void startWiFiOTA(){
 	WiFi.mode(WIFI_OFF);
@@ -550,15 +584,15 @@ void startWiFiOTA(){
 	Serial.print(F("IP address: "));
 	Serial.println(WiFi.softAPIP());
 
-	if (!MDNS.begin(host)) { //http://esp32.local
-		Serial.println(F("Error setting up MDNS responder!"));
-		while (1) {
-		  delay(1000);
-		}
-	  }
+//	if (!MDNS.begin(host)) { //http://esp32.local
+//		Serial.println(F("Error setting up MDNS responder!"));
+//		while (1) {
+//		  delay(1000);
+//		}
+//	  }
 
 	ArduinoOTA.setPort(8266);
-	ArduinoOTA.setHostname(host);
+//	ArduinoOTA.setHostname(host);
 	ArduinoOTA
 		.onStart([]() {
 		  String type;
@@ -586,6 +620,7 @@ void startWiFiOTA(){
 		});
 
 	  ArduinoOTA.begin();
+
 }
 
 void TaskInputLoop( void * pvParameters ){
@@ -641,9 +676,9 @@ void TaskInputLoop( void * pvParameters ){
 			atg.update(rotValue,SwState);
 		}
 
-//		while (SerialBT.available()) {
-//		  parseCommand(SerialBT.readStringUntil(endCmd));
-//		}
+		while (SerialBT.available()) {
+		  parseCommand(SerialBT.readStringUntil(endCmd));
+		}
 
 
 
@@ -655,7 +690,7 @@ void TaskInputLoop( void * pvParameters ){
 void setup() {
 	Serial.begin(115200);
 
-//	SerialBT.begin("ATG"); //Bluetooth device name
+	SerialBT.begin("ATG"); //Bluetooth device name
 
 	lcdHelper.createCustomChars();
 

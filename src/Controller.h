@@ -67,6 +67,7 @@ private:
 	Servo_ESP32* pServo = NULL;
 	TemperatureProbe* pProbe = NULL;
 public:
+	float lastUdpDataSent = 0;
 	TemperatureTransitionState TempState = TempStateUndefined;
 	FsmState fsmState=psIdle;
 	double _kp=50,_ki=0.3,_kd=0;
