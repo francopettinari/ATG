@@ -32,6 +32,7 @@ LiquidCrystal_I2C::LiquidCrystal_I2C(uint8_t lcd_addr, uint8_t lcd_cols, uint8_t
 }
 
 void LiquidCrystal_I2C::begin() {
+	_hasError = false;
 	Wire.begin();
 	_displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
 
@@ -50,7 +51,7 @@ void LiquidCrystal_I2C::begin() {
 	delay(50);
 
 	// Now we pull both RS and R/W low to begin commands
-	expanderWrite(_backlightval);	// reset expanderand turn backlight off (Bit 8 =1)
+	expanderWrite(_backlightval);	// reset expander and turn backlight off (Bit 8 =1)
 	delay(1000);
 
 	//put the LCD into 4 bit mode
@@ -227,7 +228,18 @@ void LiquidCrystal_I2C::write4bits(uint8_t value) {
 void LiquidCrystal_I2C::expanderWrite(uint8_t _data){
 	Wire.beginTransmission(_addr);
 	Wire.write((int)(_data) | _backlightval);
-	Wire.endTransmission();
+	uint8_t err = Wire.endTransmission();
+	if(err == 7){ // Prior Operation has been queued
+	// it will be executed when the next STOP is encountered.
+	// if sendStop had equaled true, then a successful endTransmission() would have
+	// returned 0. So, if this if() was if(err==0), the Queue operation would be
+	// considered an error.  This is the primary Difference.
+	}else if(Wire.lastError()!=0){ // complete/partial read failure
+		Serial.printf("Bad Stuff!!\nWrite ERROR\nFailed"
+		  " lastError=%d, text=%s\n", Wire.lastError(),
+		  Wire.getErrorText(Wire.lastError()));
+		_hasError = true;
+	}
 }
 
 void LiquidCrystal_I2C::pulseEnable(uint8_t _data){

@@ -29,25 +29,25 @@ uint8_t state=0;
 portMUX_TYPE gpioMux = portMUX_INITIALIZER_UNLOCKED;
 
 void IRAM_ATTR isrAB() {
-   uint8_t s = state & 3;
+	uint8_t s = state & 3;
 
   portENTER_CRITICAL_ISR(&gpioMux);
-    if (digitalRead(ROTARY_PINA)) s |= 4;
-    if (digitalRead(ROTARY_PINB)) s |= 8;
-    switch (s) {
-      case 0: case 5: case 10: case 15:
-        break;
-      case 1: case 7: case 8: case 14:
-        rotValue++; break;
-      case 2: case 4: case 11: case 13:
-        rotValue--; break;
-      case 3: case 12:
-        rotValue += 2; break;
-      default:
-        rotValue -= 2; break;
-    }
-    state = (s >> 2);
-   portEXIT_CRITICAL_ISR(&gpioMux);
+	if (digitalRead(ROTARY_PINA)) s |= 4;
+	if (digitalRead(ROTARY_PINB)) s |= 8;
+	switch (s) {
+	  case 0: case 5: case 10: case 15:
+		break;
+	  case 1: case 7: case 8: case 14:
+		rotValue++; break;
+	  case 2: case 4: case 11: case 13:
+		rotValue--; break;
+	  case 3: case 12:
+		rotValue += 2; break;
+	  default:
+		rotValue -= 2; break;
+	}
+	state = (s >> 2);
+	portEXIT_CRITICAL_ISR(&gpioMux);
 
 }
 
@@ -69,6 +69,10 @@ void IRAM_ATTR isrRotaryPress() {
 #define KP "KP"
 #define KI "KI"
 #define KD "KD"
+#define POSMIN "POS_MIN"
+#define POSMAX "POS_MAX"
+#define TCORRZERO "TCORR_ZER"
+#define TCORRBOIL "TCORR_BOIL"
 #define READ "READ"
 
 //format: SET(<CMD>:<ctrl>:<value>)
@@ -78,25 +82,31 @@ void IRAM_ATTR isrRotaryPress() {
 char parOpenChar = '(';
 char separator = ':';
 char parClosedChar = ')';
+
 void parseCommand(String s){
 	Serial.println(s);
 	if(s.startsWith(F("SET("), 0)){
 		int parOpenIdx = s.indexOf(parOpenChar);
 		int semicolIdx1 = s.indexOf(separator);
 		int semicolIdx2 = s.indexOf(separator,semicolIdx1+1);
+		int semicolIdx3 = s.indexOf(separator,semicolIdx2+1);
 		int parClosedIdx = s.indexOf(parClosedChar);
-		String command = s.substring(parOpenIdx+1,semicolIdx1);
-		String ctrl   = s.substring(semicolIdx1+1,semicolIdx2);
+		String ctrl = s.substring(parOpenIdx+1,semicolIdx1);
 		int iCtrl = ctrl.toInt();
-		String value    = s.substring(semicolIdx2+1,parClosedIdx);
+		String command = s.substring(semicolIdx1+1,semicolIdx2);
+		String value    = s.substring(semicolIdx3+1,parClosedIdx);
+		Serial.println(iCtrl);
 		Serial.println(command);
-		Serial.println(ctrl);
 		Serial.println(value);
+		atg.setSelectedController(iCtrl);
 		if(command==SP){
+			atg.SetState(svRunAuto,false);
 			atg.getController(iCtrl)->setSetpoint(value.toFloat());
 		} else if (command==RP){
+			atg.SetState(svRunAuto,false);
 			atg.getController(iCtrl)->ramp = value.toFloat();
 		} else if (command==ST){
+			atg.SetState(svRunAuto,false);
 			atg.getController(iCtrl)->setAutoMode(value.toInt());
 			if(atg.getController(iCtrl)->autoModeOn){
 				atg.pMainMenu->runMenu->switchMenu0->Caption=F("Auto");
@@ -104,13 +114,23 @@ void parseCommand(String s){
 				atg.pMainMenu->runMenu->switchMenu0->Caption=F("Manual");
 			}
 		} else if (command==OUT){
+			atg.SetState(svRunAuto,false);
 			atg.getController(iCtrl)->setForcedOutput(value.toInt());
+			atg.getController(iCtrl)->setOutPerc(atg.getController(iCtrl)->forcedOutput);
 		} else if (command==KP){
 			atg.getController(iCtrl)->SetKp(value.toFloat());
 		} else if (command==KI){
 			atg.getController(iCtrl)->SetKi(value.toFloat());
 		} else if (command==KD){
 			atg.getController(iCtrl)->SetKd(value.toFloat());
+		}else if (command==POSMIN){
+			atg.getController(iCtrl)->setServoMinValue(value.toFloat());
+		}else if (command==POSMAX){
+			atg.getController(iCtrl)->setServoMaxValue(value.toFloat());
+		}else if (command==TCORRZERO){
+			atg.getController(iCtrl)->zeroTemperatureCorrection = value.toFloat();
+		}else if (command==TCORRBOIL){
+			atg.getController(iCtrl)->boilTemperatureCorrection = value.toFloat();
 		}
 		atg.savetoEEprom();
 	}
@@ -149,6 +169,10 @@ void ATG::sendStatus(int ctrlIdx){
 	str += F(";KP:");       str += String((float)pCtrl->GetKp(),4);
 	str += F(";KI:");       str += String((float)pCtrl->GetKi(),4);
 	str += F(";KD:");       str += String((float)pCtrl->GetKd(),4);
+	str += F(";POS_MIN:");  str += String((float)pCtrl->servoMinValue,4);
+	str += F(";POS_MAX:");  str += String((float)pCtrl->servoMaxValue,4);
+	str += F(";TCORRZERO:");  str += String((float)pCtrl->zeroTemperatureCorrection,4);
+	str += F(";TCORRBOIL:");  str += String((float)pCtrl->boilTemperatureCorrection,4);
 	str += F(";STATE:");    str += String((float)pCtrl->autoModeOn,0);
 	str += F(";FSM_STATE:");str += String(pCtrl->fsmState);
 	str += F(";SETP:");     str += String(pCtrl->_setpoint,4);
@@ -563,13 +587,17 @@ void loop() {
 
 	lcdHelper.display();
 
-	ArduinoOTA.handle();
+	if(atg.OTAActive){
+		ArduinoOTA.handle();
+	}
 }
 
 const char* ssid = "ATGWiFi";
 const char* host = "ATGWiFi";
 
 void startWiFiOTA(){
+	if(atg.OTAActive) return;
+	SerialBT.end();
 	WiFi.mode(WIFI_OFF);
 
 	WiFi.mode(WIFI_AP);
@@ -634,7 +662,7 @@ void TaskInputLoop( void * pvParameters ){
 	attachInterrupt(ROTARY_PINB, isrAB, CHANGE);
 	attachInterrupt(ROTARY_PINSW, isrRotaryPress, FALLING);
 
-	char endCmd='#';
+
 
 	for(;;){
 		unsigned long now = millis();
@@ -658,8 +686,9 @@ void TaskInputLoop( void * pvParameters ){
 				updated = true;
 			}
 			if(now-lastOTAPress>10000) {
-				atg.OTAActive = true;
 				startWiFiOTA();
+				atg.OTAActive = true;
+				lastOTAPress = now;
 			}
 		}
 		prevSwVal = swValue;
@@ -676,22 +705,44 @@ void TaskInputLoop( void * pvParameters ){
 			atg.update(rotValue,SwState);
 		}
 
-		while (SerialBT.available()) {
-		  parseCommand(SerialBT.readStringUntil(endCmd));
-		}
-
-
-
 		delay(100);
 	}
 }
 
 
+
+void BTCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param){
+  if(event == ESP_SPP_SRV_OPEN_EVT){
+	Serial.println("BT Client Connected");
+	atg.BTClientConnected = true;
+  }
+
+  if(event == ESP_SPP_CLOSE_EVT ){
+	Serial.println("BT Client disconnected");
+	atg.BTClientConnected = false;
+  }
+}
+
+char* btbuffer = new char[256];
+char endCmd='#';
+char NL = '\n';
+void OnBTDataCallback(const uint8_t *buffer, size_t size){
+	for(int i=0;i<size;i++){
+		if(buffer[i]==endCmd){
+			memcpy(btbuffer,buffer,size);
+			btbuffer[size]=NL;
+			parseCommand(String(btbuffer));
+		}
+	}
+
+}
+
 void setup() {
 	Serial.begin(115200);
-
+	SerialBT.register_callback(BTCallback);
+	SerialBT.onData(OnBTDataCallback);
 	SerialBT.begin("ATG"); //Bluetooth device name
-
+	SerialBT.setTimeout(5000);
 	lcdHelper.createCustomChars();
 
 	atg.loadFromEEProm();

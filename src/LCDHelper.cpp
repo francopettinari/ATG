@@ -90,7 +90,16 @@ uint8_t timerChar[8] = {
   B01110,
   B00000
 };
-
+byte bluetoothChar[8] = {
+  B00100,
+  B10110,
+  B01101,
+  B00110,
+  B00110,
+  B01101,
+  B10110,
+  B00100
+};
 
 static const int TEMPERATURE_CHAR = 0;
 static const int DEGREE_CHAR = 1;
@@ -100,6 +109,7 @@ static const int MAN_CHAR = 4;
 //static const int DERIV_CHAR = 4;
 static const int DEGMIN_CHAR = 5;
 static const int TIMER_CHAR = 6;
+static const int BT_CHAR = 6;
 
 LCDHelper::LCDHelper(LiquidCrystal_I2C& l):lcd(l,20,4) {
 //	l.print("2 Hello, world!");
@@ -121,6 +131,7 @@ void LCDHelper::createCustomChars(){
 //	this->lcd.getLcd()->createChar(DERIV_CHAR, derivateCustomChar);
 	this->lcd.getLcd()->createChar(DEGMIN_CHAR, degMinChar);
 	this->lcd.getLcd()->createChar(TIMER_CHAR, timerChar);
+	this->lcd.getLcd()->createChar(BT_CHAR, bluetoothChar);
 }
 void LCDHelper::display(){
 	this->lcd.getLcd()->home();
@@ -202,7 +213,16 @@ void LCDHelper::display(){
 	if(atg.OTAActive){
 			lcd.PrintString(20-5, 3, F("OTA"));
 		}
+	if(atg.BTClientConnected){
+		lcd.PrintChar(19, 0,(char)BT_CHAR);
+	}
 	lcd.render();
+	if(lcd.getLcd()->hasError()){
+		Serial.println(F(">>>>>>>>>>>> I2C ERROR!!! <<<<<<<<<<<<<<"));
+		Serial.println(Wire.getErrorText(Wire.lastError()));
+		Serial.println(F(">>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<"));
+		begin();
+	}
 //	lcd.setCursor(0, 3);lcd.print(pstate.currEncoderPos);
 //	lcd.setCursor(10, 3);lcd.print(pstate.stateSelection);
 //	Serial.println(F(" "));
@@ -216,10 +236,10 @@ void LCDHelper::displayDefault(){
 
 	int tPos = t0<100?16:15;
 	if(t0<0)tPos--;
-	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 0,t0,2,1);lcd.PrintChar(19, 0,(char)DEGREE_CHAR);
+	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 1,t0,2,1);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
 	tPos = t1<100?16:15;
 	if(t1<0)tPos--;
-	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 1,t1,2,1);lcd.PrintChar(19, 1,(char)DEGREE_CHAR);
+	/*lcd.PrintChar(tPos-1, 0,(char)TEMPERATURE_CHAR);*/lcd.PrintDoubleFD(tPos, 2,t1,2,1);lcd.PrintChar(19, 2,(char)DEGREE_CHAR);
 
 
 }

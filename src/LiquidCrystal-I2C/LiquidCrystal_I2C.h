@@ -147,6 +147,7 @@ public:
 	void load_custom_character(uint8_t char_num, uint8_t *rows);	// alias for createChar()
 	void printstr(const char[]);
 
+	bool hasError(){return _hasError;}
 private:
 	void send(uint8_t, uint8_t);
 	void write4bits(uint8_t);
@@ -160,6 +161,7 @@ private:
 	uint8_t _rows;
 	uint8_t _charsize;
 	uint8_t _backlightval;
+	bool _hasError;
 };
 
 #endif // FDB_LIQUID_CRYSTAL_I2C_H

@@ -26,6 +26,7 @@ private:
 	Controller ctrl1;
 public:
 	bool OTAActive = false;
+	bool BTClientConnected = false;
 	MenuItem   *currentMenu=NULL;
 
 	int expectedReqId = 1; //expected request id
